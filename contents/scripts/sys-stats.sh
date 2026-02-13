@@ -22,16 +22,19 @@ detect_net_iface() {
     fi
 
     # 3. Fallback: first non-lo interface
-    iface=$(ls /sys/class/net/ 2>/dev/null | grep -v '^lo$' | head -n1)
-    if [[ -n "$iface" ]]; then
-        echo "$iface"
-        return
-    fi
+    for iface in /sys/class/net/*/; do
+        iface=$(basename "$iface")
+        if [[ "$iface" != "lo" ]]; then
+            echo "$iface"
+            return
+        fi
+    done
 
     echo "lo"
 }
 
-readonly NET_IFACE=$(detect_net_iface "${1:-}")
+NET_IFACE=$(detect_net_iface "${1:-}")
+readonly NET_IFACE
 
 # CPU Usage (delta-based from /proc/stat)
 
