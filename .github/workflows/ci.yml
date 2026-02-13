@@ -1,0 +1,36 @@
+name: Lint & Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  lint:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Lint shell scripts
+        run: shellcheck contents/scripts/sys-stats.sh install.sh install-remote.sh package.sh
+
+  build:
+    name: Build .plasmoid
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install zip
+        run: sudo apt-get update && sudo apt-get install -y zip
+
+      - name: Build package
+        run: bash package.sh
+
+      - name: Verify package exists
+        run: ls -lh *.plasmoid
