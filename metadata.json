@@ -1,0 +1,19 @@
+{
+    "KPlugin": {
+        "Id": "org.kde.plasma.kvitals",
+        "Name": "KVitals",
+        "Description": "Live system vitals in the panel: CPU, RAM, Temp, Battery, Network",
+        "Icon": "utilities-system-monitor",
+        "Category": "System Information",
+        "Authors": [
+            {
+                "Name": "Yassine Amjad",
+                "Email": "yassine.amjad001@gmail.com"
+            }
+        ],
+        "Version": "1.1.0",
+        "License": "GPL-3.0"
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}
