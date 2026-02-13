@@ -6,6 +6,12 @@ A lightweight KDE Plasma 6 panel widget that displays live system vitals directl
 CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 96°C  |  🔋BAT: 78%  |  NET: ↓82.2K ↑58.9K
 ```
 
+## Screenshots
+
+![Panel View](screenshots/demo.png)
+
+![Configuration](screenshots/demo1.png)
+
 ## Features
 
 - **Live monitoring** — CPU usage, RAM, CPU temperature, battery status, network speed
@@ -22,6 +28,20 @@ CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 96°C  |  🔋BAT: 78%  |  NET: ↓82.2K �
 - Standard Linux utilities (`free`, `awk`, `bc`)
 
 ## Installation
+
+### KDE Store (Recommended)
+
+Install directly from the KDE Store:
+
+👉 **[Get KVitals on the KDE Store](https://www.pling.com/p/2347917/)**
+
+Or from within KDE Plasma:
+1. Right-click on the panel → **Add Widgets...**
+2. Click **Get New Widgets...** → **Download New Plasma Widgets...**
+3. Search for **"KVitals"**
+4. Click **Install**
+
+---
 
 ### Quick Install (curl)
 
@@ -67,6 +87,16 @@ rm -rf ~/.local/share/plasma/plasmoids/org.kde.plasma.kvitals
 ```
 
 Then restart Plasma: `plasmashell --replace &`
+
+## Packaging for KDE Store
+
+To create a `.plasmoid` file for upload to the [KDE Store](https://store.kde.org/):
+
+```bash
+bash package.sh
+```
+
+This will create `org.kde.plasma.kvitals-v1.1.0.plasmoid`. Upload this file to the **Plasma 6 Extensions** category.
 
 ## Project Structure
 
