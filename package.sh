@@ -20,11 +20,5 @@ zip -r "$FILENAME" \
     -x "package.sh" \
     -x "*.DS_Store"
 
-echo ""
+
 echo "✅ Created package: $FILENAME"
-echo ""
-echo "To publish:"
-echo "1. Go to https://store.kde.org/"
-echo "2. Create an account / Login"
-echo "3. Go to 'Plasma 6 Extensions' -> 'Add Product'"
-echo "4. Upload this file: $FILENAME"
