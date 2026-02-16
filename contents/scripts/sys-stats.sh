@@ -154,12 +154,13 @@ get_power() {
     for bat_dir in "$power_supply_dir"/*; do
         [[ -d "$bat_dir" ]] || continue
         
-        local bat_name=$(basename "$bat_dir")
+
         local type_file="$bat_dir/type"
         
         # Check if it's a battery device
         if [[ -f "$type_file" ]]; then
-            local device_type=$(<"$type_file")
+            local device_type
+            device_type=$(<"$type_file")
             if [[ "$device_type" != "Battery" ]]; then
                 continue
             fi
@@ -175,7 +176,8 @@ get_power() {
         
         # Try to read power_now directly
         if [[ -f "$power_now" ]]; then
-            local power_val=$(<"$power_now")
+            local power_val
+            power_val=$(<"$power_now")
             # Check if value is valid (not empty and is a number)
             if [[ -n "$power_val" && "$power_val" =~ ^-?[0-9]+$ ]]; then
                 # Convert from microwatts to watts, take absolute value
@@ -185,8 +187,10 @@ get_power() {
             fi
         # Otherwise calculate from current and voltage
         elif [[ -f "$current_now" && -f "$voltage_now" ]]; then
-            local current_val=$(<"$current_now")
-            local voltage_val=$(<"$voltage_now")
+            local current_val
+            current_val=$(<"$current_now")
+            local voltage_val
+            voltage_val=$(<"$voltage_now")
             # Check if both values are valid (not empty and are numbers)
             if [[ -n "$current_val" && "$current_val" =~ ^-?[0-9]+$ ]] && \
                [[ -n "$voltage_val" && "$voltage_val" =~ ^-?[0-9]+$ ]]; then
@@ -201,7 +205,8 @@ get_power() {
         
         # Get charging/discharging status
         if [[ -f "$status_file" ]]; then
-            local status=$(<"$status_file")
+            local status
+            status=$(<"$status_file")
             case "$status" in
                 Charging)    sign="+" ;;
                 Discharging) sign="-" ;;
