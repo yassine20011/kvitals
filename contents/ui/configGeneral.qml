@@ -12,6 +12,7 @@ KCM.SimpleKCM {
     property alias cfg_showRam: showRamCheck.checked
     property alias cfg_showTemp: showTempCheck.checked
     property alias cfg_showBattery: showBatteryCheck.checked
+    property alias cfg_showPower: showPowerCheck.checked
     property alias cfg_showNetwork: showNetworkCheck.checked
     property alias cfg_updateInterval: intervalSlider.value
     property string cfg_networkInterface: "auto"
@@ -56,6 +57,11 @@ KCM.SimpleKCM {
         CheckBox {
             id: showBatteryCheck
             text: i18n("Show battery status")
+        }
+
+        CheckBox {
+            id: showPowerCheck
+            text: i18n("Show power consumption")
         }
 
         CheckBox {

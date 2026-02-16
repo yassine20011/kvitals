@@ -136,6 +136,90 @@ get_battery() {
     echo "$capacity $status $icon"
 }
 
+# Power Consumption (from /sys/class/power_supply/)
+
+get_power() {
+    local power_supply_dir="/sys/class/power_supply"
+    local total_power=0
+    local power_count=0
+    local sign=""
+    
+    # Check if power_supply directory exists
+    if [[ ! -d "$power_supply_dir" ]]; then
+        echo "N/A N/A"
+        return
+    fi
+    
+    # Iterate through all power supply devices
+    for bat_dir in "$power_supply_dir"/*; do
+        [[ -d "$bat_dir" ]] || continue
+        
+        local bat_name=$(basename "$bat_dir")
+        local type_file="$bat_dir/type"
+        
+        # Check if it's a battery device
+        if [[ -f "$type_file" ]]; then
+            local device_type=$(<"$type_file")
+            if [[ "$device_type" != "Battery" ]]; then
+                continue
+            fi
+        else
+            continue
+        fi
+        
+        local power=0
+        local power_now="$bat_dir/power_now"
+        local current_now="$bat_dir/current_now"
+        local voltage_now="$bat_dir/voltage_now"
+        local status_file="$bat_dir/status"
+        
+        # Try to read power_now directly
+        if [[ -f "$power_now" ]]; then
+            local power_val=$(<"$power_now")
+            # Check if value is valid (not empty and is a number)
+            if [[ -n "$power_val" && "$power_val" =~ ^-?[0-9]+$ ]]; then
+                # Convert from microwatts to watts, take absolute value
+                power=$(awk "BEGIN {printf \"%.1f\", ($power_val < 0 ? -$power_val : $power_val) / 1000000}")
+            else
+                continue
+            fi
+        # Otherwise calculate from current and voltage
+        elif [[ -f "$current_now" && -f "$voltage_now" ]]; then
+            local current_val=$(<"$current_now")
+            local voltage_val=$(<"$voltage_now")
+            # Check if both values are valid (not empty and are numbers)
+            if [[ -n "$current_val" && "$current_val" =~ ^-?[0-9]+$ ]] && \
+               [[ -n "$voltage_val" && "$voltage_val" =~ ^-?[0-9]+$ ]]; then
+                # Calculate power in watts, take absolute value
+                power=$(awk "BEGIN {val = ($current_val * $voltage_val) / 1000000000000; printf \"%.1f\", (val < 0 ? -val : val)}")
+            else
+                continue
+            fi
+        else
+            continue
+        fi
+        
+        # Get charging/discharging status
+        if [[ -f "$status_file" ]]; then
+            local status=$(<"$status_file")
+            case "$status" in
+                Charging)    sign="+" ;;
+                Discharging) sign="-" ;;
+                *)           sign="" ;;
+            esac
+        fi
+        
+        total_power=$(awk "BEGIN {printf \"%.1f\", $total_power + $power}")
+        ((power_count++))
+    done
+    
+    if [[ $power_count -eq 0 ]]; then
+        echo "N/A N/A"
+    else
+        echo "$total_power $sign"
+    fi
+}
+
 # Network Speed (delta-based from /proc/net/dev)
 
 format_speed() {
@@ -176,9 +260,10 @@ output_json() {
     local cpu="$1" ram_used="$2" ram_total="$3" temp="$4"
     local bat_capacity="$5" bat_status="$6" bat_icon="$7"
     local net_down="$8" net_up="$9"
+    local power="${10}" power_sign="${11}"
 
     cat <<EOF
-{"cpu":${cpu},"ram_used":"${ram_used}","ram_total":"${ram_total}","temp":"${temp}","bat":"${bat_capacity}","bat_status":"${bat_status}","bat_icon":"${bat_icon}","net_down":"${net_down}","net_up":"${net_up}"}
+{"cpu":${cpu},"ram_used":"${ram_used}","ram_total":"${ram_total}","temp":"${temp}","bat":"${bat_capacity}","bat_status":"${bat_status}","bat_icon":"${bat_icon}","net_down":"${net_down}","net_up":"${net_up}","power":"${power}","power_sign":"${power_sign}"}
 EOF
 }
 
@@ -188,6 +273,7 @@ main() {
     local cpu ram_used ram_total temp
     local bat_capacity bat_status bat_icon
     local net_down net_up
+    local power power_sign
 
     cpu=$(get_cpu)
 
@@ -209,9 +295,15 @@ main() {
     net_down=${net_info%% *}
     net_up=${net_info##* }
 
+    local power_info
+    power_info=$(get_power)
+    power=$(echo "$power_info" | awk '{print $1}')
+    power_sign=$(echo "$power_info" | awk '{print $2}')
+
     output_json "$cpu" "$ram_used" "$ram_total" "$temp" \
                 "$bat_capacity" "$bat_status" "$bat_icon" \
-                "$net_down" "$net_up"
+                "$net_down" "$net_up" \
+                "$power" "$power_sign"
 }
 
 main
