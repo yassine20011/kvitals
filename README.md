@@ -3,7 +3,7 @@
 A lightweight KDE Plasma 6 panel widget that displays live system vitals directly in your top bar.
 
 ```
-CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 96°C  |  🔋BAT: 78%  |  NET: ↓82.2K ↑58.9K
+CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 96°C  |  🔋BAT: 78%  |  PWR: +20W  |  NET: ↓82.2K ↑58.9K
 ```
 
 ## Screenshots

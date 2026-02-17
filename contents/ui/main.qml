@@ -64,14 +64,11 @@ PlasmoidItem {
                 if (stats.power !== "N/A") {
                     var powerSign = stats.power_sign || "";
                     root.powerText = "PWR: " + powerSign + stats.power + "W";
-                    console.log("KVitals: Power data parsed - " + root.powerText);
                 } else {
                     root.powerText = "";
-                    console.log("KVitals: No power data available");
                 }
 
                 root.netText = "NET: ↓" + stats.net_down + " ↑" + stats.net_up;
-                console.log("KVitals: showPower=" + root.showPower + ", powerText=" + root.powerText);
             } catch (e) {
                 console.log("sys-state parse error: " + e + " | raw: " + stdout);
             }
@@ -124,7 +121,7 @@ PlasmoidItem {
                 if (root.showRam) items.push({ label: "Memory", value: root.ramText.replace("RAM: ", "") });
                 if (root.showTemp) items.push({ label: "CPU Temp", value: root.tempText.replace("TEMP: ", "") });
                 if (root.showBattery) items.push({ label: "Battery", value: root.batText.replace(/.*BAT: /, "") });
-                if (root.showPower) items.push({ label: "Power", value: root.powerText.replace("PWR: ", "") });
+                if (root.showPower && root.powerText) items.push({ label: "Power", value: root.powerText.replace("PWR: ", "") });
                 if (root.showNetwork) {
                     var netParts = root.netText.replace("NET: ", "").split(" ↑");
                     items.push({ label: "Network ↓", value: netParts[0].replace("↓", "") });
