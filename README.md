@@ -8,9 +8,12 @@ CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 96°C  |  🔋BAT: 78%  |  PWR: +20W  |  N
 
 ## Screenshots
 
-![Panel View](screenshots/demo.png)
-
-![Configuration](screenshots/demo1.png)
+![Panel View Text only](screenshots/text_only.png)
+![Panel View Icons only](screenshots/icons_only.png)
+![Panel View Icons + Text](screenshots/icons_text.png)
+![General Settings](screenshots/general_settings.png)
+![Metrics Settings](screenshots/metrics_settings.png)
+![Icons Settings](screenshots/icons_settings.png)
 
 ## Features
 
