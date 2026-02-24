@@ -1,0 +1,17 @@
+# KVitals
+
+> A lightweight KDE Plasma 6 panel widget that displays live system vitals: CPU, RAM, temperature, battery, power consumption, and network speed.
+
+## Docs
+
+- [Installation](https://yassine20011.github.io/kvitals/installation/)
+- [Configuration](https://yassine20011.github.io/kvitals/configuration/)
+- [Architecture](https://yassine20011.github.io/kvitals/architecture/)
+- [Contributing](https://yassine20011.github.io/kvitals/contributing/)
+- [Troubleshooting](https://yassine20011.github.io/kvitals/troubleshooting/)
+- [Changelog](https://yassine20011.github.io/kvitals/changelog/)
+
+## Source
+
+- [GitHub Repository](https://github.com/yassine20011/kvitals)
+- License: GPL-3.0

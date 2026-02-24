@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://yassine20011.github.io/kvitals/sitemap.xml
