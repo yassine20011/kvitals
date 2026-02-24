@@ -523,6 +523,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ram-shows-empty-versions-140" class="md-nav__link">
+    <span class="md-ellipsis">
+      RAM Shows Empty (versions ≤ 1.4.0)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#batterypower-shows-nothing" class="md-nav__link">
     <span class="md-ellipsis">
       Battery/Power Shows Nothing
@@ -623,6 +632,15 @@
   <a href="#temperature-shows-" class="md-nav__link">
     <span class="md-ellipsis">
       Temperature Shows "--"
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ram-shows-empty-versions-140" class="md-nav__link">
+    <span class="md-ellipsis">
+      RAM Shows Empty (versions ≤ 1.4.0)
     </span>
   </a>
   
@@ -731,6 +749,13 @@
 </code></pre></div>
 To load it automatically on boot, add <code>k10temp</code> to <code>/etc/modules-load.d/k10temp.conf</code>.</p>
 </div>
+<h2 id="ram-shows-empty-versions-140">RAM Shows Empty (versions ≤ 1.4.0)<a class="headerlink" href="#ram-shows-empty-versions-140" title="Permanent link">&para;</a></h2>
+<p><strong>Cause:</strong> On versions before 1.4.1, RAM was read by parsing the <code>free</code> command, which translates its output headers (e.g. <code>Mem:</code>) based on your system locale. Non-English locales caused the parser to match nothing.</p>
+<p><strong>Fix:</strong> Update to KVitals 1.4.1+, which reads directly from <code>/proc/meminfo</code> (always English, locale-independent).</p>
+<div class="admonition tip">
+<p class="admonition-title">Workaround for older versions</p>
+<p>If you can't update immediately, set the locale for the script by adding <code>export LC_ALL=C</code> before running it.</p>
+</div>
 <h2 id="batterypower-shows-nothing">Battery/Power Shows Nothing<a class="headerlink" href="#batterypower-shows-nothing" title="Permanent link">&para;</a></h2>
 <p><strong>Cause:</strong> No battery detected (desktop systems without a battery).</p>
 <div class="admonition note">
@@ -761,7 +786,7 @@ To load it automatically on boot, add <code>k10temp</code> to <code>/etc/modules
 </ol>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>If the script outputs nothing or errors, check that <code>free</code>, <code>awk</code>, and <code>bc</code> are installed on your system.</p>
+<p>If the script outputs nothing or errors, check that <code>awk</code> is installed on your system.</p>
 </div>
 <h2 id="icons-not-visible-on-panel">Icons Not Visible on Panel<a class="headerlink" href="#icons-not-visible-on-panel" title="Permanent link">&para;</a></h2>
 <p><strong>Cause:</strong> Icons are rendered with <code>isMask: true</code> (monochrome). If your panel background is the same color as the text color, icons may be invisible.</p>
