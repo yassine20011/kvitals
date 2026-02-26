@@ -1,0 +1,625 @@
+# KVitals
+
+> A lightweight KDE Plasma 6 panel widget for live system vitals
+
+KVitals is a lightweight KDE Plasma 6 panel widget that displays live system vitals including CPU usage, memory usage, CPU temperature, network upload/download speeds, and disk read/write speeds directly in your panel. It uses a shell script backend with automatic network interface detection and is fully configurable through a settings UI.
+
+
+# Getting started
+
+# KVitals
+
+A lightweight KDE Plasma 6 panel widget that displays live system vitals directly in your top bar.
+
+```
+CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 96°C  |  🔋BAT: 78%  |  PWR: +20W  |  NET: ↓82.2K ↑58.9K
+```
+
+## Features
+
+- **Live monitoring** — CPU, RAM, temperature, battery, power, network
+- **Display modes** — Text, Icons, or Icons + Text
+- **Custom icons** — Pick any icon from your installed KDE theme
+- **Font customization** — Choose any system font and size
+- **3-tab settings** — General, Metrics, and Icons
+- **Minimal footprint** — Bash + QML, no heavy dependencies
+
+## Quick Start
+
+```
+git clone https://github.com/yassine20011/kvitals.git
+cd kvitals && bash install.sh
+```
+
+Then right-click your panel → **Add Widgets** → search **KVitals**.
+
+## Links
+
+- [GitHub Repository](https://github.com/yassine20011/kvitals)
+- [KDE Store](https://www.pling.com/p/2347917/)
+
+# Installation
+
+## KDE Store (Recommended)
+
+Install directly from the KDE Store:
+
+👉 **[Get KVitals on the KDE Store](https://www.pling.com/p/2347917/)**
+
+Or from within KDE Plasma:
+
+1. Right-click on the panel → **Add Widgets...**
+1. Click **Get New Widgets...** → **Download New Plasma Widgets...**
+1. Search for **"KVitals"**
+1. Click **Install**
+
+## Quick Install (curl)
+
+```
+curl -fsSL https://raw.githubusercontent.com/yassine20011/kvitals/master/install-remote.sh | bash
+```
+
+## Quick Install (wget)
+
+```
+wget -qO- https://raw.githubusercontent.com/yassine20011/kvitals/master/install-remote.sh | bash
+```
+
+## Manual Install
+
+```
+git clone https://github.com/yassine20011/kvitals.git
+cd kvitals
+bash install.sh
+```
+
+Then add the widget:
+
+1. Right-click on the panel → **Add Widgets...**
+1. Search for **KVitals**
+1. Drag it onto your panel
+
+Restart Required
+
+You may need to restart Plasma for the widget to appear:
+
+```
+plasmashell --replace &
+```
+
+## Requirements
+
+- KDE Plasma 6.0+
+- Bash
+- Standard Linux utilities (`free`, `awk`, `bc`)
+
+Checking Requirements
+
+All required utilities are pre-installed on most Linux distributions. You can verify with:
+
+```
+which free awk bc bash
+```
+
+## Uninstall
+
+```
+rm -rf ~/.local/share/plasma/plasmoids/org.kde.plasma.kvitals
+plasmashell --replace &
+```
+
+Warning
+
+This permanently removes the widget and all its configuration. Your settings will not be preserved.
+
+# Configuration
+
+Right-click the widget → **Configure KVitals...** to open the settings dialog. Settings are organized into three tabs.
+
+## General Tab
+
+| Setting             | Description                                                                    | Default            |
+| ------------------- | ------------------------------------------------------------------------------ | ------------------ |
+| **Display mode**    | How metrics are shown in the panel                                             | Text               |
+| **Icon size**       | Icon dimensions in pixels (only visible when using icons)                      | 12 px              |
+| **Font**            | Font family for all panel text (searchable dropdown of system fonts, editable) | monospace          |
+| **Font size**       | Text size in pixels. `0` uses the system default                               | 0 (system default) |
+| **Update interval** | How often stats are refreshed                                                  | 2.0 seconds        |
+
+### Display Modes
+
+| Mode             | Description                                                |
+| ---------------- | ---------------------------------------------------------- |
+| **Text**         | Labels + values: `CPU: 26% \| RAM: 8.8/39.0G`              |
+| **Icons**        | Icons + values only: `🖥 26% \| 🧠 8.8/39.0G`               |
+| **Icons + Text** | Icons + labels + values: `🖥 CPU: 26% \| 🧠 RAM: 8.8/39.0G` |
+
+Saving Panel Space
+
+**Icons** mode is the most compact — great for small panels or when you have many metrics enabled.
+
+## Metrics Tab
+
+| Setting                    | Description                                 | Default |
+| -------------------------- | ------------------------------------------- | ------- |
+| **Show CPU usage**         | Display CPU utilization percentage          | On      |
+| **Show RAM usage**         | Display used/total memory                   | On      |
+| **Show CPU temperature**   | Display CPU temperature in °C               | On      |
+| **Show battery status**    | Display battery percentage                  | On      |
+| **Show power consumption** | Display power draw in watts                 | On      |
+| **Show network speed**     | Display download/upload speeds              | On      |
+| **Network interface**      | Select network interface (`auto` or manual) | auto    |
+
+### Network Interface
+
+When set to `auto`, the widget detects the active interface via `ip route`. You can manually select a specific interface (e.g., `wlan0`, `enp3s0`) from the dropdown if auto-detection doesn't work for your setup.
+
+Note
+
+The interface list is populated dynamically from `/sys/class/net/`. If your interface doesn't appear, make sure it is active.
+
+## Icons Tab
+
+Each metric has its own icon that can be customized:
+
+| Metric      | Default Icon | Icon Name             |
+| ----------- | ------------ | --------------------- |
+| CPU         | 🖥            | `cpu`                 |
+| RAM         | 🧠           | `memory`              |
+| Temperature | 🌡            | `temperature-normal`  |
+| Battery     | 🔋           | `battery-good`        |
+| Power       | ⚡           | `battery-charging-60` |
+| Network     | 📶           | `network-wireless`    |
+
+Click **"Change..."** to open KDE's native icon picker, which lets you browse and search all icons from your installed icon theme (Breeze, Papirus, Tela, etc.).
+
+Click **"Reset to defaults"** to restore all icons to their default values.
+
+Monochrome Rendering
+
+Icons are rendered with `isMask: true`, meaning they adopt the panel's text color (monochrome). This ensures visibility on both light and dark panels.
+
+Finding Icons
+
+The icon picker shows all icons from your installed theme. Use the search bar to find icons by name — try keywords like "chip", "thermometer", "download", or "lightning".
+# Technical reference
+
+# Architecture
+
+KVitals is a KDE Plasma 6 widget (plasmoid) with a simple two-layer architecture: a **bash data collector** and a **QML UI**.
+
+## Data Flow
+
+## sys-stats.sh
+
+The bash script collects all system metrics and outputs a single JSON object. It is invoked periodically by the QML `DataSource` at the configured update interval.
+
+### Data Sources
+
+| Metric      | Source                     | Method                                                     |
+| ----------- | -------------------------- | ---------------------------------------------------------- |
+| CPU         | `/proc/stat`               | Delta-based calculation between two reads                  |
+| RAM         | `/proc/meminfo`            | `MemTotal` − `MemAvailable` for used, `MemTotal` for total |
+| Temperature | 4-tier fallback            | thermal_zone → hwmon → lm-sensors → generic                |
+| Battery     | `/sys/class/power_supply/` | Reads `capacity` and `status`                              |
+| Power       | `/sys/class/power_supply/` | `power_now` or `current_now × voltage_now`                 |
+| Network     | `/proc/net/dev`            | Delta-based RX/TX bytes between two reads                  |
+
+### Temperature Detection
+
+Temperature detection uses a priority-based fallback:
+
+1. **thermal_zone** — Matches `x86_pkg_temp`, `k10temp`, `zenpower`, `coretemp` labels
+1. **hwmon** — Matches `coretemp`, `k10temp`, `zenpower`, `zenergy`, `amdgpu` drivers
+1. **lm-sensors** — Parses `Package id 0`, `Tctl`, `Tdie`, `Tccd1`
+1. **Generic fallback** — First available thermal zone
+
+Note
+
+The script tries each tier in order and uses the first one that returns valid data. This ensures compatibility with both Intel and AMD systems.
+
+### JSON Output
+
+```
+{
+  "cpu": "26",
+  "ram_used": "8.8",
+  "ram_total": "39.0",
+  "temp": "52",
+  "bat": "78",
+  "bat_icon": "🔋",
+  "power": "20.5",
+  "power_sign": "+",
+  "net_down": "82.2K",
+  "net_up": "58.9K"
+}
+```
+
+## QML UI (main.qml)
+
+The widget has three visual representations:
+
+### Compact Representation (Panel)
+
+A `RowLayout` with a `Repeater` that renders each enabled metric as:
+
+- **Icon** (optional, via `Kirigami.Icon` with `isMask: true`)
+- **Label** (optional, e.g., "CPU:")
+- **Value** (always shown, e.g., "26%")
+- **Separator** (`|` between metrics)
+
+Visibility of icons/labels is controlled by the `displayMode` property.
+
+Tip
+
+Icons use `isMask: true` to render as monochrome, matching the panel's text color regardless of the icon theme.
+
+### Full Representation (Popup)
+
+A `ColumnLayout` with a `Repeater` showing a detailed row per metric with label and bold value, displayed when clicking the widget.
+
+### Tooltip
+
+Multi-line text showing all enabled metrics, displayed on hover.
+
+## Configuration System
+
+```
+config/main.xml          ← Config schema (entry names, types, defaults)
+config/config.qml        ← Tab registration (General, Metrics, Icons)
+ui/configGeneral.qml     ← General tab (display mode, font, interval)
+ui/configMetrics.qml     ← Metrics tab (show/hide toggles, network interface)
+ui/configIcons.qml       ← Icons tab (per-metric icon picker)
+```
+
+All config values are accessed in `main.qml` via `Plasmoid.configuration.<key>`.
+
+Adding New Config
+
+When adding a new config entry, you only need to: add it to `main.xml`, create a UI control in the appropriate config tab, and bind it in `main.qml`. No build step needed.
+
+## Project Structure
+
+```
+kvitals/
+├── metadata.json                   # Plasmoid metadata (name, version, id)
+├── install.sh                      # Local install script
+├── install-remote.sh               # Remote install (curl/wget)
+├── CHANGELOG.md                    # Version history
+├── docs/                           # Documentation
+│   ├── installation.md
+│   ├── configuration.md
+│   ├── architecture.md
+│   ├── contributing.md
+│   └── troubleshooting.md
+└── contents/
+    ├── config/
+    │   ├── config.qml              # Tab registration
+    │   └── main.xml                # Config schema
+    ├── scripts/
+    │   └── sys-stats.sh            # System stats collector
+    └── ui/
+        ├── main.qml                # Widget UI
+        ├── configGeneral.qml       # General settings tab
+        ├── configMetrics.qml       # Metrics settings tab
+        └── configIcons.qml         # Icons settings tab
+```
+
+# Troubleshooting
+
+## Temperature Shows "--"
+
+**Cause:** The widget couldn't find a temperature source on your system.
+
+**Fix:** Check which thermal sources are available:
+
+```
+# Check thermal zones
+cat /sys/class/thermal/thermal_zone*/type 2>/dev/null
+
+# Check hwmon
+for d in /sys/class/hwmon/hwmon*/; do
+    echo "$(cat "$d/name" 2>/dev/null): $d"
+done
+
+# Check lm-sensors
+sensors 2>/dev/null | head -20
+```
+
+AMD Systems
+
+If you're on AMD, make sure `k10temp` or `zenpower` kernel module is loaded:
+
+```
+sudo modprobe k10temp
+```
+
+To load it automatically on boot, add `k10temp` to `/etc/modules-load.d/k10temp.conf`.
+
+## RAM Shows Empty (versions ≤ 1.4.0)
+
+**Cause:** On versions before 1.4.1, RAM was read by parsing the `free` command, which translates its output headers (e.g. `Mem:`) based on your system locale. Non-English locales caused the parser to match nothing.
+
+**Fix:** Update to KVitals 1.4.1+, which reads directly from `/proc/meminfo` (always English, locale-independent).
+
+Workaround for older versions
+
+If you can't update immediately, set the locale for the script by adding `export LC_ALL=C` before running it.
+
+## Battery/Power Shows Nothing
+
+**Cause:** No battery detected (desktop systems without a battery).
+
+Note
+
+This is expected behavior on desktop systems. Disable battery and power metrics in **Settings → Metrics** tab to hide the empty entries.
+
+## Network Speed Shows 0
+
+**Cause:** Wrong network interface selected.
+
+**Fix:**
+
+1. Check your active interface: `ip route | grep default`
+1. Open **Settings → Metrics** and set the correct interface, or set to `auto`
+
+Tip
+
+If you use multiple connections (WiFi + Ethernet), set the interface manually to the one you want to monitor.
+
+## Widget Shows "KVitals" or "..."
+
+**Cause:** The stats script hasn't returned data yet or failed to execute.
+
+**Fix:**
+
+1. Test the script directly:
+
+   ```
+   bash ~/.local/share/plasma/plasmoids/org.kde.plasma.kvitals/contents/scripts/sys-stats.sh
+   ```
+
+1. Check for script errors:
+
+   ```
+   journalctl -b --no-pager | grep "sys-state parse error"
+   ```
+
+Warning
+
+If the script outputs nothing or errors, check that `awk` is installed on your system.
+
+## Icons Not Visible on Panel
+
+**Cause:** Icons are rendered with `isMask: true` (monochrome). If your panel background is the same color as the text color, icons may be invisible.
+
+Tip
+
+Try switching to a different Plasma theme, or adjust the panel opacity. You can also switch to **Text** display mode if icons aren't working well with your theme.
+
+## Settings Dialog Shows Warnings in Journal
+
+Harmless Warnings
+
+You may see `cfg_*Default` warnings in the journal. These are harmless Plasma 6 KCM warnings about default property injection and **do not affect functionality**.
+
+## Widget Not Appearing After Install
+
+**Fix:**
+
+1. Restart plasmashell:
+
+   ```
+   kquitapp6 plasmashell && kstart plasmashell &
+   ```
+
+1. If still missing, check the install path:
+
+   ```
+   ls ~/.local/share/plasma/plasmoids/org.kde.plasma.kvitals/
+   ```
+
+Warning
+
+If the directory doesn't exist, the install failed. Re-run `bash install.sh` from the project directory.
+
+## Custom Font Not Applying
+
+**Cause:** The font name might not match exactly.
+
+**Fix:**
+
+1. Check available fonts: `fc-list | grep -i "font-name"`
+1. In settings, use the exact family name from the dropdown
+1. Font size `0` means "use system default" — set a specific value if needed
+
+Tip
+
+The font dropdown is searchable — start typing the font name to filter the list. You can also type a custom font name directly.
+# Community
+
+# Contributing
+
+Thanks for your interest in contributing to KVitals!
+
+## Getting Started
+
+1. Fork the repository
+
+1. Clone your fork:
+
+   ```
+   git clone https://github.com/<your-username>/kvitals.git
+   cd kvitals
+   ```
+
+1. Install locally for development:
+
+   ```
+   bash install.sh
+   ```
+
+## Development Workflow
+
+### Making Changes
+
+1. Edit files in the project directory
+
+1. Reinstall and test:
+
+   ```
+   bash install.sh
+   kquitapp6 plasmashell && kstart plasmashell &
+   ```
+
+1. Check for QML errors:
+
+   ```
+   journalctl -b --no-pager | grep kvitals
+   ```
+
+Fast Iteration
+
+You don't always need to restart plasmashell. For config-only changes, just reopen the settings dialog. For QML changes, a restart is required.
+
+### Shell Script Changes
+
+Always run ShellCheck before committing:
+
+```
+shellcheck contents/scripts/sys-stats.sh
+```
+
+CI Enforcement
+
+ShellCheck is enforced in CI. PRs with ShellCheck warnings will fail the pipeline.
+
+### Adding a New Metric
+
+1. **Script** — Add a new function in `sys-stats.sh` that outputs the value
+1. **JSON** — Include the new field in the JSON output
+1. **Config** — Add `showNewMetric` (Bool) and optionally `newMetricIcon` (String) to `main.xml`
+1. **Settings** — Add checkbox to `configMetrics.qml`, icon picker to `configIcons.qml`
+1. **UI** — Add property bindings and model entry in `main.qml`
+
+Note
+
+Don't forget to add a default icon name for the new metric in `configIcons.qml`'s reset button handler.
+
+### Adding a New Setting
+
+1. Add the entry to `contents/config/main.xml` with a default value
+1. Add the UI control to the appropriate config tab (`configGeneral.qml`, `configMetrics.qml`, or `configIcons.qml`)
+1. Bind the value in `main.qml` via `Plasmoid.configuration.<key>`
+
+## Pull Requests
+
+1. Create a feature branch: `git checkout -b feat/my-feature`
+1. Make your changes and test locally
+1. Ensure ShellCheck passes
+1. Push and open a PR against `master`
+
+Commit Messages
+
+Use conventional commits for clear history:
+
+- `feat:` — New feature
+- `fix:` — Bug fix
+- `chore:` — Maintenance
+- `docs:` — Documentation
+
+## Code Style
+
+- **QML** — Follow KDE's QML conventions, use `Kirigami` components where possible
+- **Bash** — Must pass ShellCheck with no warnings
+- **Commits** — Use conventional commits: `feat:`, `fix:`, `chore:`, `docs:`
+
+## Reporting Issues
+
+When filing a bug report, please include:
+
+- KDE Plasma version (`plasmashell --version`)
+- Linux distribution and version
+- Whether you're using Intel or AMD CPU
+- Relevant journal output (`journalctl -b | grep kvitals`)
+
+Debugging Output
+
+To capture detailed logs for a bug report:
+
+```
+journalctl -b --no-pager | grep -i "kvitals\|sys-state" > kvitals-debug.log
+```
+
+# Changelog
+
+All notable changes to KVitals will be documented in this file.
+
+## [1.4.1] - 2026-02-24
+
+### Fixed
+
+- RAM usage showing empty on non-English locales — `free` translates its `Mem:` header based on locale, causing the parser to match nothing
+- Switched RAM data source from `free -b` to `/proc/meminfo` (locale-independent, faster, more accurate)
+
+## [1.4.0] - 2026-02-22
+
+### Added
+
+- **Display mode setting** — choose between Text, Icons, or Icons + Text for the panel
+- **Custom icon picker** — select icons from your installed theme for each metric (via KDE's native icon picker)
+- **Icon size slider** — adjust icon size (8–24px) when using icon mode
+- **Font customization** — choose any system font and font size for the panel text
+- **Settings tabs** — split configuration into General, Metrics, and Icons tabs
+- **Reset to defaults** button on the Icons tab
+- **CHANGELOG.md** — version history
+- **Documentation** — MkDocs site with installation, configuration, architecture, contributing, and troubleshooting guides
+
+## [1.3.0] - 2026-02-16
+
+### Added
+
+- Power consumption tracking (via `/sys/class/power_supply/`) — contributed by [@Pijuli](https://github.com/Pijuli)
+
+### Fixed
+
+- ShellCheck warnings from power consumption PR (SC2034, SC2155)
+
+## [1.2.1] - 2026-02-16
+
+### Fixed
+
+- AMD CPU temperature detection — added `k10temp`, `zenpower`, `zenergy`, `amdgpu` to thermal_zone and hwmon detection
+- lm-sensors fallback now matches AMD `Tccd1` label
+- Reordered temperature fallback tiers to prioritize CPU-specific sources over generic thermal zones
+
+## [1.2.0] - 2026-02-13
+
+### Added
+
+- Auto-detect network interface via `ip route` with manual override in settings
+- Network interface selector in widget configuration
+
+### Fixed
+
+- ShellCheck warnings (SC2010, SC2155)
+
+## [1.1.0] - 2026-02-12
+
+### Changed
+
+- Modularized `sys-stats.sh` into functions
+- Enhanced CPU temperature detection with 4-tier fallback (thermal_zone → hwmon → lm-sensors → generic)
+
+## [1.0.0] - 2026-02-12
+
+### Added
+
+- Initial release
+- CPU usage (delta-based from `/proc/stat`)
+- RAM usage (from `/proc/meminfo`)
+- CPU temperature (multi-source detection)
+- Battery status with emoji indicators
+- Network speed (delta-based from `/proc/net/dev`)
+- Configurable update interval
+- Toggle visibility per metric

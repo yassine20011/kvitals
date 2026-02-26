@@ -1,17 +1,23 @@
 # KVitals
 
-> A lightweight KDE Plasma 6 panel widget that displays live system vitals: CPU, RAM, temperature, battery, power consumption, and network speed.
+> A lightweight KDE Plasma 6 panel widget for live system vitals
 
-## Docs
+KVitals is a lightweight KDE Plasma 6 panel widget that displays live system vitals including CPU usage, memory usage, CPU temperature, network upload/download speeds, and disk read/write speeds directly in your panel. It uses a shell script backend with automatic network interface detection and is fully configurable through a settings UI.
 
-- [Installation](https://yassine20011.github.io/kvitals/installation/)
-- [Configuration](https://yassine20011.github.io/kvitals/configuration/)
-- [Architecture](https://yassine20011.github.io/kvitals/architecture/)
-- [Contributing](https://yassine20011.github.io/kvitals/contributing/)
-- [Troubleshooting](https://yassine20011.github.io/kvitals/troubleshooting/)
-- [Changelog](https://yassine20011.github.io/kvitals/changelog/)
 
-## Source
+## Getting started
 
-- [GitHub Repository](https://github.com/yassine20011/kvitals)
-- License: GPL-3.0
+- [Home](https://yassine20011.github.io/kvitals/index.md): Overview and features of KVitals
+- [Installation](https://yassine20011.github.io/kvitals/installation/index.md): How to install KVitals on KDE Plasma 6
+- [Configuration](https://yassine20011.github.io/kvitals/configuration/index.md): Widget settings and customization options
+
+## Technical reference
+
+- [Architecture](https://yassine20011.github.io/kvitals/architecture/index.md): System architecture, data flow, and component design
+- [Troubleshooting](https://yassine20011.github.io/kvitals/troubleshooting/index.md): Common issues and solutions
+
+## Community
+
+- [Contributing](https://yassine20011.github.io/kvitals/contributing/index.md): How to contribute to the project
+- [Changelog](https://yassine20011.github.io/kvitals/changelog/index.md): Version history and release notes
+
