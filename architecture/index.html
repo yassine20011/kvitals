@@ -504,13 +504,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#sys-statssh" class="md-nav__link">
+  <a href="#data-collection-ksysguard-sensors" class="md-nav__link">
     <span class="md-ellipsis">
-      sys-stats.sh
+      Data Collection (KSysGuard Sensors)
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="sys-stats.sh">
+    <nav class="md-nav" aria-label="Data Collection (KSysGuard Sensors)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -523,18 +523,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#temperature-detection" class="md-nav__link">
+  <a href="#performance-benefits" class="md-nav__link">
     <span class="md-ellipsis">
-      Temperature Detection
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#json-output" class="md-nav__link">
-    <span class="md-ellipsis">
-      JSON Output
+      Performance Benefits
     </span>
   </a>
   
@@ -709,13 +700,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#sys-statssh" class="md-nav__link">
+  <a href="#data-collection-ksysguard-sensors" class="md-nav__link">
     <span class="md-ellipsis">
-      sys-stats.sh
+      Data Collection (KSysGuard Sensors)
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="sys-stats.sh">
+    <nav class="md-nav" aria-label="Data Collection (KSysGuard Sensors)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -728,18 +719,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#temperature-detection" class="md-nav__link">
+  <a href="#performance-benefits" class="md-nav__link">
     <span class="md-ellipsis">
-      Temperature Detection
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#json-output" class="md-nav__link">
-    <span class="md-ellipsis">
-      JSON Output
+      Performance Benefits
     </span>
   </a>
   
@@ -829,79 +811,27 @@
 
 
 <h1 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h1>
-<p>KVitals is a KDE Plasma 6 widget (plasmoid) with a simple two-layer architecture: a <strong>bash data collector</strong> and a <strong>QML UI</strong>.</p>
+<p>KVitals is a KDE Plasma 6 widget (plasmoid) with a direct architecture connecting native <strong>KSysGuard sensors</strong> directly to a <strong>QML UI</strong>.</p>
 <h2 id="data-flow">Data Flow<a class="headerlink" href="#data-flow" title="Permanent link">&para;</a></h2>
 <p><img alt="KVitals Data Flow" src="../dataflow.svg" /></p>
-<h2 id="sys-statssh">sys-stats.sh<a class="headerlink" href="#sys-statssh" title="Permanent link">&para;</a></h2>
-<p>The bash script collects all system metrics and outputs a single JSON object. It is invoked periodically by the QML <code>DataSource</code> at the configured update interval.</p>
+<h2 id="data-collection-ksysguard-sensors">Data Collection (KSysGuard Sensors)<a class="headerlink" href="#data-collection-ksysguard-sensors" title="Permanent link">&para;</a></h2>
+<p>KVitals relies completely on standard KDE technologies. Instead of continuously executing shell scripts or external processes, the widget connects securely to the KDE <code>ksystemstats</code> D-Bus daemon via <code>org.kde.ksysguard.sensors</code>.</p>
+<p>By instantiating native <code>Sensors.Sensor</code> objects in QML, KVitals subscribes to system statistics without any CPU overhead or file descriptor leaks. </p>
 <h3 id="data-sources">Data Sources<a class="headerlink" href="#data-sources" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Metric</th>
-<th>Source</th>
-<th>Method</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>CPU</td>
-<td><code>/proc/stat</code></td>
-<td>Delta-based calculation between two reads</td>
-</tr>
-<tr>
-<td>RAM</td>
-<td><code>/proc/meminfo</code></td>
-<td><code>MemTotal</code> − <code>MemAvailable</code> for used, <code>MemTotal</code> for total</td>
-</tr>
-<tr>
-<td>Temperature</td>
-<td>4-tier fallback</td>
-<td>thermal_zone → hwmon → lm-sensors → generic</td>
-</tr>
-<tr>
-<td>Battery</td>
-<td><code>/sys/class/power_supply/</code></td>
-<td>Reads <code>capacity</code> and <code>status</code></td>
-</tr>
-<tr>
-<td>Power</td>
-<td><code>/sys/class/power_supply/</code></td>
-<td><code>power_now</code> or <code>current_now × voltage_now</code></td>
-</tr>
-<tr>
-<td>Network</td>
-<td><code>/proc/net/dev</code></td>
-<td>Delta-based RX/TX bytes between two reads</td>
-</tr>
-</tbody>
-</table>
-<h3 id="temperature-detection">Temperature Detection<a class="headerlink" href="#temperature-detection" title="Permanent link">&para;</a></h3>
-<p>Temperature detection uses a priority-based fallback:</p>
+<p>All metrics are fetched natively:</p>
+<ul>
+<li><strong>CPU</strong>: <code>cpu/all/usage</code></li>
+<li><strong>RAM</strong>: <code>memory/physical/used</code> and <code>memory/physical/total</code></li>
+<li><strong>Temperature</strong>: <code>cpu/all/averageTemperature</code> (with fallback logic handled directly by <code>ksystemstats</code>)</li>
+<li><strong>Battery</strong>: <code>power/battery_BAT0/chargePercentage</code> and <code>chargeRate</code> (with <code>BAT1</code> fallback built-in)</li>
+<li><strong>Network</strong>: <code>network/&lt;interface&gt;/download</code> and <code>upload</code></li>
+</ul>
+<h3 id="performance-benefits">Performance Benefits<a class="headerlink" href="#performance-benefits" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>thermal_zone</strong> — Matches <code>x86_pkg_temp</code>, <code>k10temp</code>, <code>zenpower</code>, <code>coretemp</code> labels</li>
-<li><strong>hwmon</strong> — Matches <code>coretemp</code>, <code>k10temp</code>, <code>zenpower</code>, <code>zenergy</code>, <code>amdgpu</code> drivers</li>
-<li><strong>lm-sensors</strong> — Parses <code>Package id 0</code>, <code>Tctl</code>, <code>Tdie</code>, <code>Tccd1</code></li>
-<li><strong>Generic fallback</strong> — First available thermal zone</li>
+<li><strong>Zero Subprocesses</strong>: No <code>bash</code>, <code>awk</code>, or <code>cat</code> commands are spawned.</li>
+<li><strong>Stable File Descriptors</strong>: No CLI pipes need to be kept open, eliminating Plasma 6 Wayland FD-exhaustion crashes.</li>
+<li><strong>Low Latency</strong>: The widget reads the exact same backend API as the official KDE System Monitor.</li>
 </ol>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The script tries each tier in order and uses the first one that returns valid data. This ensures compatibility with both Intel and AMD systems.</p>
-</div>
-<h3 id="json-output">JSON Output<a class="headerlink" href="#json-output" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;cpu&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;26&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">&quot;ram_used&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;8.8&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">&quot;ram_total&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;39.0&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">&quot;temp&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;52&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">&quot;bat&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;78&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">&quot;bat_icon&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;🔋&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">&quot;power&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;20.5&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="nt">&quot;power_sign&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;+&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span><span class="nt">&quot;net_down&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;82.2K&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">  </span><span class="nt">&quot;net_up&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;58.9K&quot;</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">}</span>
-</code></pre></div>
 <h2 id="qml-ui-mainqml">QML UI (main.qml)<a class="headerlink" href="#qml-ui-mainqml" title="Permanent link">&para;</a></h2>
 <p>The widget has three visual representations:</p>
 <h3 id="compact-representation-panel">Compact Representation (Panel)<a class="headerlink" href="#compact-representation-panel" title="Permanent link">&para;</a></h3>
@@ -920,11 +850,11 @@
 <h3 id="tooltip">Tooltip<a class="headerlink" href="#tooltip" title="Permanent link">&para;</a></h3>
 <p>Multi-line text showing all enabled metrics, displayed on hover.</p>
 <h2 id="configuration-system">Configuration System<a class="headerlink" href="#configuration-system" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>config/main.xml          ← Config schema (entry names, types, defaults)
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>config/config.qml        ← Tab registration (General, Metrics, Icons)
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>ui/configGeneral.qml     ← General tab (display mode, font, interval)
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>ui/configMetrics.qml     ← Metrics tab (show/hide toggles, network interface)
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>ui/configIcons.qml       ← Icons tab (per-metric icon picker)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>config/main.xml          ← Config schema (entry names, types, defaults)
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>config/config.qml        ← Tab registration (General, Metrics, Icons)
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>ui/configGeneral.qml     ← General tab (display mode, font, interval)
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>ui/configMetrics.qml     ← Metrics tab (show/hide toggles, network interface)
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>ui/configIcons.qml       ← Icons tab (per-metric icon picker)
 </code></pre></div>
 <p>All config values are accessed in <code>main.qml</code> via <code>Plasmoid.configuration.&lt;key&gt;</code>.</p>
 <div class="admonition tip">
@@ -932,28 +862,26 @@
 <p>When adding a new config entry, you only need to: add it to <code>main.xml</code>, create a UI control in the appropriate config tab, and bind it in <code>main.qml</code>. No build step needed.</p>
 </div>
 <h2 id="project-structure">Project Structure<a class="headerlink" href="#project-structure" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kvitals/
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>├── metadata.json                   # Plasmoid metadata (name, version, id)
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>├── install.sh                      # Local install script
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>├── install-remote.sh               # Remote install (curl/wget)
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>├── CHANGELOG.md                    # Version history
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>├── docs/                           # Documentation
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>│   ├── installation.md
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>│   ├── configuration.md
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>│   ├── architecture.md
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>│   ├── contributing.md
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>│   └── troubleshooting.md
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>└── contents/
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    ├── config/
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    │   ├── config.qml              # Tab registration
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    │   └── main.xml                # Config schema
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    ├── scripts/
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    │   └── sys-stats.sh            # System stats collector
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    └── ui/
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>        ├── main.qml                # Widget UI
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>        ├── configGeneral.qml       # General settings tab
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>        ├── configMetrics.qml       # Metrics settings tab
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>        └── configIcons.qml         # Icons settings tab
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>kvitals/
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>├── metadata.json                   # Plasmoid metadata (name, version, id)
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>├── install.sh                      # Local install script
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>├── install-remote.sh               # Remote install (curl/wget)
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>├── CHANGELOG.md                    # Version history
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>├── docs/                           # Documentation
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│   ├── installation.md
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│   ├── configuration.md
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│   ├── architecture.md
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>│   ├── contributing.md
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│   └── troubleshooting.md
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>└── contents/
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    ├── config/
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    │   ├── config.qml              # Tab registration
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    │   └── main.xml                # Config schema
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    ├── ui/
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>        ├── main.qml                # Widget UI
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>        ├── configGeneral.qml       # General settings tab
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        ├── configMetrics.qml       # Metrics settings tab
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>        └── configIcons.qml         # Icons settings tab
 </code></pre></div>
 
 

@@ -35,10 +35,6 @@ To load it automatically on boot, add `k10temp` to `/etc/modules-load.d/k10temp.
 
 **Fix:** Update to KVitals 1.4.1+, which reads directly from `/proc/meminfo` (always English, locale-independent).
 
-Workaround for older versions
-
-If you can't update immediately, set the locale for the script by adding `export LC_ALL=C` before running it.
-
 ## Battery/Power Shows Nothing
 
 **Cause:** No battery detected (desktop systems without a battery).
@@ -53,8 +49,8 @@ This is expected behavior on desktop systems. Disable battery and power metrics 
 
 **Fix:**
 
-1. Check your active interface: `ip route | grep default`
-1. Open **Settings → Metrics** and set the correct interface, or set to `auto`
+1. Open **Settings → Metrics** and ensure the network interface is set to `auto`.
+1. If you want to monitor a specific connection, select it from the dropdown list.
 
 Tip
 
@@ -62,25 +58,13 @@ If you use multiple connections (WiFi + Ethernet), set the interface manually to
 
 ## Widget Shows "KVitals" or "..."
 
-**Cause:** The stats script hasn't returned data yet or failed to execute.
+**Cause:** The KSysGuard daemon hasn't returned sensor data yet.
 
-**Fix:**
+**Fix:** Wait a few seconds for the data to populate. If it still doesn't, try restarting the `plasma-ksystemstats` service:
 
-1. Test the script directly:
-
-   ```
-   bash ~/.local/share/plasma/plasmoids/org.kde.plasma.kvitals/contents/scripts/sys-stats.sh
-   ```
-
-1. Check for script errors:
-
-   ```
-   journalctl -b --no-pager | grep "sys-state parse error"
-   ```
-
-Warning
-
-If the script outputs nothing or errors, check that `awk` is installed on your system.
+```
+systemctl --user restart plasma-ksystemstats.service
+```
 
 ## Icons Not Visible on Panel
 

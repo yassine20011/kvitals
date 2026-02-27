@@ -50,16 +50,6 @@ plasmashell --replace &
 ## Requirements
 
 - KDE Plasma 6.0+
-- Bash
-- Standard Linux utilities (`free`, `awk`, `bc`)
-
-Checking Requirements
-
-All required utilities are pre-installed on most Linux distributions. You can verify with:
-
-```
-which free awk bc bash
-```
 
 ## Uninstall
 

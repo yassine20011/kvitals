@@ -543,15 +543,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#shell-script-changes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Shell Script Changes
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#adding-a-new-metric" class="md-nav__link">
     <span class="md-ellipsis">
       Adding a New Metric
@@ -704,15 +695,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#shell-script-changes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Shell Script Changes
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#adding-a-new-metric" class="md-nav__link">
     <span class="md-ellipsis">
       Adding a New Metric
@@ -809,19 +791,9 @@
 <p class="admonition-title">Fast Iteration</p>
 <p>You don't always need to restart plasmashell. For config-only changes, just reopen the settings dialog. For QML changes, a restart is required.</p>
 </div>
-<h3 id="shell-script-changes">Shell Script Changes<a class="headerlink" href="#shell-script-changes" title="Permanent link">&para;</a></h3>
-<p>Always run ShellCheck before committing:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>shellcheck<span class="w"> </span>contents/scripts/sys-stats.sh
-</code></pre></div>
-<div class="admonition warning">
-<p class="admonition-title">CI Enforcement</p>
-<p>ShellCheck is enforced in CI. PRs with ShellCheck warnings will fail the pipeline.</p>
-</div>
 <h3 id="adding-a-new-metric">Adding a New Metric<a class="headerlink" href="#adding-a-new-metric" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>Script</strong> — Add a new function in <code>sys-stats.sh</code> that outputs the value</li>
-<li><strong>JSON</strong> — Include the new field in the JSON output</li>
-<li><strong>Config</strong> — Add <code>showNewMetric</code> (Bool) and optionally <code>newMetricIcon</code> (String) to <code>main.xml</code></li>
+<li><strong>Sensors</strong> — Find the relevant <code>org.kde.ksysguard.sensors</code> sensor ID using <code>kstatsviewer</code></li>
 <li><strong>Settings</strong> — Add checkbox to <code>configMetrics.qml</code>, icon picker to <code>configIcons.qml</code></li>
 <li><strong>UI</strong> — Add property bindings and model entry in <code>main.qml</code></li>
 </ol>
@@ -855,7 +827,6 @@
 <h2 id="code-style">Code Style<a class="headerlink" href="#code-style" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>QML</strong> — Follow KDE's QML conventions, use <code>Kirigami</code> components where possible</li>
-<li><strong>Bash</strong> — Must pass ShellCheck with no warnings</li>
 <li><strong>Commits</strong> — Use conventional commits: <code>feat:</code>, <code>fix:</code>, <code>chore:</code>, <code>docs:</code></li>
 </ul>
 <h2 id="reporting-issues">Reporting Issues<a class="headerlink" href="#reporting-issues" title="Permanent link">&para;</a></h2>
@@ -869,7 +840,7 @@
 <div class="admonition note">
 <p class="admonition-title">Debugging Output</p>
 <p>To capture detailed logs for a bug report:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>journalctl<span class="w"> </span>-b<span class="w"> </span>--no-pager<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;kvitals\|sys-state&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>kvitals-debug.log
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>journalctl<span class="w"> </span>-b<span class="w"> </span>--no-pager<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;kvitals\|sys-state&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>kvitals-debug.log
 </code></pre></div></p>
 </div>
 

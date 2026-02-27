@@ -22,7 +22,7 @@ CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 96°C  |  🔋BAT: 78%  |  PWR: +20W  |  N
 - **Custom icons** — Pick any icon from your installed KDE theme
 - **Font customization** — Choose any system font and size
 - **3-tab settings** — General, Metrics, and Icons
-- **Minimal footprint** — Bash + QML, no heavy dependencies
+- **Minimal footprint** — Native KSysGuard integration + QML, no heavy dependencies
 
 ## Quick Start
 
@@ -90,16 +90,6 @@ plasmashell --replace &
 ## Requirements
 
 - KDE Plasma 6.0+
-- Bash
-- Standard Linux utilities (`free`, `awk`, `bc`)
-
-Checking Requirements
-
-All required utilities are pre-installed on most Linux distributions. You can verify with:
-
-```
-which free awk bc bash
-```
 
 ## Uninstall
 
@@ -152,11 +142,13 @@ Saving Panel Space
 
 ### Network Interface
 
-When set to `auto`, the widget detects the active interface via `ip route`. You can manually select a specific interface (e.g., `wlan0`, `enp3s0`) from the dropdown if auto-detection doesn't work for your setup.
+When set to `auto`, the widget natively aggregates the traffic across all active network connections using KDE's `network/all` sensor. This handles VPN routing and switching networks automatically.
+
+You can manually select a specific interface (e.g., `wlan0`, `enp3s0`) from the dropdown if you only want to monitor a single device.
 
 Note
 
-The interface list is populated dynamically from `/sys/class/net/`. If your interface doesn't appear, make sure it is active.
+The manual interface list is populated dynamically from `/sys/class/net/`.
 
 ## Icons Tab
 
@@ -186,54 +178,31 @@ The icon picker shows all icons from your installed theme. Use the search bar to
 
 # Architecture
 
-KVitals is a KDE Plasma 6 widget (plasmoid) with a simple two-layer architecture: a **bash data collector** and a **QML UI**.
+KVitals is a KDE Plasma 6 widget (plasmoid) with a direct architecture connecting native **KSysGuard sensors** directly to a **QML UI**.
 
 ## Data Flow
 
-## sys-stats.sh
+## Data Collection (KSysGuard Sensors)
 
-The bash script collects all system metrics and outputs a single JSON object. It is invoked periodically by the QML `DataSource` at the configured update interval.
+KVitals relies completely on standard KDE technologies. Instead of continuously executing shell scripts or external processes, the widget connects securely to the KDE `ksystemstats` D-Bus daemon via `org.kde.ksysguard.sensors`.
+
+By instantiating native `Sensors.Sensor` objects in QML, KVitals subscribes to system statistics without any CPU overhead or file descriptor leaks.
 
 ### Data Sources
 
-| Metric      | Source                     | Method                                                     |
-| ----------- | -------------------------- | ---------------------------------------------------------- |
-| CPU         | `/proc/stat`               | Delta-based calculation between two reads                  |
-| RAM         | `/proc/meminfo`            | `MemTotal` − `MemAvailable` for used, `MemTotal` for total |
-| Temperature | 4-tier fallback            | thermal_zone → hwmon → lm-sensors → generic                |
-| Battery     | `/sys/class/power_supply/` | Reads `capacity` and `status`                              |
-| Power       | `/sys/class/power_supply/` | `power_now` or `current_now × voltage_now`                 |
-| Network     | `/proc/net/dev`            | Delta-based RX/TX bytes between two reads                  |
+All metrics are fetched natively:
 
-### Temperature Detection
+- **CPU**: `cpu/all/usage`
+- **RAM**: `memory/physical/used` and `memory/physical/total`
+- **Temperature**: `cpu/all/averageTemperature` (with fallback logic handled directly by `ksystemstats`)
+- **Battery**: `power/battery_BAT0/chargePercentage` and `chargeRate` (with `BAT1` fallback built-in)
+- **Network**: `network/<interface>/download` and `upload`
 
-Temperature detection uses a priority-based fallback:
+### Performance Benefits
 
-1. **thermal_zone** — Matches `x86_pkg_temp`, `k10temp`, `zenpower`, `coretemp` labels
-1. **hwmon** — Matches `coretemp`, `k10temp`, `zenpower`, `zenergy`, `amdgpu` drivers
-1. **lm-sensors** — Parses `Package id 0`, `Tctl`, `Tdie`, `Tccd1`
-1. **Generic fallback** — First available thermal zone
-
-Note
-
-The script tries each tier in order and uses the first one that returns valid data. This ensures compatibility with both Intel and AMD systems.
-
-### JSON Output
-
-```
-{
-  "cpu": "26",
-  "ram_used": "8.8",
-  "ram_total": "39.0",
-  "temp": "52",
-  "bat": "78",
-  "bat_icon": "🔋",
-  "power": "20.5",
-  "power_sign": "+",
-  "net_down": "82.2K",
-  "net_up": "58.9K"
-}
-```
+1. **Zero Subprocesses**: No `bash`, `awk`, or `cat` commands are spawned.
+1. **Stable File Descriptors**: No CLI pipes need to be kept open, eliminating Plasma 6 Wayland FD-exhaustion crashes.
+1. **Low Latency**: The widget reads the exact same backend API as the official KDE System Monitor.
 
 ## QML UI (main.qml)
 
@@ -296,9 +265,7 @@ kvitals/
     ├── config/
     │   ├── config.qml              # Tab registration
     │   └── main.xml                # Config schema
-    ├── scripts/
-    │   └── sys-stats.sh            # System stats collector
-    └── ui/
+    ├── ui/
         ├── main.qml                # Widget UI
         ├── configGeneral.qml       # General settings tab
         ├── configMetrics.qml       # Metrics settings tab
@@ -342,10 +309,6 @@ To load it automatically on boot, add `k10temp` to `/etc/modules-load.d/k10temp.
 
 **Fix:** Update to KVitals 1.4.1+, which reads directly from `/proc/meminfo` (always English, locale-independent).
 
-Workaround for older versions
-
-If you can't update immediately, set the locale for the script by adding `export LC_ALL=C` before running it.
-
 ## Battery/Power Shows Nothing
 
 **Cause:** No battery detected (desktop systems without a battery).
@@ -360,8 +323,8 @@ This is expected behavior on desktop systems. Disable battery and power metrics 
 
 **Fix:**
 
-1. Check your active interface: `ip route | grep default`
-1. Open **Settings → Metrics** and set the correct interface, or set to `auto`
+1. Open **Settings → Metrics** and ensure the network interface is set to `auto`.
+1. If you want to monitor a specific connection, select it from the dropdown list.
 
 Tip
 
@@ -369,25 +332,13 @@ If you use multiple connections (WiFi + Ethernet), set the interface manually to
 
 ## Widget Shows "KVitals" or "..."
 
-**Cause:** The stats script hasn't returned data yet or failed to execute.
+**Cause:** The KSysGuard daemon hasn't returned sensor data yet.
 
-**Fix:**
+**Fix:** Wait a few seconds for the data to populate. If it still doesn't, try restarting the `plasma-ksystemstats` service:
 
-1. Test the script directly:
-
-   ```
-   bash ~/.local/share/plasma/plasmoids/org.kde.plasma.kvitals/contents/scripts/sys-stats.sh
-   ```
-
-1. Check for script errors:
-
-   ```
-   journalctl -b --no-pager | grep "sys-state parse error"
-   ```
-
-Warning
-
-If the script outputs nothing or errors, check that `awk` is installed on your system.
+```
+systemctl --user restart plasma-ksystemstats.service
+```
 
 ## Icons Not Visible on Panel
 
@@ -482,23 +433,9 @@ Fast Iteration
 
 You don't always need to restart plasmashell. For config-only changes, just reopen the settings dialog. For QML changes, a restart is required.
 
-### Shell Script Changes
-
-Always run ShellCheck before committing:
-
-```
-shellcheck contents/scripts/sys-stats.sh
-```
-
-CI Enforcement
-
-ShellCheck is enforced in CI. PRs with ShellCheck warnings will fail the pipeline.
-
 ### Adding a New Metric
 
-1. **Script** — Add a new function in `sys-stats.sh` that outputs the value
-1. **JSON** — Include the new field in the JSON output
-1. **Config** — Add `showNewMetric` (Bool) and optionally `newMetricIcon` (String) to `main.xml`
+1. **Sensors** — Find the relevant `org.kde.ksysguard.sensors` sensor ID using `kstatsviewer`
 1. **Settings** — Add checkbox to `configMetrics.qml`, icon picker to `configIcons.qml`
 1. **UI** — Add property bindings and model entry in `main.qml`
 
@@ -531,7 +468,6 @@ Use conventional commits for clear history:
 ## Code Style
 
 - **QML** — Follow KDE's QML conventions, use `Kirigami` components where possible
-- **Bash** — Must pass ShellCheck with no warnings
 - **Commits** — Use conventional commits: `feat:`, `fix:`, `chore:`, `docs:`
 
 ## Reporting Issues
@@ -554,6 +490,14 @@ journalctl -b --no-pager | grep -i "kvitals\|sys-state" > kvitals-debug.log
 # Changelog
 
 All notable changes to KVitals will be documented in this file.
+
+## [2.0.0] - 2026-02-27
+
+### Changed
+
+- **Major Architecture Overhaul**: Replaced the previous `sys-stats.sh` backend with native KDE KSysGuard sensors (`org.kde.ksysguard.sensors`).
+- Completely eliminates "file descriptor leak" crashes (Issue #8) and improves overall performance by relying directly on the `ksystemstats` D-Bus daemon instead of constantly spawning bash processes.
+- Automatic fallback for battery monitoring (BAT0 and BAT1) logic implemented directly in QML.
 
 ## [1.4.1] - 2026-02-24
 

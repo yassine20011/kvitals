@@ -1,68 +1,28 @@
 direction: right
 
-script: "sys-stats.sh" {
-  shape: rectangle
-  style.fill: "#2d3436"
+ksystemstats: "KDE System Stats Daemon\n(ksystemstats)" {
+  shape: cylinder
+  style.fill: "#353b48"
   style.font-color: "#dfe6e9"
   style.stroke: "#636e72"
-  style.border-radius: 8
 
-  sources: "Data Sources" {
+  api: "D-Bus API\n(org.kde.ksysguard.sensors)" {
     shape: rectangle
-    style.fill: "#353b48"
-    style.font-color: "#dfe6e9"
-    style.stroke: "#636e72"
-
-    proc_stat: "/proc/stat"
-    free_cmd: "free -m"
-    thermal: "thermal zones\nhwmon\nlm-sensors"
-    power_supply: "/sys/class/\npower_supply/"
-    proc_net: "/proc/net/dev"
+    style.fill: "#0984e3"
+    style.font-color: "#fff"
+    style.border-radius: 4
   }
-
-  cpu_fn: "get_cpu()" { style.fill: "#0984e3"; style.font-color: "#fff" }
-  ram_fn: "get_ram()" { style.fill: "#0984e3"; style.font-color: "#fff" }
-  temp_fn: "get_temp()" { style.fill: "#0984e3"; style.font-color: "#fff" }
-  bat_fn: "get_bat()" { style.fill: "#0984e3"; style.font-color: "#fff" }
-  pwr_fn: "get_power()" { style.fill: "#0984e3"; style.font-color: "#fff" }
-  net_fn: "get_net()" { style.fill: "#0984e3"; style.font-color: "#fff" }
-
-  sources.proc_stat -> cpu_fn
-  sources.free_cmd -> ram_fn
-  sources.thermal -> temp_fn
-  sources.power_supply -> bat_fn
-  sources.power_supply -> pwr_fn
-  sources.proc_net -> net_fn
 }
 
-json_out: "JSON stdout" {
-  shape: page
-  style.fill: "#ffeaa7"
-  style.font-color: "#2d3436"
-  style.stroke: "#fdcb6e"
-}
-
-script.cpu_fn -> json_out: cpu
-script.ram_fn -> json_out: ram
-script.temp_fn -> json_out: temp
-script.bat_fn -> json_out: bat
-script.pwr_fn -> json_out: power
-script.net_fn -> json_out: net
-
-widget: "main.qml" {
+widget: "KVitals Widget\n(main.qml)" {
   shape: rectangle
   style.fill: "#2d3436"
   style.font-color: "#dfe6e9"
   style.stroke: "#636e72"
   style.border-radius: 8
 
-  datasource: "DataSource\n(interval timer)" {
+  sensors: "Sensors.Sensor\n(Declarative Objects)" {
     style.fill: "#6c5ce7"
-    style.font-color: "#fff"
-  }
-
-  parser: "JSON.parse()" {
-    style.fill: "#00b894"
     style.font-color: "#fff"
   }
 
@@ -81,13 +41,12 @@ widget: "main.qml" {
     style.font-color: "#fff"
   }
 
-  datasource -> parser
-  parser -> compact
-  parser -> popup
-  parser -> ttip
+  sensors -> compact
+  sensors -> popup
+  sensors -> ttip
 }
 
-json_out -> widget.datasource: stdout
+ksystemstats.api -> widget.sensors: "Live Data Streams"
 
 plasmoid_config: "Plasmoid.configuration" {
   shape: cylinder
@@ -95,5 +54,5 @@ plasmoid_config: "Plasmoid.configuration" {
   style.font-color: "#dfe6e9"
 }
 
-plasmoid_config -> widget.compact: "displayMode\niconSize\nfontFamily"
-plasmoid_config -> widget.datasource: updateInterval
+plasmoid_config -> widget.compact: "UI Preferences\n(displayMode, etc.)"
+plasmoid_config -> widget.sensors: "updateRateLimit"
