@@ -2,6 +2,13 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [2.0.0] - 2026-02-27
+
+### Changed
+- **Major Architecture Overhaul**: Replaced the previous `sys-stats.sh` backend with native KDE KSysGuard sensors (`org.kde.ksysguard.sensors`).
+- Completely eliminates "file descriptor leak" crashes (Issue #8) and improves overall performance by relying directly on the `ksystemstats` D-Bus daemon instead of constantly spawning bash processes.
+- Automatic fallback for battery monitoring (BAT0 and BAT1) logic implemented directly in QML.
+
 ## [1.4.1] - 2026-02-24
 
 ### Fixed

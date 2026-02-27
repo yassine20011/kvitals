@@ -17,7 +17,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y shellcheck
 
       - name: Lint shell scripts
-        run: shellcheck contents/scripts/sys-stats.sh install.sh install-remote.sh package.sh
+        run: shellcheck install.sh install-remote.sh package.sh
 
   build:
     name: Build .plasmoid
