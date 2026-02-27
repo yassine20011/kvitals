@@ -15,7 +15,7 @@ Thanks for your interest in contributing! Here's how to get started.
    bash install.sh
    ```
 
-3. **Test changes** — After editing QML or shell scripts, reinstall:
+3. **Test changes** — After editing QML files, reinstall:
    ```bash
    bash install.sh
    ```
@@ -32,8 +32,6 @@ kvitals/
 │   │   └── configGeneral.qml      # Settings page
 │   ├── config/
 │   │   └── config.qml             # Config entry point
-│   └── scripts/
-│       └── sys-stats.sh           # System stats collection script
 ├── install.sh                     # Local install script
 ├── install-remote.sh              # Remote install (curl/wget)
 └── package.sh                     # Build .plasmoid package

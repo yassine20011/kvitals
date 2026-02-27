@@ -37,10 +37,12 @@ Right-click the widget → **Configure KVitals...** to open the settings dialog.
 
 ### Network Interface
 
-When set to `auto`, the widget detects the active interface via `ip route`. You can manually select a specific interface (e.g., `wlan0`, `enp3s0`) from the dropdown if auto-detection doesn't work for your setup.
+When set to `auto`, the widget natively aggregates the traffic across all active network connections using KDE's `network/all` sensor. This handles VPN routing and switching networks automatically.
+
+You can manually select a specific interface (e.g., `wlan0`, `enp3s0`) from the dropdown if you only want to monitor a single device.
 
 !!! note
-    The interface list is populated dynamically from `/sys/class/net/`. If your interface doesn't appear, make sure it is active.
+    The manual interface list is populated dynamically from `/sys/class/net/`.
 
 ## Icons Tab
 

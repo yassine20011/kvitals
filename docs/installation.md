@@ -46,14 +46,6 @@ Then add the widget:
 ## Requirements
 
 - KDE Plasma 6.0+
-- Bash
-- Standard Linux utilities (`free`, `awk`, `bc`)
-
-!!! tip "Checking Requirements"
-    All required utilities are pre-installed on most Linux distributions. You can verify with:
-    ```bash
-    which free awk bc bash
-    ```
 
 ## Uninstall
 

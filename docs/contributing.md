@@ -33,23 +33,10 @@ Thanks for your interest in contributing to KVitals!
 !!! tip "Fast Iteration"
     You don't always need to restart plasmashell. For config-only changes, just reopen the settings dialog. For QML changes, a restart is required.
 
-### Shell Script Changes
-
-Always run ShellCheck before committing:
-
-```bash
-shellcheck contents/scripts/sys-stats.sh
-```
-
-!!! warning "CI Enforcement"
-    ShellCheck is enforced in CI. PRs with ShellCheck warnings will fail the pipeline.
-
 ### Adding a New Metric
 
-1. **Script** — Add a new function in `sys-stats.sh` that outputs the value
-2. **JSON** — Include the new field in the JSON output
-3. **Config** — Add `showNewMetric` (Bool) and optionally `newMetricIcon` (String) to `main.xml`
-4. **Settings** — Add checkbox to `configMetrics.qml`, icon picker to `configIcons.qml`
+1. **Sensors** — Find the relevant `org.kde.ksysguard.sensors` sensor ID using `kstatsviewer`
+2. **Settings** — Add checkbox to `configMetrics.qml`, icon picker to `configIcons.qml`
 5. **UI** — Add property bindings and model entry in `main.qml`
 
 !!! note
@@ -79,7 +66,6 @@ shellcheck contents/scripts/sys-stats.sh
 ## Code Style
 
 - **QML** — Follow KDE's QML conventions, use `Kirigami` components where possible
-- **Bash** — Must pass ShellCheck with no warnings
 - **Commits** — Use conventional commits: `feat:`, `fix:`, `chore:`, `docs:`
 
 ## Reporting Issues

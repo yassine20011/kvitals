@@ -22,15 +22,12 @@ CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 96°C  |  🔋BAT: 78%  |  PWR: +20W  |  N
 - **Custom icons** — Pick any icon from your installed theme for each metric
 - **Font customization** — Choose any system font and size
 - **Configurable** — Toggle each metric, adjust refresh rate, organized in 3 settings tabs
-- **Minimal footprint** — Simple bash script + QML, no heavy dependencies
+- **Minimal footprint** — Native KDE KSysGuard sensors + QML, no heavy dependencies or excessive subprocesses
 - **Click to expand** — Detailed popup view with all stats
 
 ## Requirements
 
 - KDE Plasma 6.0+
-- Bash
-- Git
-- Standard Linux utilities (`free`, `awk`, `bc`)
 
 ## Installation
 
@@ -114,8 +111,6 @@ kvitals/
     ├── config/
     │   ├── config.qml              # Tab registration
     │   └── main.xml                # Config schema
-    ├── scripts/
-    │   └── sys-stats.sh            # System stats collector
     └── ui/
         ├── main.qml                # Widget UI
         ├── configGeneral.qml       # General settings tab
@@ -133,4 +128,4 @@ kvitals/
 
 ## License
 
-GPL-3.0
+By contributing, you agree that your contributions will be licensed under the [GPL-3.0 License](LICENSE).

@@ -32,8 +32,7 @@ sensors 2>/dev/null | head -20
 
 **Fix:** Update to KVitals 1.4.1+, which reads directly from `/proc/meminfo` (always English, locale-independent).
 
-!!! tip "Workaround for older versions"
-    If you can't update immediately, set the locale for the script by adding `export LC_ALL=C` before running it.
+
 
 ## Battery/Power Shows Nothing
 
@@ -48,29 +47,20 @@ sensors 2>/dev/null | head -20
 
 **Fix:**
 
-1. Check your active interface: `ip route | grep default`
-2. Open **Settings → Metrics** and set the correct interface, or set to `auto`
+1. Open **Settings → Metrics** and ensure the network interface is set to `auto`.
+2. If you want to monitor a specific connection, select it from the dropdown list.
 
 !!! tip
     If you use multiple connections (WiFi + Ethernet), set the interface manually to the one you want to monitor.
 
 ## Widget Shows "KVitals" or "..."
 
-**Cause:** The stats script hasn't returned data yet or failed to execute.
+**Cause:** The KSysGuard daemon hasn't returned sensor data yet.
 
-**Fix:**
-
-1. Test the script directly:
-   ```bash
-   bash ~/.local/share/plasma/plasmoids/org.kde.plasma.kvitals/contents/scripts/sys-stats.sh
-   ```
-2. Check for script errors:
-   ```bash
-   journalctl -b --no-pager | grep "sys-state parse error"
-   ```
-
-!!! warning
-    If the script outputs nothing or errors, check that `awk` is installed on your system.
+**Fix:** Wait a few seconds for the data to populate. If it still doesn't, try restarting the `plasma-ksystemstats` service:
+```bash
+systemctl --user restart plasma-ksystemstats.service
+```
 
 ## Icons Not Visible on Panel
 

@@ -1,54 +1,32 @@
 # Architecture
 
-KVitals is a KDE Plasma 6 widget (plasmoid) with a simple two-layer architecture: a **bash data collector** and a **QML UI**.
+KVitals is a KDE Plasma 6 widget (plasmoid) with a direct architecture connecting native **KSysGuard sensors** directly to a **QML UI**.
 
 ## Data Flow
 
 ![KVitals Data Flow](dataflow.svg)
 
-## sys-stats.sh
+## Data Collection (KSysGuard Sensors)
 
-The bash script collects all system metrics and outputs a single JSON object. It is invoked periodically by the QML `DataSource` at the configured update interval.
+KVitals relies completely on standard KDE technologies. Instead of continuously executing shell scripts or external processes, the widget connects securely to the KDE `ksystemstats` D-Bus daemon via `org.kde.ksysguard.sensors`.
+
+By instantiating native `Sensors.Sensor` objects in QML, KVitals subscribes to system statistics without any CPU overhead or file descriptor leaks. 
 
 ### Data Sources
 
-| Metric | Source | Method |
-|--------|--------|--------|
-| CPU | `/proc/stat` | Delta-based calculation between two reads |
-| RAM | `/proc/meminfo` | `MemTotal` − `MemAvailable` for used, `MemTotal` for total |
-| Temperature | 4-tier fallback | thermal_zone → hwmon → lm-sensors → generic |
-| Battery | `/sys/class/power_supply/` | Reads `capacity` and `status` |
-| Power | `/sys/class/power_supply/` | `power_now` or `current_now × voltage_now` |
-| Network | `/proc/net/dev` | Delta-based RX/TX bytes between two reads |
+All metrics are fetched natively:
 
-### Temperature Detection
+- **CPU**: `cpu/all/usage`
+- **RAM**: `memory/physical/used` and `memory/physical/total`
+- **Temperature**: `cpu/all/averageTemperature` (with fallback logic handled directly by `ksystemstats`)
+- **Battery**: `power/battery_BAT0/chargePercentage` and `chargeRate` (with `BAT1` fallback built-in)
+- **Network**: `network/<interface>/download` and `upload`
 
-Temperature detection uses a priority-based fallback:
+### Performance Benefits
 
-1. **thermal_zone** — Matches `x86_pkg_temp`, `k10temp`, `zenpower`, `coretemp` labels
-2. **hwmon** — Matches `coretemp`, `k10temp`, `zenpower`, `zenergy`, `amdgpu` drivers
-3. **lm-sensors** — Parses `Package id 0`, `Tctl`, `Tdie`, `Tccd1`
-4. **Generic fallback** — First available thermal zone
-
-!!! note
-    The script tries each tier in order and uses the first one that returns valid data. This ensures compatibility with both Intel and AMD systems.
-
-### JSON Output
-
-```json
-{
-  "cpu": "26",
-  "ram_used": "8.8",
-  "ram_total": "39.0",
-  "temp": "52",
-  "bat": "78",
-  "bat_icon": "🔋",
-  "power": "20.5",
-  "power_sign": "+",
-  "net_down": "82.2K",
-  "net_up": "58.9K"
-}
-```
+1. **Zero Subprocesses**: No `bash`, `awk`, or `cat` commands are spawned.
+2. **Stable File Descriptors**: No CLI pipes need to be kept open, eliminating Plasma 6 Wayland FD-exhaustion crashes.
+3. **Low Latency**: The widget reads the exact same backend API as the official KDE System Monitor.
 
 ## QML UI (main.qml)
 
@@ -108,9 +86,7 @@ kvitals/
     ├── config/
     │   ├── config.qml              # Tab registration
     │   └── main.xml                # Config schema
-    ├── scripts/
-    │   └── sys-stats.sh            # System stats collector
-    └── ui/
+    ├── ui/
         ├── main.qml                # Widget UI
         ├── configGeneral.qml       # General settings tab
         ├── configMetrics.qml       # Metrics settings tab

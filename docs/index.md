@@ -13,7 +13,7 @@ CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 96°C  |  🔋BAT: 78%  |  PWR: +20W  |  N
 - **Custom icons** — Pick any icon from your installed KDE theme
 - **Font customization** — Choose any system font and size
 - **3-tab settings** — General, Metrics, and Icons
-- **Minimal footprint** — Bash + QML, no heavy dependencies
+- **Minimal footprint** — Native KSysGuard integration + QML, no heavy dependencies
 
 ## Quick Start
 
