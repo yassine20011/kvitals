@@ -20,8 +20,6 @@ mkdir -p "$DEST_DIR"
 cp -r "$SRC_DIR/metadata.json" "$DEST_DIR/"
 cp -r "$SRC_DIR/contents" "$DEST_DIR/"
 
-# Make script executable
-chmod +x "$DEST_DIR/contents/scripts/sys-stats.sh"
 
 echo ""
 echo "✅ Installed to: $DEST_DIR"

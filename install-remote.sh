@@ -32,7 +32,7 @@ fi
 mkdir -p "$DEST_DIR"
 cp "$SRC_DIR/metadata.json" "$DEST_DIR/"
 cp -r "$SRC_DIR/contents" "$DEST_DIR/"
-chmod +x "$DEST_DIR/contents/scripts/sys-stats.sh"
+
 
 echo ""
 echo "✅ KVitals installed to: $DEST_DIR"
