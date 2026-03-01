@@ -48,13 +48,13 @@ Or from within KDE Plasma:
 ### Quick Install (curl)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yassine20011/kvitals/master/install-remote.sh | bash
+curl -fsSL https://github.com/yassine20011/kvitals/releases/latest/download/install-remote.sh | bash
 ```
 
 ### Quick Install (wget)
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/yassine20011/kvitals/master/install-remote.sh | bash
+wget -qO- https://github.com/yassine20011/kvitals/releases/latest/download/install-remote.sh | bash
 ```
 
 ### Manual Install

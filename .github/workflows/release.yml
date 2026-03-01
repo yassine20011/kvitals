@@ -45,5 +45,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: "*.plasmoid"
+          files: |
+            *.plasmoid
+            install-remote.sh
           body: ${{ steps.notes.outputs.NOTES }}
