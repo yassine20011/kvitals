@@ -2,6 +2,11 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [2.1.1] - 2026-03-03
+
+### Fixed
+- Fixed a "Detected anchors on an item that is managed by a layout" QML warning spanning the journal log caused by a `MouseArea` anchoring inside a `RowLayout` (#13).
+
 ## [2.1.0] - 2026-03-01
 
 ### Added
