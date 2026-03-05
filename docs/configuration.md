@@ -27,6 +27,7 @@ Right-click the widget → **Configure KVitals...** to open the settings dialog.
 
 | Setting | Description | Default |
 |---------|-------------|---------|
+| **Metric Order** | Drag and drop to rearrange the order of metrics on your panel | CPU, RAM, Temp, Bat, Power, Net |
 | **Show CPU usage** | Display CPU utilization percentage | On |
 | **Show RAM usage** | Display used/total memory | On |
 | **Show CPU temperature** | Display CPU temperature in °C | On |

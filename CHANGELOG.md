@@ -2,6 +2,12 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [2.2.0] - 2026-03-05
+
+### Added
+- **Custom Metric Order**: Added a new configuration option to arrange metrics (CPU, RAM, GPU, etc.) individually in whatever order you prefer (#7).
+- **Dynamic Battery Detection**: Replaced hardcoded `BAT0`/`BAT1` sensors with dynamic `SensorTreeModel` discovery. The widget will now automatically find any battery your system has (BAT0, BATT, CMB0, macsmc-battery, etc.) (#14).
+
 ## [2.1.1] - 2026-03-03
 
 ### Fixed

@@ -36,7 +36,9 @@ sensors 2>/dev/null | head -20
 
 ## Battery/Power Shows Nothing
 
-**Cause:** No battery detected (desktop systems without a battery).
+**Cause:** No battery detected (e.g., desktop systems without a battery or UPS).
+
+**Behavior in KVitals (v2.2.0+):** The widget uses KDE's native `SensorTreeModel` to dynamically scan your system's hardware tree for any connected battery (including `BAT0`, `BAT1`, `BATT`, `CMB0`, `macsmc-battery`, etc.). If nothing shows up, it means the KDE `ksystemstats` daemon cannot find a battery API on your machine.
 
 !!! note
     This is expected behavior on desktop systems. Disable battery and power metrics in **Settings → Metrics** tab to hide the empty entries.
