@@ -5,6 +5,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.kirigami as Kirigami
 import org.kde.ksysguard.sensors as Sensors
+import org.kde.plasma.plasma5support as Plasma5Support
 
 PlasmoidItem {
     id: root
@@ -19,6 +20,7 @@ PlasmoidItem {
     property bool showPower: Plasmoid.configuration.showPower
     property bool showNetwork: Plasmoid.configuration.showNetwork
     property string networkInterface: Plasmoid.configuration.networkInterface
+    property string batteryDevice: ""
     property string displayMode: Plasmoid.configuration.displayMode
     property int iconSize: Plasmoid.configuration.iconSize
     property string cpuIcon: Plasmoid.configuration.cpuIcon
@@ -216,77 +218,26 @@ PlasmoidItem {
         updateRateLimit: root.updateInterval
     }
 
-    // Dynamic battery sensor discovery via SensorTreeModel
-    Sensors.SensorTreeModel {
-        id: sensorTree
-    }
-
-    property string batChargeSensorId: ""
-    property string batRateSensorId: ""
-
-    Timer {
-        id: batDiscoveryTimer
-        interval: 1000; running: true; repeat: true
-        property int attempts: 0
-        onTriggered: {
-            attempts++;
-            root.discoverBatterySensors();
-            if ((root.batChargeSensorId && root.batRateSensorId) || attempts >= 5)
-                running = false;
-        }
-    }
-
-    function discoverBatterySensors() {
-        var sensorIdRole = 257; // KSysGuard::SensorTreeModel::SensorId role
-
-        for (var i = 0; i < sensorTree.rowCount(); i++) {
-            var topIdx = sensorTree.index(i, 0);
-            var topName = sensorTree.data(topIdx, Qt.DisplayRole);
-            if (!topName || topName.toString().toLowerCase() !== "power")
-                continue;
-
-            for (var j = 0; j < sensorTree.rowCount(topIdx); j++) {
-                var batIdx = sensorTree.index(j, 0, topIdx);
-                var batName = sensorTree.data(batIdx, Qt.DisplayRole);
-                if (!batName || batName.toString().toLowerCase().indexOf("battery") < 0)
-                    continue;
-
-                for (var k = 0; k < sensorTree.rowCount(batIdx); k++) {
-                    var sensorIdx = sensorTree.index(k, 0, batIdx);
-                    var sensorId = sensorTree.data(sensorIdx, sensorIdRole);
-
-                    // Fallback: scan nearby roles if 257 doesn't work
-                    if (!sensorId || sensorId.toString().indexOf("/") < 0) {
-                        for (var r = 256; r <= 270; r++) {
-                            var val = sensorTree.data(sensorIdx, r);
-                            if (val && val.toString().indexOf("/") >= 0) {
-                                sensorId = val;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (!sensorId) continue;
-                    var sid = sensorId.toString();
-                    if (sid.endsWith("/chargePercentage") && !batChargeSensorId)
-                        batChargeSensorId = sid;
-                    if (sid.endsWith("/chargeRate") && !batRateSensorId)
-                        batRateSensorId = sid;
-                }
-                if (batChargeSensorId && batRateSensorId) return;
-            }
+    Plasma5Support.DataSource {
+        id: batDeviceDetector
+        engine: "executable"
+        connectedSources: ["qdbus6 --literal org.kde.ksystemstats1 /org/kde/ksystemstats1 org.kde.ksystemstats1.allSensors"]
+        onNewData: function(source, data) {
+            if (data["exit code"] !== 0) return;
+            var match = data["stdout"].match(/"power\/([^\/]+)\/chargePercentage"/);
+            if (match) root.batteryDevice = match[1];
         }
     }
 
     Sensors.Sensor {
         id: batChargeSensor
-        sensorId: root.batChargeSensorId
+        sensorId: "power/" + root.batteryDevice + "/chargePercentage"
         updateRateLimit: root.updateInterval > 5000 ? root.updateInterval : 5000
     }
 
     Sensors.Sensor {
         id: batRateSensor
-        sensorId: root.batRateSensorId
+        sensorId: "power/" + root.batteryDevice + "/chargeRate"
         updateRateLimit: root.updateInterval > 5000 ? root.updateInterval : 5000
     }
 

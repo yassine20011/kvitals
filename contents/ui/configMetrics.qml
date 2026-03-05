@@ -17,7 +17,6 @@ KCM.SimpleKCM {
     property bool cfg_showNetwork
     property string cfg_networkInterface: "auto"
     property string cfg_metricOrder: "cpu,ram,temp,gpu,bat,pwr,net"
-
     property var ifaceList: []
 
     readonly property var allKeys: ["cpu", "ram", "temp", "gpu", "bat", "pwr", "net"]
@@ -155,5 +154,6 @@ KCM.SimpleKCM {
                 cfg_networkInterface = metricsPage.ifaceList[currentIndex];
             }
         }
+
     }
 }
