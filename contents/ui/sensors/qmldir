@@ -1,0 +1,8 @@
+module sensors
+singleton Utils 1.0 Utils.qml
+CpuSensors 1.0 CpuSensors.qml
+MemorySensors 1.0 MemorySensors.qml
+TempSensors 1.0 TempSensors.qml
+GpuSensors 1.0 GpuSensors.qml
+BatterySensors 1.0 BatterySensors.qml
+NetworkSensors 1.0 NetworkSensors.qml

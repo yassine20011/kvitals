@@ -113,10 +113,21 @@ kvitals/
     │   ├── config.qml              # Tab registration
     │   └── main.xml                # Config schema
     └── ui/
-        ├── main.qml                # Widget UI
+        ├── main.qml                # Widget orchestrator
+        ├── CompactView.qml         # Panel representation
+        ├── FullView.qml            # Popup representation
         ├── configGeneral.qml       # General settings tab
         ├── configMetrics.qml       # Metrics settings tab
-        └── configIcons.qml         # Icons settings tab
+        ├── configIcons.qml         # Icons settings tab
+        └── sensors/                # Sensor modules
+            ├── qmldir              # QML module definition
+            ├── CpuSensors.qml      # CPU usage
+            ├── MemorySensors.qml   # RAM usage
+            ├── TempSensors.qml     # CPU temperature
+            ├── GpuSensors.qml      # GPU usage, VRAM, temp
+            ├── BatterySensors.qml  # Battery & power
+            ├── NetworkSensors.qml  # Network speed
+            └── Utils.qml           # Shared formatting helpers
 ```
 
 ## Documentation

@@ -2,6 +2,24 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [2.3.0] - 2026-03-13
+
+### Changed
+- **Sensor Module Architecture**: Extracted all sensor logic from `main.qml` into dedicated QML components under `contents/ui/sensors/`:
+  - `CpuSensors.qml` — CPU usage monitoring
+  - `MemorySensors.qml` — RAM usage monitoring
+  - `TempSensors.qml` — CPU temperature monitoring
+  - `GpuSensors.qml` — GPU usage, VRAM, and temperature monitoring
+  - `BatterySensors.qml` — Battery and power monitoring with auto-detection
+  - `NetworkSensors.qml` — Network download/upload speed monitoring
+  - `Utils.qml` — Shared formatting helpers (byte formatting, rate formatting)
+- **View Separation**: Extracted compact and full representations into `CompactView.qml` and `FullView.qml`.
+- **Reduced `main.qml`**: From ~700 lines to ~140 lines — now acts purely as an orchestrator.
+
+### Notes
+- No user-facing or configuration changes. The widget behaves identically to v2.2.1.
+- This refactor improves maintainability and makes it easier to add new sensor types in the future.
+
 ## [2.2.1] - 2026-03-07
 
 ### Fixed
