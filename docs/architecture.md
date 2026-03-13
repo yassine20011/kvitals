@@ -1,26 +1,25 @@
 # Architecture
 
-KVitals is a KDE Plasma 6 widget (plasmoid) with a direct architecture connecting native **KSysGuard sensors** directly to a **QML UI**.
+KVitals is a KDE Plasma 6 widget (plasmoid) with a modular architecture connecting native **KSysGuard sensors** to a **QML UI** through dedicated sensor components.
 
 ## Data Flow
 
 ![KVitals Data Flow](dataflow.svg)
 
-## Data Collection (KSysGuard Sensors)
+## Sensor Modules (`contents/ui/sensors/`)
 
-KVitals relies completely on standard KDE technologies. Instead of continuously executing shell scripts or external processes, the widget connects securely to the KDE `ksystemstats` D-Bus daemon via `org.kde.ksysguard.sensors`.
+Each system metric has its own QML component under `sensors/`. These components encapsulate all sensor subscriptions, data parsing, and value formatting for their metric.
 
-By instantiating native `Sensors.Sensor` objects in QML, KVitals subscribes to system statistics without any CPU overhead or file descriptor leaks. 
+| Module | Sensors | Exposed Properties |
+|---|---|---|
+| `CpuSensors.qml` | `cpu/all/usage` | `cpuValue` |
+| `MemorySensors.qml` | `memory/physical/used`, `total` | `ramValue` |
+| `TempSensors.qml` | `cpu/all/averageTemperature` | `tempValue` |
+| `GpuSensors.qml` | `gpu/all/usage`, `totalVram`, `usedVram`, `temperature` | `gpuValue`, `gpuRamValue`, `gpuTempValue`, `gpuDisplayValue`, `hasGpuData` |
+| `BatterySensors.qml` | `power/<device>/chargePercentage`, `chargeRate` | `batValue`, `powerValue` |
+| `NetworkSensors.qml` | `network/<iface>/download`, `upload` | `netDownValue`, `netUpValue` |
 
-### Data Sources
-
-All metrics are fetched natively:
-
-- **CPU**: `cpu/all/usage`
-- **RAM**: `memory/physical/used` and `memory/physical/total`
-- **Temperature**: `cpu/all/averageTemperature` (with fallback logic handled directly by `ksystemstats`)
-- **Battery**: `power/battery_BAT0/chargePercentage` and `chargeRate` (with `BAT1` fallback built-in)
-- **Network**: `network/<interface>/download` and `upload`
+A shared `Utils.qml` singleton provides formatting helpers (`formatBytes`, `formatRate`, `formatSensorValue`).
 
 ### Performance Benefits
 
@@ -28,11 +27,30 @@ All metrics are fetched natively:
 2. **Stable File Descriptors**: No CLI pipes need to be kept open, eliminating Plasma 6 Wayland FD-exhaustion crashes.
 3. **Low Latency**: The widget reads the exact same backend API as the official KDE System Monitor.
 
-## QML UI (main.qml)
+## Orchestrator (`main.qml`)
 
-The widget has three visual representations:
+`main.qml` acts as a lightweight orchestrator (~140 lines):
 
-### Compact Representation (Panel)
+1. **Reads configuration** from `Plasmoid.configuration`
+2. **Instantiates sensor modules** with the configured `updateInterval`
+3. **Builds metrics models** using the `orderedKeys` array (derived from the `metricOrder` config)
+4. **Passes models** to `CompactView` and `FullView` for rendering
+
+```
+main.qml
+  ├── CpuSensors { id: cpu }
+  ├── MemorySensors { id: memory }
+  ├── TempSensors { id: temp }
+  ├── GpuSensors { id: gpu }
+  ├── BatterySensors { id: battery }
+  ├── NetworkSensors { id: network }
+  ├── compactRepresentation: CompactView { metricsModel: ... }
+  └── fullRepresentation: FullView { metricsModel: ... }
+```
+
+## Views
+
+### CompactView (Panel)
 
 A `RowLayout` with a `Repeater` that renders each enabled metric as:
 - **Icon** (optional, via `Kirigami.Icon` with `isMask: true`)
@@ -45,7 +63,7 @@ Visibility of icons/labels is controlled by the `displayMode` property.
 !!! tip
     Icons use `isMask: true` to render as monochrome, matching the panel's text color regardless of the icon theme.
 
-### Full Representation (Popup)
+### FullView (Popup)
 
 A `ColumnLayout` with a `Repeater` showing a detailed row per metric with label and bold value, displayed when clicking the widget.
 
@@ -59,14 +77,18 @@ Multi-line text showing all enabled metrics, displayed on hover.
 config/main.xml          ← Config schema (entry names, types, defaults)
 config/config.qml        ← Tab registration (General, Metrics, Icons)
 ui/configGeneral.qml     ← General tab (display mode, font, interval)
-ui/configMetrics.qml     ← Metrics tab (show/hide toggles, network interface)
+ui/configMetrics.qml     ← Metrics tab (show/hide toggles, metric order, network interface, battery device)
 ui/configIcons.qml       ← Icons tab (per-metric icon picker)
 ```
 
 All config values are accessed in `main.qml` via `Plasmoid.configuration.<key>`.
 
-!!! tip "Adding New Config"
-    When adding a new config entry, you only need to: add it to `main.xml`, create a UI control in the appropriate config tab, and bind it in `main.qml`. No build step needed.
+!!! tip "Adding a New Sensor"
+    1. Create `contents/ui/sensors/NewSensor.qml` exposing formatted value properties
+    2. Register it in `sensors/qmldir`
+    3. Instantiate it in `main.qml`
+    4. Add it to the `orderedKeys` loop in compact/full/tooltip builders
+    5. Add a `show*` config entry in `main.xml` and a checkbox in `configMetrics.qml`
 
 ## Project Structure
 
@@ -86,9 +108,20 @@ kvitals/
     ├── config/
     │   ├── config.qml              # Tab registration
     │   └── main.xml                # Config schema
-    ├── ui/
-        ├── main.qml                # Widget UI
+    └── ui/
+        ├── main.qml                # Widget orchestrator
+        ├── CompactView.qml         # Panel representation
+        ├── FullView.qml            # Popup representation
         ├── configGeneral.qml       # General settings tab
         ├── configMetrics.qml       # Metrics settings tab
-        └── configIcons.qml         # Icons settings tab
+        ├── configIcons.qml         # Icons settings tab
+        └── sensors/                # Sensor modules
+            ├── qmldir              # QML module definition
+            ├── CpuSensors.qml      # CPU usage
+            ├── MemorySensors.qml   # RAM usage
+            ├── TempSensors.qml     # CPU temperature
+            ├── GpuSensors.qml      # GPU usage, VRAM, temp
+            ├── BatterySensors.qml  # Battery & power
+            ├── NetworkSensors.qml  # Network speed
+            └── Utils.qml           # Shared formatting helpers
 ```
