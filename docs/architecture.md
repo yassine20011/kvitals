@@ -19,7 +19,7 @@ Each system metric has its own QML component under `sensors/`. These components 
 | `BatterySensors.qml` | `power/<device>/chargePercentage`, `chargeRate` | `batValue`, `powerValue` |
 | `NetworkSensors.qml` | `network/<iface>/download`, `upload` | `netDownValue`, `netUpValue` |
 
-A shared `Utils.qml` singleton provides formatting helpers (`formatBytes`, `formatRate`, `formatSensorValue`).
+A shared `Utils.qml` singleton provides formatting helpers (`formatBytes`, `formatRate`) and sensor-reading utilities (`sensorValueOrNaN`, `firstReadyNumber`, `maxReadyNumber`, `firstReadyVramPair`).
 
 ### Performance Benefits
 

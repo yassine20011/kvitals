@@ -13,11 +13,6 @@ Item {
         return Math.round(batChargeSensor.value) + "%";
     }
 
-    readonly property string batIcon: {
-        if (batRateSensor.status !== Sensors.Sensor.Ready) return "";
-        return batRateSensor.value > 0 ? "⚡" : "🔋";
-    }
-
     readonly property string powerValue: {
         if (batRateSensor.status !== Sensors.Sensor.Ready) return "";
         var watts = Math.abs(batRateSensor.value);

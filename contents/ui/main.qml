@@ -105,7 +105,6 @@ PlasmoidItem {
         effectiveFontSize: root.effectiveFontSize
         fontFamily: root.fontFamily
         iconSize: root.iconSize
-        expanded: root.expanded
         onToggleExpanded: root.expanded = !root.expanded
     }
 

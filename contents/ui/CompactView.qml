@@ -13,7 +13,7 @@ RowLayout {
     required property int effectiveFontSize
     required property string fontFamily
     required property int iconSize
-    required property bool expanded
+
 
     signal toggleExpanded()
 
