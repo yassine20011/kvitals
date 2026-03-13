@@ -1,16 +1,16 @@
 import QtQuick
 import QtQuick.Layouts
 import org.kde.plasma.plasmoid
-import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.components as PlasmaComponents
-import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.kirigami as Kirigami
-import org.kde.ksysguard.sensors as Sensors
+import "./sensors"
 
 PlasmoidItem {
     id: root
 
     preferredRepresentation: compactRepresentation
+
+    // --- Configuration properties ---
 
     property bool showCpu: Plasmoid.configuration.showCpu
     property bool showRam: Plasmoid.configuration.showRam
@@ -40,677 +40,128 @@ PlasmoidItem {
     property string metricOrder: Plasmoid.configuration.metricOrder || "cpu,ram,temp,gpu,bat,pwr,net"
     property var orderedKeys: metricOrder.split(",").map(function(k) { return k.trim(); })
 
-    // KSysGuard Sensors
-
     property int updateInterval: Plasmoid.configuration.updateInterval || 2000
 
-    readonly property string netIfacePath: {
-        if (networkInterface === "" || networkInterface === "auto")
-            return "all";
-        return networkInterface;
+    // --- Sensor components ---
+
+    CpuSensors {
+        id: cpu
+        updateInterval: root.updateInterval
     }
 
-    Sensors.Sensor {
-        id: cpuSensor
-        sensorId: "cpu/all/usage"
-        updateRateLimit: root.updateInterval
+    MemorySensors {
+        id: memory
+        updateInterval: root.updateInterval
     }
 
-    Sensors.Sensor {
-        id: ramUsedSensor
-        sensorId: "memory/physical/used"
-        updateRateLimit: root.updateInterval
+    TempSensors {
+        id: temp
+        updateInterval: root.updateInterval
     }
 
-    Sensors.Sensor {
-        id: ramTotalSensor
-        sensorId: "memory/physical/total"
-        updateRateLimit: root.updateInterval
+    GpuSensors {
+        id: gpu
+        updateInterval: root.updateInterval
     }
 
-    Sensors.Sensor {
-        id: tempSensor
-        sensorId: "cpu/all/averageTemperature"
-        updateRateLimit: root.updateInterval
+    BatterySensors {
+        id: battery
+        updateInterval: root.updateInterval
+        batteryDevice: root.batteryDevice || "auto"
     }
 
-    Sensors.Sensor {
-        id: gpuUsageAllSensor
-        sensorId: "gpu/all/usage"
-        updateRateLimit: root.updateInterval
+    NetworkSensors {
+        id: network
+        updateInterval: root.updateInterval
+        networkInterface: root.networkInterface
     }
 
-    Sensors.Sensor {
-        id: gpuUsage0Sensor
-        sensorId: "gpu/gpu0/usage"
-        updateRateLimit: root.updateInterval
-    }
+    // --- Representations ---
 
-    Sensors.Sensor {
-        id: gpuUsage1Sensor
-        sensorId: "gpu/gpu1/usage"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuUsage2Sensor
-        sensorId: "gpu/gpu2/usage"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuUsage3Sensor
-        sensorId: "gpu/gpu3/usage"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuVramUsedAllSensor
-        sensorId: "gpu/all/usedVram"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuVramTotalAllSensor
-        sensorId: "gpu/all/totalVram"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuVramUsedLegacySensor
-        sensorId: "gpu/all/memory/used"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuVramTotalLegacySensor
-        sensorId: "gpu/all/memory/total"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuVramUsed0Sensor
-        sensorId: "gpu/gpu0/usedVram"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuVramTotal0Sensor
-        sensorId: "gpu/gpu0/totalVram"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuVramUsed1Sensor
-        sensorId: "gpu/gpu1/usedVram"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuVramTotal1Sensor
-        sensorId: "gpu/gpu1/totalVram"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuVramUsed2Sensor
-        sensorId: "gpu/gpu2/usedVram"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuVramTotal2Sensor
-        sensorId: "gpu/gpu2/totalVram"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuVramUsed3Sensor
-        sensorId: "gpu/gpu3/usedVram"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuVramTotal3Sensor
-        sensorId: "gpu/gpu3/totalVram"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuTempAllSensor
-        sensorId: "gpu/all/temperature"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuTemp0Sensor
-        sensorId: "gpu/gpu0/temperature"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuTemp1Sensor
-        sensorId: "gpu/gpu1/temperature"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuTemp2Sensor
-        sensorId: "gpu/gpu2/temperature"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: gpuTemp3Sensor
-        sensorId: "gpu/gpu3/temperature"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: netDownSensor
-        sensorId: "network/" + root.netIfacePath + "/download"
-        updateRateLimit: root.updateInterval
-    }
-
-    Sensors.Sensor {
-        id: netUpSensor
-        sensorId: "network/" + root.netIfacePath + "/upload"
-        updateRateLimit: root.updateInterval
-    }
-
-    // --- Dynamic battery sensor discovery ---
-
-    property string discoveredBatId: ""
-
-    property string batChargeSensorId: {
-        var base = (batteryDevice && batteryDevice !== "auto") ? batteryDevice : discoveredBatId;
-        return base ? ("power/" + base + "/chargePercentage") : "";
-    }
-
-    property string batRateSensorId: {
-        var base = (batteryDevice && batteryDevice !== "auto") ? batteryDevice : discoveredBatId;
-        return base ? ("power/" + base + "/chargeRate") : "";
-    }
-
-    // Stage 1: Silent probes
-    property var batteryCandidates: [
-        "battery_BAT0",
-        "battery_BAT1",
-        "battery_BAT2",
-        "battery_BATT",
-        "battery_BATT0"
-    ]
-    property var stage1Probes: []
-    property var batteryChoices: []
-    property bool showBatteryPicker: false
-    property bool showManualBatteryInput: false
-
-    Component.onCompleted: {
-        if (batteryDevice && batteryDevice !== "auto")
-            return;
-
-        for (var i = 0; i < batteryCandidates.length; i++) {
-            var pre = "power/" + batteryCandidates[i] + "/chargePercentage";
-            var code = 'import org.kde.ksysguard.sensors as Sensors; Sensors.Sensor { sensorId: "' + pre + '"; updateRateLimit: 0 }';
-            try {
-                var probe = Qt.createQmlObject(code, root, "probe_" + i);
-                stage1Probes.push({ candidate: batteryCandidates[i], probe: probe });
-            } catch(e) {
-            }
-        }
-    }
-
-    Timer {
-        id: stage1Timer
-        interval: 500
-        repeat: true
-        running: (!batteryDevice || batteryDevice === "auto") && !discoveredBatId
-        property int attempts: 0
-        onTriggered: {
-            attempts++;
-            for (var i = 0; i < stage1Probes.length; i++) {
-                if (stage1Probes[i].probe && stage1Probes[i].probe.status === Sensors.Sensor.Ready) {
-                    persistDetectedBattery(stage1Probes[i].candidate);
-                    running = false;
-                    cleanupProbes();
-                    return;
-                }
-            }
-            if (attempts >= 6) { // 3 seconds timeout
-                running = false;
-                cleanupProbes();
-                // Stage 2: qdbus fallback
-                tryNextQdbus();
-            }
-        }
-    }
-
-    function cleanupProbes() {
-        for (var i = 0; i < stage1Probes.length; i++) {
-            if (stage1Probes[i].probe)
-                stage1Probes[i].probe.destroy();
-        }
-        stage1Probes = [];
-    }
-
-    function persistDetectedBattery(deviceId) {
-        discoveredBatId = deviceId;
-        if (typeof Plasmoid !== "undefined" && Plasmoid.configuration)
-            Plasmoid.configuration.batteryDevice = deviceId;
-    }
-
-    function extractBatteryIds(stdout) {
-        if (!stdout)
-            return [];
-        var matches = stdout.match(/power\/[^\/"\s]+\/chargePercentage/g);
-        if (!matches)
-            return [];
-
-        var ids = [];
-        for (var i = 0; i < matches.length; i++) {
-            var parts = matches[i].split("/");
-            if (parts.length < 3)
-                continue;
-            if (ids.indexOf(parts[1]) === -1)
-                ids.push(parts[1]);
-        }
-        return ids;
-    }
-
-    // Stage 2: qdbus fallback
-    property var qdbusVariants: ["qdbus", "qdbus6", "qdbus-qt6", "qdbus-qt5"]
-    property int qdbusIndex: 0
-
-    Plasma5Support.DataSource {
-        id: qdbusDetector
-        engine: "executable"
-        property bool active: false
-
-        onNewData: function(sourceName, data) {
-            if (!active) return;
-            active = false;
-            disconnectSource(sourceName);
-
-            if (data["exit code"] === 0) {
-                var ids = extractBatteryIds(data["stdout"] ? data["stdout"].toString() : "");
-                if (ids.length === 1) {
-                    persistDetectedBattery(ids[0]);
-                    return;
-                }
-                if (ids.length > 1) {
-                    batteryChoices = ids;
-                    showBatteryPicker = true;
-                    return;
-                }
-            }
-            tryNextQdbus();
-        }
-
-        function run(variant) {
-            var cmd = variant + " --literal org.kde.ksystemstats1" +
-                      " /org/kde/ksystemstats1" +
-                      " org.kde.ksystemstats1.allSensors";
-            active = true;
-            connectSource(cmd);
-        }
-    }
-
-    function tryNextQdbus() {
-        if (qdbusIndex >= qdbusVariants.length) {
-            showManualBatteryInput = true;
-            return;
-        }
-        var variant = qdbusVariants[qdbusIndex];
-        qdbusIndex++;
-        qdbusDetector.run(variant);
-    }
-
-    Sensors.Sensor {
-        id: batChargeSensor
-        sensorId: root.batChargeSensorId
-        updateRateLimit: root.updateInterval > 5000 ? root.updateInterval : 5000
-    }
-
-    Sensors.Sensor {
-        id: batRateSensor
-        sensorId: root.batRateSensorId
-        updateRateLimit: root.updateInterval > 5000 ? root.updateInterval : 5000
-    }
-
-    // --- Formatting helpers ---
-
-    function formatBytes(bytes) {
-        if (typeof bytes !== "number" || isNaN(bytes))
-            return "...";
-        var gb = bytes / (1024 * 1024 * 1024);
-        return gb.toFixed(1);
-    }
-
-    function formatRate(bytesPerSec) {
-        if (typeof bytesPerSec !== "number" || isNaN(bytesPerSec))
-            return "...";
-        var kbps = bytesPerSec / 1024;
-        if (kbps >= 1024) {
-            return (kbps / 1024).toFixed(1) + "M";
-        }
-        return Math.max(0, kbps).toFixed(1) + "K";
-    }
-
-    function sensorValueOrNaN(sensor) {
-        if (!sensor || sensor.status !== Sensors.Sensor.Ready)
-            return NaN;
-        if (typeof sensor.value !== "number" || isNaN(sensor.value))
-            return NaN;
-        return sensor.value;
-    }
-
-    function firstReadyNumber(sensors, requirePositive) {
-        for (var i = 0; i < sensors.length; i++) {
-            var value = sensorValueOrNaN(sensors[i]);
-            if (isNaN(value))
-                continue;
-            if (requirePositive && value <= 0)
-                continue;
-            return value;
-        }
-        return NaN;
-    }
-
-    function maxReadyNumber(sensors, requirePositive) {
-        var maxValue = NaN;
-        for (var i = 0; i < sensors.length; i++) {
-            var value = sensorValueOrNaN(sensors[i]);
-            if (isNaN(value))
-                continue;
-            if (requirePositive && value <= 0)
-                continue;
-            if (isNaN(maxValue) || value > maxValue)
-                maxValue = value;
-        }
-        return maxValue;
-    }
-
-    function firstReadyVramPair(pairs) {
-        for (var i = 0; i < pairs.length; i++) {
-            var used = sensorValueOrNaN(pairs[i].used);
-            var total = sensorValueOrNaN(pairs[i].total);
-            if (isNaN(used) || isNaN(total))
-                continue;
-            if (total <= 0 || used < 0)
-                continue;
-            return { used: used, total: total };
-        }
-        return null;
-    }
-
-    // --- Derived display values ---
-
-    property string cpuValue: {
-        if (cpuSensor.status !== Sensors.Sensor.Ready) return "...";
-        return Math.round(cpuSensor.value) + "%";
-    }
-
-    property string ramValue: {
-        if (ramUsedSensor.status !== Sensors.Sensor.Ready || ramTotalSensor.status !== Sensors.Sensor.Ready)
-            return "...";
-        return formatBytes(ramUsedSensor.value) + "/" + formatBytes(ramTotalSensor.value) + "G";
-    }
-
-    property string tempValue: {
-        if (tempSensor.status !== Sensors.Sensor.Ready) return "--";
-        return Math.round(tempSensor.value) + "°C";
-    }
-
-    property real gpuUsageNumber: {
-        var aggregateUsage = firstReadyNumber([gpuUsageAllSensor], false);
-        if (!isNaN(aggregateUsage))
-            return aggregateUsage;
-        return maxReadyNumber([gpuUsage0Sensor, gpuUsage1Sensor, gpuUsage2Sensor, gpuUsage3Sensor], false);
-    }
-
-    property var gpuVramPair: {
-        return firstReadyVramPair([
-            { used: gpuVramUsedAllSensor, total: gpuVramTotalAllSensor },
-            { used: gpuVramUsedLegacySensor, total: gpuVramTotalLegacySensor },
-            { used: gpuVramUsed0Sensor, total: gpuVramTotal0Sensor },
-            { used: gpuVramUsed1Sensor, total: gpuVramTotal1Sensor },
-            { used: gpuVramUsed2Sensor, total: gpuVramTotal2Sensor },
-            { used: gpuVramUsed3Sensor, total: gpuVramTotal3Sensor }
-        ]);
-    }
-
-    property real gpuTempNumber: {
-        var aggregateTemp = firstReadyNumber([gpuTempAllSensor], true);
-        if (!isNaN(aggregateTemp))
-            return aggregateTemp;
-        return maxReadyNumber([gpuTemp0Sensor, gpuTemp1Sensor, gpuTemp2Sensor, gpuTemp3Sensor], true);
-    }
-
-    property string gpuValue: {
-        if (isNaN(gpuUsageNumber))
-            return "";
-        return Math.round(gpuUsageNumber) + "%";
-    }
-
-    property string gpuRamValue: {
-        if (!gpuVramPair)
-            return "";
-        return formatBytes(gpuVramPair.used) + "/" + formatBytes(gpuVramPair.total) + "G";
-    }
-
-    property string gpuTempValue: {
-        if (isNaN(gpuTempNumber))
-            return "";
-        return Math.round(gpuTempNumber) + "°C";
-    }
-
-    property string gpuDisplayValue: {
-        var parts = [];
-        if (gpuValue)
-            parts.push(gpuValue);
-        if (gpuRamValue)
-            parts.push(gpuRamValue);
-        if (gpuTempValue)
-            parts.push(gpuTempValue);
-        return parts.join(" ");
-    }
-
-    property bool hasGpuData: gpuDisplayValue.length > 0
-
-    property bool hasGpuUsageData: gpuValue.length > 0
-    property bool hasGpuVramData: gpuRamValue.length > 0
-    property bool hasGpuTempData: gpuTempValue.length > 0
-
-    property string batValue: {
-        if (batChargeSensor.status !== Sensors.Sensor.Ready) return "";
-        return Math.round(batChargeSensor.value) + "%";
-    }
-
-    property string batIcon: {
-        if (batRateSensor.status !== Sensors.Sensor.Ready) return "";
-        return batRateSensor.value > 0 ? "⚡" : "🔋";
-    }
-
-    property string powerValue: {
-        if (batRateSensor.status !== Sensors.Sensor.Ready) return "";
-        var watts = Math.abs(batRateSensor.value);
-        if (watts < 0.01) return "0.0W";
-        var sign = batRateSensor.value > 0 ? "+" : "-";
-        return sign + watts.toFixed(1) + "W";
-    }
-
-    property string netDownValue: {
-        if (netDownSensor.status !== Sensors.Sensor.Ready) return "...";
-        return formatRate(netDownSensor.value);
-    }
-
-    property string netUpValue: {
-        if (netUpSensor.status !== Sensors.Sensor.Ready) return "...";
-        return formatRate(netUpSensor.value);
-    }
-
-    compactRepresentation: RowLayout {
-        id: compactRow
-        spacing: Kirigami.Units.smallSpacing
-
-        TapHandler {
-            onTapped: root.expanded = !root.expanded
-        }
-
-        property var metricsModel: {
+    compactRepresentation: CompactView {
+        metricsModel: {
             var items = [];
             for (var i = 0; i < root.orderedKeys.length; i++) {
                 var key = root.orderedKeys[i];
-                if (key === "cpu" && root.showCpu && root.cpuValue)
-                    items.push({ icon: root.cpuIcon, label: "CPU:", value: root.cpuValue });
-                else if (key === "ram" && root.showRam && root.ramValue)
-                    items.push({ icon: root.ramIcon, label: "RAM:", value: root.ramValue });
-                else if (key === "temp" && root.showTemp && root.tempValue && root.tempValue !== "--")
-                    items.push({ icon: root.tempIcon, label: "TEMP:", value: root.tempValue });
-                else if (key === "gpu" && root.showGpu && root.hasGpuData)
-                    items.push({ icon: root.gpuIcon, label: "GPU:", value: root.gpuDisplayValue });
-                else if (key === "bat" && root.showBattery && root.batValue)
-                    items.push({ icon: root.batteryIcon, label: "BAT:", value: root.batValue });
-                else if (key === "pwr" && root.showPower && root.powerValue)
-                    items.push({ icon: root.powerIcon, label: "PWR:", value: root.powerValue });
+                if (key === "cpu" && root.showCpu && cpu.cpuValue)
+                    items.push({ icon: root.cpuIcon, label: "CPU:", value: cpu.cpuValue });
+                else if (key === "ram" && root.showRam && memory.ramValue)
+                    items.push({ icon: root.ramIcon, label: "RAM:", value: memory.ramValue });
+                else if (key === "temp" && root.showTemp && temp.tempValue && temp.tempValue !== "--")
+                    items.push({ icon: root.tempIcon, label: "TEMP:", value: temp.tempValue });
+                else if (key === "gpu" && root.showGpu && gpu.hasGpuData)
+                    items.push({ icon: root.gpuIcon, label: "GPU:", value: gpu.gpuDisplayValue });
+                else if (key === "bat" && root.showBattery && battery.batValue)
+                    items.push({ icon: root.batteryIcon, label: "BAT:", value: battery.batValue });
+                else if (key === "pwr" && root.showPower && battery.powerValue)
+                    items.push({ icon: root.powerIcon, label: "PWR:", value: battery.powerValue });
                 else if (key === "net" && root.showNetwork)
-                    items.push({ icon: root.networkIcon, label: "NET:", value: "↓" + root.netDownValue + " ↑" + root.netUpValue });
+                    items.push({ icon: root.networkIcon, label: "NET:", value: "↓" + network.netDownValue + " ↑" + network.netUpValue });
             }
             return items;
         }
+        useIcons: root.useIcons
+        useText: root.useText
+        effectiveFontSize: root.effectiveFontSize
+        fontFamily: root.fontFamily
+        iconSize: root.iconSize
+        expanded: root.expanded
+        onToggleExpanded: root.expanded = !root.expanded
+    }
 
-        Repeater {
-            model: compactRow.metricsModel
-
-            delegate: RowLayout {
-                spacing: 2
-                Layout.fillHeight: true
-
-                // Separator
-                PlasmaComponents.Label {
-                    visible: index > 0
-                    text: "|"
-                    font.pixelSize: root.effectiveFontSize
-                    font.family: root.fontFamily
-                    color: Kirigami.Theme.textColor
-                    opacity: 0.4
-                    Layout.alignment: Qt.AlignVCenter
+    fullRepresentation: FullView {
+        metricsModel: {
+            var items = [];
+            for (var i = 0; i < root.orderedKeys.length; i++) {
+                var key = root.orderedKeys[i];
+                if (key === "cpu" && root.showCpu)
+                    items.push({ label: "CPU Usage", value: cpu.cpuValue });
+                else if (key === "ram" && root.showRam)
+                    items.push({ label: "Memory", value: memory.ramValue });
+                else if (key === "temp" && root.showTemp && temp.tempValue !== "--")
+                    items.push({ label: "CPU Temp", value: temp.tempValue });
+                else if (key === "gpu" && root.showGpu) {
+                    if (gpu.hasGpuUsageData) items.push({ label: "GPU Usage", value: gpu.gpuValue });
+                    if (gpu.hasGpuVramData) items.push({ label: "GPU VRAM", value: gpu.gpuRamValue });
+                    if (gpu.hasGpuTempData) items.push({ label: "GPU Temp", value: gpu.gpuTempValue });
                 }
-
-                // Icon
-                Kirigami.Icon {
-                    visible: root.useIcons
-                    source: modelData.icon
-                    isMask: true
-                    Layout.preferredWidth: root.iconSize
-                    Layout.preferredHeight: root.iconSize
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                // Text label
-                PlasmaComponents.Label {
-                    visible: root.useText
-                    text: modelData.label
-                    font.pixelSize: root.effectiveFontSize
-                    font.family: root.fontFamily
-                    color: Kirigami.Theme.textColor
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                // Value
-                PlasmaComponents.Label {
-                    text: modelData.value
-                    font.pixelSize: root.effectiveFontSize
-                    font.family: root.fontFamily
-                    color: Kirigami.Theme.textColor
-                    Layout.alignment: Qt.AlignVCenter
+                else if (key === "bat" && root.showBattery && battery.batValue)
+                    items.push({ label: "Battery", value: battery.batValue });
+                else if (key === "pwr" && root.showPower && battery.powerValue)
+                    items.push({ label: "Power", value: battery.powerValue });
+                else if (key === "net" && root.showNetwork) {
+                    items.push({ label: "Network ↓", value: network.netDownValue });
+                    items.push({ label: "Network ↑", value: network.netUpValue });
                 }
             }
+            return items;
         }
     }
 
-    fullRepresentation: ColumnLayout {
-        spacing: Kirigami.Units.smallSpacing
-        Layout.preferredWidth: Kirigami.Units.gridUnit * 18
-        Layout.preferredHeight: Kirigami.Units.gridUnit * 12
-
-        PlasmaComponents.Label {
-            text: "KVitals"
-            font.bold: true
-            font.pixelSize: Kirigami.Theme.defaultFont.pixelSize * 1.2
-            Layout.alignment: Qt.AlignHCenter
-            Layout.bottomMargin: Kirigami.Units.smallSpacing
-        }
-
-        Repeater {
-            model: {
-                var items = [];
-                for (var i = 0; i < root.orderedKeys.length; i++) {
-                    var key = root.orderedKeys[i];
-                    if (key === "cpu" && root.showCpu)
-                        items.push({ label: "CPU Usage", value: root.cpuValue });
-                    else if (key === "ram" && root.showRam)
-                        items.push({ label: "Memory", value: root.ramValue });
-                    else if (key === "temp" && root.showTemp && root.tempValue !== "--")
-                        items.push({ label: "CPU Temp", value: root.tempValue });
-                    else if (key === "gpu" && root.showGpu) {
-                        if (root.hasGpuUsageData) items.push({ label: "GPU Usage", value: root.gpuValue });
-                        if (root.hasGpuVramData) items.push({ label: "GPU VRAM", value: root.gpuRamValue });
-                        if (root.hasGpuTempData) items.push({ label: "GPU Temp", value: root.gpuTempValue });
-                    }
-                    else if (key === "bat" && root.showBattery && root.batValue)
-                        items.push({ label: "Battery", value: root.batValue });
-                    else if (key === "pwr" && root.showPower && root.powerValue)
-                        items.push({ label: "Power", value: root.powerValue });
-                    else if (key === "net" && root.showNetwork) {
-                        items.push({ label: "Network ↓", value: root.netDownValue });
-                        items.push({ label: "Network ↑", value: root.netUpValue });
-                    }
-                }
-                return items;
-            }
-
-            delegate: RowLayout {
-                Layout.fillWidth: true
-                Layout.leftMargin: Kirigami.Units.largeSpacing
-                Layout.rightMargin: Kirigami.Units.largeSpacing
-
-                PlasmaComponents.Label {
-                    text: modelData.label
-                    opacity: 0.7
-                    Layout.fillWidth: true
-                }
-                PlasmaComponents.Label {
-                    text: modelData.value
-                    font.bold: true
-                    horizontalAlignment: Text.AlignRight
-                }
-            }
-        }
-    }
+    // --- Tooltip ---
 
     toolTipMainText: "KVitals"
     toolTipSubText: {
         var parts = [];
         for (var i = 0; i < root.orderedKeys.length; i++) {
             var key = root.orderedKeys[i];
-            if (key === "cpu" && root.showCpu && root.cpuValue)
-                parts.push("CPU: " + root.cpuValue);
-            else if (key === "ram" && root.showRam && root.ramValue)
-                parts.push("RAM: " + root.ramValue);
-            else if (key === "temp" && root.showTemp && root.tempValue && root.tempValue !== "--")
-                parts.push("TEMP: " + root.tempValue);
-            else if (key === "gpu" && root.showGpu && root.hasGpuData) {
-                if (root.hasGpuUsageData) parts.push("GPU: " + root.gpuValue);
-                if (root.hasGpuVramData) parts.push("VRAM: " + root.gpuRamValue);
-                if (root.hasGpuTempData) parts.push("GPU TEMP: " + root.gpuTempValue);
+            if (key === "cpu" && root.showCpu && cpu.cpuValue)
+                parts.push("CPU: " + cpu.cpuValue);
+            else if (key === "ram" && root.showRam && memory.ramValue)
+                parts.push("RAM: " + memory.ramValue);
+            else if (key === "temp" && root.showTemp && temp.tempValue && temp.tempValue !== "--")
+                parts.push("TEMP: " + temp.tempValue);
+            else if (key === "gpu" && root.showGpu && gpu.hasGpuData) {
+                if (gpu.hasGpuUsageData) parts.push("GPU: " + gpu.gpuValue);
+                if (gpu.hasGpuVramData) parts.push("VRAM: " + gpu.gpuRamValue);
+                if (gpu.hasGpuTempData) parts.push("GPU TEMP: " + gpu.gpuTempValue);
             }
-            else if (key === "bat" && root.showBattery && root.batValue)
-                parts.push("BAT: " + root.batValue);
-            else if (key === "pwr" && root.showPower && root.powerValue)
-                parts.push("PWR: " + root.powerValue);
+            else if (key === "bat" && root.showBattery && battery.batValue)
+                parts.push("BAT: " + battery.batValue);
+            else if (key === "pwr" && root.showPower && battery.powerValue)
+                parts.push("PWR: " + battery.powerValue);
             else if (key === "net" && root.showNetwork)
-                parts.push("NET: ↓" + root.netDownValue + " ↑" + root.netUpValue);
+                parts.push("NET: ↓" + network.netDownValue + " ↑" + network.netUpValue);
         }
         return parts.join("\n");
     }
