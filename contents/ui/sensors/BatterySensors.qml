@@ -43,9 +43,6 @@ Item {
         "battery_BATT0"
     ]
     property var stage1Probes: []
-    property var batteryChoices: []
-    property bool showBatteryPicker: false
-    property bool showManualBatteryInput: false
 
     Component.onCompleted: {
         if (batteryDevice && batteryDevice !== "auto")
@@ -140,8 +137,8 @@ Item {
                     return;
                 }
                 if (ids.length > 1) {
-                    batteryChoices = ids;
-                    showBatteryPicker = true;
+                    console.warn("BatterySensors: multiple batteries found:", JSON.stringify(ids), "— using first:", ids[0]);
+                    persistDetectedBattery(ids[0]);
                     return;
                 }
             }
@@ -159,7 +156,7 @@ Item {
 
     function tryNextQdbus() {
         if (qdbusIndex >= qdbusVariants.length) {
-            showManualBatteryInput = true;
+            console.warn("BatterySensors: all detection methods exhausted; set batteryDevice manually in widget config");
             return;
         }
         var variant = qdbusVariants[qdbusIndex];
