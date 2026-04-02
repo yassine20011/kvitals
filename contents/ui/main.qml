@@ -99,6 +99,17 @@ PlasmoidItem {
                              warningColor, criticalColor, baseTextColor, true)
         : baseTextColor
 
+    // For the compact view, all GPU data is one combined string (usage + VRAM + temp).
+    // Pick the highest-urgency color across GPU usage and GPU temp.
+    readonly property color gpuCompactColor: {
+        function urgency(c) {
+            if (c.toString() === Qt.color(criticalColor).toString()) return 2;
+            if (c.toString() === Qt.color(warningColor).toString())  return 1;
+            return 0;
+        }
+        return urgency(gpuTempColor) >= urgency(gpuColor) ? gpuTempColor : gpuColor;
+    }
+
     // --- Sensor components ---
 
     CpuSensors {
@@ -151,7 +162,7 @@ PlasmoidItem {
                                  color: root.tempColor });
                 else if (key === "gpu" && root.showGpu && gpu.hasGpuData)
                     items.push({ icon: root.gpuIcon, label: "GPU:", value: gpu.gpuDisplayValue,
-                                 color: root.gpuColor });
+                                 color: root.gpuCompactColor });
                 else if (key === "bat" && root.showBattery && battery.batValue)
                     items.push({ icon: root.batteryIcon, label: "BAT:", value: battery.batValue,
                                  color: root.batteryColor });
