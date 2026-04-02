@@ -8,9 +8,15 @@ Item {
     property int updateInterval: 2000
     property string batteryDevice: "auto"
 
+    readonly property real batNumericValue: {
+        if (batChargeSensor.status !== Sensors.Sensor.Ready)
+            return NaN;
+        return batChargeSensor.value;
+    }
+
     readonly property string batValue: {
-        if (batChargeSensor.status !== Sensors.Sensor.Ready) return "";
-        return Math.round(batChargeSensor.value) + "%";
+        if (isNaN(batNumericValue)) return "";
+        return Math.round(batNumericValue) + "%";
     }
 
     readonly property string powerValue: {

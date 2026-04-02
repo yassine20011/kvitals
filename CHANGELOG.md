@@ -2,6 +2,28 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [2.4.0] - 2026-04-01
+
+### Added
+- **Custom Font Color**: Override the widget font color to match your panel theme (#20). Configurable via the new **Colors** settings tab.
+- **Threshold-Based Coloring**: Metric values dynamically change color when they exceed configurable warning/critical thresholds (#12). Supported metrics:
+  - CPU usage (default: warning 70%, critical 90%)
+  - CPU temperature (default: warning 60°C, critical 85°C)
+  - RAM usage (default: warning 70%, critical 90%)
+  - GPU usage (default: warning 70%, critical 90%)
+  - GPU temperature (default: warning 60°C, critical 85°C)
+  - Battery level (inverted: warning below 30%, critical below 15%)
+- **Colors Config Tab**: New settings page with color pickers for font/warning/critical colors and per-metric threshold sliders.
+- Sensor modules now expose raw numeric values (`cpuNumericValue`, `tempNumericValue`, `ramPercentage`, `batNumericValue`) for threshold comparison.
+- `Utils.resolveColor()` function for flexible threshold-triggered color resolution.
+
+### Fixed
+- Fixed the Colors tab color picker turning white after selecting a color; it now uses a stable native platform color dialog and preserves the selected swatch correctly.
+
+### Notes
+- Network and Power metrics are excluded from threshold coloring (no meaningful universal threshold).
+- Both features are **opt-in** — disabled by default. Existing users are unaffected.
+
 ## [2.3.0] - 2026-03-13
 
 ### Changed

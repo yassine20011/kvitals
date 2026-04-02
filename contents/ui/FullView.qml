@@ -10,6 +10,7 @@ ColumnLayout {
     Layout.preferredHeight: Kirigami.Units.gridUnit * 12
 
     required property var metricsModel
+    required property color baseTextColor
 
     PlasmaComponents.Label {
         text: "KVitals"
@@ -31,12 +32,14 @@ ColumnLayout {
 
             PlasmaComponents.Label {
                 text: modelData.label
+                color: fullView.baseTextColor
                 opacity: 0.7
                 Layout.fillWidth: true
             }
             PlasmaComponents.Label {
                 text: modelData.value
                 font.bold: true
+                color: modelData.color
                 horizontalAlignment: Text.AlignRight
             }
         }

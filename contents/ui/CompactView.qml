@@ -13,6 +13,7 @@ RowLayout {
     required property int effectiveFontSize
     required property string fontFamily
     required property int iconSize
+    required property color baseTextColor
 
 
     signal toggleExpanded()
@@ -36,7 +37,7 @@ RowLayout {
                 text: "|"
                 font.pixelSize: compactRow.effectiveFontSize
                 font.family: compactRow.fontFamily
-                color: Kirigami.Theme.textColor
+                color: compactRow.baseTextColor
                 opacity: 0.4
                 Layout.alignment: Qt.AlignVCenter
             }
@@ -55,7 +56,7 @@ RowLayout {
                 text: modelData.label
                 font.pixelSize: compactRow.effectiveFontSize
                 font.family: compactRow.fontFamily
-                color: Kirigami.Theme.textColor
+                color: compactRow.baseTextColor
                 Layout.alignment: Qt.AlignVCenter
             }
 
@@ -63,7 +64,7 @@ RowLayout {
                 text: modelData.value
                 font.pixelSize: compactRow.effectiveFontSize
                 font.family: compactRow.fontFamily
-                color: Kirigami.Theme.textColor
+                color: modelData.color
                 Layout.alignment: Qt.AlignVCenter
             }
         }

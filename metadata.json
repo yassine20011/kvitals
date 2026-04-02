@@ -12,7 +12,7 @@
             }
         ],
         "Website": "https://github.com/yassine20011/kvitals",
-        "Version": "2.3.0",
+        "Version": "2.4.0",
         "License": "GPL-3.0"
     },
     "KPackageStructure": "Plasma/Applet",

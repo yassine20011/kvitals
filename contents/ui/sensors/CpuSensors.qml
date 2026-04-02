@@ -6,10 +6,16 @@ Item {
 
     property int updateInterval: 2000
 
-    readonly property string cpuValue: {
+    readonly property real cpuNumericValue: {
         if (cpuSensor.status !== Sensors.Sensor.Ready)
+            return NaN;
+        return cpuSensor.value;
+    }
+
+    readonly property string cpuValue: {
+        if (isNaN(cpuNumericValue))
             return "...";
-        return Math.round(cpuSensor.value) + "%";
+        return Math.round(cpuNumericValue) + "%";
     }
 
     Sensors.Sensor {

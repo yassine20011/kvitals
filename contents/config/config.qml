@@ -18,4 +18,9 @@ ConfigModel {
         icon: "preferences-desktop-icons"
         source: "configIcons.qml"
     }
+    ConfigCategory {
+        name: i18n("Colors")
+        icon: "color-management"
+        source: "configColors.qml"
+    }
 }

@@ -6,9 +6,15 @@ Item {
 
     property int updateInterval: 2000
 
+    readonly property real tempNumericValue: {
+        if (tempSensor.status !== Sensors.Sensor.Ready)
+            return NaN;
+        return tempSensor.value;
+    }
+
     readonly property string tempValue: {
-        if (tempSensor.status !== Sensors.Sensor.Ready) return "--";
-        return Math.round(tempSensor.value) + "°C";
+        if (isNaN(tempNumericValue)) return "--";
+        return Math.round(tempNumericValue) + "°C";
     }
 
     Sensors.Sensor {

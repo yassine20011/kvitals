@@ -66,4 +66,18 @@ QtObject {
         }
         return null;
     }
+
+    function resolveColor(numericValue, warningThreshold, criticalThreshold,
+                          warningColor, criticalColor, baseColor, inverted) {
+        if (isNaN(numericValue))
+            return baseColor;
+        if (inverted) {
+            if (numericValue <= criticalThreshold) return criticalColor;
+            if (numericValue <= warningThreshold)  return warningColor;
+        } else {
+            if (numericValue >= criticalThreshold) return criticalColor;
+            if (numericValue >= warningThreshold)  return warningColor;
+        }
+        return baseColor;
+    }
 }

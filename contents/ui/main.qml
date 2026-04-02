@@ -42,6 +42,63 @@ PlasmoidItem {
 
     property int updateInterval: Plasmoid.configuration.updateInterval || 2000
 
+    // --- Color configuration properties ---
+
+    property bool useCustomColors: Plasmoid.configuration.useCustomColors
+    property string fontColor: Plasmoid.configuration.fontColor
+    property bool enableThresholdColors: Plasmoid.configuration.enableThresholdColors
+    property string warningColor: Plasmoid.configuration.warningColor || "#e5a50a"
+    property string criticalColor: Plasmoid.configuration.criticalColor || "#da4453"
+
+    property int cpuWarningThreshold: Plasmoid.configuration.cpuWarningThreshold
+    property int cpuCriticalThreshold: Plasmoid.configuration.cpuCriticalThreshold
+    property int tempWarningThreshold: Plasmoid.configuration.tempWarningThreshold
+    property int tempCriticalThreshold: Plasmoid.configuration.tempCriticalThreshold
+    property int ramWarningThreshold: Plasmoid.configuration.ramWarningThreshold
+    property int ramCriticalThreshold: Plasmoid.configuration.ramCriticalThreshold
+    property int gpuWarningThreshold: Plasmoid.configuration.gpuWarningThreshold
+    property int gpuCriticalThreshold: Plasmoid.configuration.gpuCriticalThreshold
+    property int gpuTempWarningThreshold: Plasmoid.configuration.gpuTempWarningThreshold
+    property int gpuTempCriticalThreshold: Plasmoid.configuration.gpuTempCriticalThreshold
+    property int batteryWarningThreshold: Plasmoid.configuration.batteryWarningThreshold
+    property int batteryCriticalThreshold: Plasmoid.configuration.batteryCriticalThreshold
+
+    // --- Computed base text color ---
+
+    property color baseTextColor: (useCustomColors && fontColor !== "") ? fontColor : Kirigami.Theme.textColor
+
+    // --- Pre-resolved per-metric colors (reactive properties) ---
+
+    property color cpuColor: enableThresholdColors
+        ? Utils.resolveColor(cpu.cpuNumericValue, cpuWarningThreshold, cpuCriticalThreshold,
+                             warningColor, criticalColor, baseTextColor, false)
+        : baseTextColor
+
+    property color tempColor: enableThresholdColors
+        ? Utils.resolveColor(temp.tempNumericValue, tempWarningThreshold, tempCriticalThreshold,
+                             warningColor, criticalColor, baseTextColor, false)
+        : baseTextColor
+
+    property color ramColor: enableThresholdColors
+        ? Utils.resolveColor(memory.ramPercentage, ramWarningThreshold, ramCriticalThreshold,
+                             warningColor, criticalColor, baseTextColor, false)
+        : baseTextColor
+
+    property color gpuColor: enableThresholdColors
+        ? Utils.resolveColor(gpu.gpuUsageNumber, gpuWarningThreshold, gpuCriticalThreshold,
+                             warningColor, criticalColor, baseTextColor, false)
+        : baseTextColor
+
+    property color gpuTempColor: enableThresholdColors
+        ? Utils.resolveColor(gpu.gpuTempNumber, gpuTempWarningThreshold, gpuTempCriticalThreshold,
+                             warningColor, criticalColor, baseTextColor, false)
+        : baseTextColor
+
+    property color batteryColor: enableThresholdColors
+        ? Utils.resolveColor(battery.batNumericValue, batteryWarningThreshold, batteryCriticalThreshold,
+                             warningColor, criticalColor, baseTextColor, true)
+        : baseTextColor
+
     // --- Sensor components ---
 
     CpuSensors {
@@ -84,19 +141,26 @@ PlasmoidItem {
             for (var i = 0; i < root.orderedKeys.length; i++) {
                 var key = root.orderedKeys[i];
                 if (key === "cpu" && root.showCpu && cpu.cpuValue)
-                    items.push({ icon: root.cpuIcon, label: "CPU:", value: cpu.cpuValue });
+                    items.push({ icon: root.cpuIcon, label: "CPU:", value: cpu.cpuValue,
+                                 color: root.cpuColor });
                 else if (key === "ram" && root.showRam && memory.ramValue)
-                    items.push({ icon: root.ramIcon, label: "RAM:", value: memory.ramValue });
+                    items.push({ icon: root.ramIcon, label: "RAM:", value: memory.ramValue,
+                                 color: root.ramColor });
                 else if (key === "temp" && root.showTemp && temp.tempValue && temp.tempValue !== "--")
-                    items.push({ icon: root.tempIcon, label: "TEMP:", value: temp.tempValue });
+                    items.push({ icon: root.tempIcon, label: "TEMP:", value: temp.tempValue,
+                                 color: root.tempColor });
                 else if (key === "gpu" && root.showGpu && gpu.hasGpuData)
-                    items.push({ icon: root.gpuIcon, label: "GPU:", value: gpu.gpuDisplayValue });
+                    items.push({ icon: root.gpuIcon, label: "GPU:", value: gpu.gpuDisplayValue,
+                                 color: root.gpuColor });
                 else if (key === "bat" && root.showBattery && battery.batValue)
-                    items.push({ icon: root.batteryIcon, label: "BAT:", value: battery.batValue });
+                    items.push({ icon: root.batteryIcon, label: "BAT:", value: battery.batValue,
+                                 color: root.batteryColor });
                 else if (key === "pwr" && root.showPower && battery.powerValue)
-                    items.push({ icon: root.powerIcon, label: "PWR:", value: battery.powerValue });
+                    items.push({ icon: root.powerIcon, label: "PWR:", value: battery.powerValue,
+                                 color: root.baseTextColor });
                 else if (key === "net" && root.showNetwork)
-                    items.push({ icon: root.networkIcon, label: "NET:", value: "↓" + network.netDownValue + " ↑" + network.netUpValue });
+                    items.push({ icon: root.networkIcon, label: "NET:", value: "↓" + network.netDownValue + " ↑" + network.netUpValue,
+                                 color: root.baseTextColor });
             }
             return items;
         }
@@ -105,32 +169,42 @@ PlasmoidItem {
         effectiveFontSize: root.effectiveFontSize
         fontFamily: root.fontFamily
         iconSize: root.iconSize
+        baseTextColor: root.baseTextColor
         onToggleExpanded: root.expanded = !root.expanded
     }
 
     fullRepresentation: FullView {
+        baseTextColor: root.baseTextColor
         metricsModel: {
             var items = [];
             for (var i = 0; i < root.orderedKeys.length; i++) {
                 var key = root.orderedKeys[i];
                 if (key === "cpu" && root.showCpu)
-                    items.push({ label: "CPU Usage", value: cpu.cpuValue });
+                    items.push({ label: "CPU Usage", value: cpu.cpuValue,
+                                 color: root.cpuColor });
                 else if (key === "ram" && root.showRam)
-                    items.push({ label: "Memory", value: memory.ramValue });
+                    items.push({ label: "Memory", value: memory.ramValue,
+                                 color: root.ramColor });
                 else if (key === "temp" && root.showTemp && temp.tempValue !== "--")
-                    items.push({ label: "CPU Temp", value: temp.tempValue });
+                    items.push({ label: "CPU Temp", value: temp.tempValue,
+                                 color: root.tempColor });
                 else if (key === "gpu" && root.showGpu) {
-                    if (gpu.hasGpuUsageData) items.push({ label: "GPU Usage", value: gpu.gpuValue });
-                    if (gpu.hasGpuVramData) items.push({ label: "GPU VRAM", value: gpu.gpuRamValue });
-                    if (gpu.hasGpuTempData) items.push({ label: "GPU Temp", value: gpu.gpuTempValue });
+                    if (gpu.hasGpuUsageData) items.push({ label: "GPU Usage", value: gpu.gpuValue,
+                                                          color: root.gpuColor });
+                    if (gpu.hasGpuVramData) items.push({ label: "GPU VRAM", value: gpu.gpuRamValue,
+                                                         color: root.baseTextColor });
+                    if (gpu.hasGpuTempData) items.push({ label: "GPU Temp", value: gpu.gpuTempValue,
+                                                         color: root.gpuTempColor });
                 }
                 else if (key === "bat" && root.showBattery && battery.batValue)
-                    items.push({ label: "Battery", value: battery.batValue });
+                    items.push({ label: "Battery", value: battery.batValue,
+                                 color: root.batteryColor });
                 else if (key === "pwr" && root.showPower && battery.powerValue)
-                    items.push({ label: "Power", value: battery.powerValue });
+                    items.push({ label: "Power", value: battery.powerValue,
+                                 color: root.baseTextColor });
                 else if (key === "net" && root.showNetwork) {
-                    items.push({ label: "Network ↓", value: network.netDownValue });
-                    items.push({ label: "Network ↑", value: network.netUpValue });
+                    items.push({ label: "Network ↓", value: network.netDownValue, color: root.baseTextColor });
+                    items.push({ label: "Network ↑", value: network.netUpValue, color: root.baseTextColor });
                 }
             }
             return items;
