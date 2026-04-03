@@ -25,6 +25,7 @@ KCM.SimpleKCM {
     property alias cfg_gpuTempCriticalThreshold: gpuTempCritSlider.value
     property alias cfg_batteryWarningThreshold: batWarnSlider.value
     property alias cfg_batteryCriticalThreshold: batCritSlider.value
+
     readonly property string defaultWarningColor: "#e5a50a"
     readonly property string defaultCriticalColor: "#da4453"
 
@@ -292,7 +293,7 @@ KCM.SimpleKCM {
                 Slider { id: cpuCritSlider; from: 10; to: 100; stepSize: 5; value: 90; Layout.fillWidth: true }
                 Label { text: Math.round(cpuCritSlider.value) + "%"; Layout.preferredWidth: 40 }
             }
-            Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: cpuWarnSlider.value >= cpuCritSlider.value ? "#da4453" : "transparent" }
+            Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: cpuWarnSlider.value >= cpuCritSlider.value ? cfg_criticalColor : "transparent" }
 
             // --- CPU Temperature ---
             Label { text: i18n("CPU Temp") }
@@ -306,7 +307,7 @@ KCM.SimpleKCM {
                 Slider { id: tempCritSlider; from: 30; to: 110; stepSize: 5; value: 85; Layout.fillWidth: true }
                 Label { text: Math.round(tempCritSlider.value) + "°C"; Layout.preferredWidth: 40 }
             }
-            Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: tempWarnSlider.value >= tempCritSlider.value ? "#da4453" : "transparent" }
+            Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: tempWarnSlider.value >= tempCritSlider.value ? cfg_criticalColor : "transparent" }
 
             // --- RAM Usage ---
             Label { text: i18n("RAM Usage") }
@@ -320,7 +321,7 @@ KCM.SimpleKCM {
                 Slider { id: ramCritSlider; from: 10; to: 100; stepSize: 5; value: 90; Layout.fillWidth: true }
                 Label { text: Math.round(ramCritSlider.value) + "%"; Layout.preferredWidth: 40 }
             }
-            Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: ramWarnSlider.value >= ramCritSlider.value ? "#da4453" : "transparent" }
+            Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: ramWarnSlider.value >= ramCritSlider.value ? cfg_criticalColor : "transparent" }
 
             // --- GPU Usage ---
             Label { text: i18n("GPU Usage") }
@@ -334,7 +335,7 @@ KCM.SimpleKCM {
                 Slider { id: gpuCritSlider; from: 10; to: 100; stepSize: 5; value: 90; Layout.fillWidth: true }
                 Label { text: Math.round(gpuCritSlider.value) + "%"; Layout.preferredWidth: 40 }
             }
-            Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: gpuWarnSlider.value >= gpuCritSlider.value ? "#da4453" : "transparent" }
+            Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: gpuWarnSlider.value >= gpuCritSlider.value ? cfg_criticalColor : "transparent" }
 
             // --- GPU Temperature ---
             Label { text: i18n("GPU Temp") }
@@ -348,7 +349,7 @@ KCM.SimpleKCM {
                 Slider { id: gpuTempCritSlider; from: 30; to: 110; stepSize: 5; value: 85; Layout.fillWidth: true }
                 Label { text: Math.round(gpuTempCritSlider.value) + "°C"; Layout.preferredWidth: 40 }
             }
-            Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: gpuTempWarnSlider.value >= gpuTempCritSlider.value ? "#da4453" : "transparent" }
+            Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: gpuTempWarnSlider.value >= gpuTempCritSlider.value ? cfg_criticalColor : "transparent" }
 
             // --- Battery (inverted) ---
             Label { text: i18n("Battery ↓") }
@@ -362,7 +363,7 @@ KCM.SimpleKCM {
                 Slider { id: batCritSlider; from: 5; to: 60; stepSize: 5; value: 15; Layout.fillWidth: true }
                 Label { text: Math.round(batCritSlider.value) + "%"; Layout.preferredWidth: 40 }
             }
-            Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: batWarnSlider.value <= batCritSlider.value ? "#da4453" : "transparent" }
+            Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: batWarnSlider.value <= batCritSlider.value ? cfg_criticalColor : "transparent" }
         }
 
         Label {

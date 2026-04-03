@@ -33,7 +33,7 @@ RowLayout {
             Layout.fillHeight: true
 
             PlasmaComponents.Label {
-                visible: index > 0
+                visible: index > 0 && !modelData.hideSeparator
                 text: "|"
                 font.pixelSize: compactRow.effectiveFontSize
                 font.family: compactRow.fontFamily
@@ -61,11 +61,43 @@ RowLayout {
             }
 
             PlasmaComponents.Label {
-                text: modelData.value
+                text: modelData.value || ""
+                visible: !modelData.segments
                 font.pixelSize: compactRow.effectiveFontSize
                 font.family: compactRow.fontFamily
                 color: modelData.color
                 Layout.alignment: Qt.AlignVCenter
+            }
+
+            Row {
+                visible: !!modelData.segments
+                spacing: 2
+                Layout.alignment: Qt.AlignVCenter
+
+                Repeater {
+                    model: modelData.segments || []
+                    delegate: Row {
+                        required property var modelData
+                        required property int index
+                        spacing: 2
+
+                        PlasmaComponents.Label {
+                            visible: index > 0
+                            text: "·"
+                            font.pixelSize: compactRow.effectiveFontSize
+                            font.family: compactRow.fontFamily
+                            color: compactRow.baseTextColor
+                            opacity: 0.5
+                        }
+
+                        PlasmaComponents.Label {
+                            text: modelData.value
+                            font.pixelSize: compactRow.effectiveFontSize
+                            font.family: compactRow.fontFamily
+                            color: modelData.color
+                        }
+                    }
+                }
             }
         }
     }

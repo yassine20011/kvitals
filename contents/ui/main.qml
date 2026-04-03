@@ -149,9 +149,17 @@ PlasmoidItem {
                 else if (key === "temp" && root.showTemp && temp.tempValue && temp.tempValue !== "--")
                     items.push({ icon: root.tempIcon, label: "TEMP:", value: temp.tempValue,
                                  color: root.tempColor });
-                else if (key === "gpu" && root.showGpu && gpu.hasGpuData)
-                    items.push({ icon: root.gpuIcon, label: "GPU:", value: gpu.gpuDisplayValue,
+                else if (key === "gpu" && root.showGpu && gpu.hasGpuData) {
+                    var gpuSegs = [];
+                    if (gpu.hasGpuUsageData)
+                        gpuSegs.push({ value: gpu.gpuValue,   color: root.gpuColor });
+                    if (gpu.hasGpuVramData)
+                        gpuSegs.push({ value: gpu.gpuRamValue, color: root.baseTextColor });
+                    if (gpu.hasGpuTempData)
+                        gpuSegs.push({ value: gpu.gpuTempValue, color: root.gpuTempColor });
+                    items.push({ icon: root.gpuIcon, label: "GPU:", segments: gpuSegs,
                                  color: root.gpuColor });
+                }
                 else if (key === "bat" && root.showBattery && battery.batValue)
                     items.push({ icon: root.batteryIcon, label: "BAT:", value: battery.batValue,
                                  color: root.batteryColor });
