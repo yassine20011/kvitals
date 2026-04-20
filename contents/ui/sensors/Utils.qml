@@ -17,7 +17,7 @@ QtObject {
         if (kbps >= 1024) {
             return String((kbps / 1024).toFixed(1)).padStart(5, "\u2007") + "M";
         }
-        return String(Math.max(0, kbps).toFixed(1)).padStart(5, "\u2007") + "K";
+        return String(Math.max(0, kbps).toFixed(1)).padStart(6, "\u2007") + "K";
     }
 
     function sensorValueOrNaN(sensor) {
