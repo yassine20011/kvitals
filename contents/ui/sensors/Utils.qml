@@ -7,7 +7,7 @@ QtObject {
         if (typeof bytes !== "number" || isNaN(bytes))
             return "...";
         var gb = bytes / (1024 * 1024 * 1024);
-        return gb.toFixed(1);
+        return String(gb.toFixed(1)).padStart(4, "\u2007");
     }
 
     function formatRate(bytesPerSec) {
@@ -15,9 +15,9 @@ QtObject {
             return "...";
         var kbps = bytesPerSec / 1024;
         if (kbps >= 1024) {
-            return (kbps / 1024).toFixed(1) + "M";
+            return String((kbps / 1024).toFixed(1)).padStart(5, "\u2007") + "M";
         }
-        return Math.max(0, kbps).toFixed(1) + "K";
+        return String(Math.max(0, kbps).toFixed(1)).padStart(5, "\u2007") + "K";
     }
 
     function sensorValueOrNaN(sensor) {

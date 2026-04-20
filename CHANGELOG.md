@@ -2,6 +2,11 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [2.4.1] - 2026-04-20
+
+### Fixed
+- Fixed horizontal layout jitter caused by changing sensor value lengths (#23).
+
 ## [2.4.0] - 2026-04-01
 
 ### Added

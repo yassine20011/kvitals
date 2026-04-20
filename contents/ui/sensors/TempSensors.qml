@@ -14,7 +14,7 @@ Item {
 
     readonly property string tempValue: {
         if (isNaN(tempNumericValue)) return "--";
-        return Math.round(tempNumericValue) + "°C";
+        return String(Math.round(tempNumericValue)).padStart(3, "\u2007") + "°C";
     }
 
     Sensors.Sensor {
