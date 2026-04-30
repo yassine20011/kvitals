@@ -22,7 +22,7 @@ Right-click the widget → **Configure KVitals...** to open the settings dialog.
 | **Icons + Text** | Icons + labels + values: `🖥 CPU: 26%  \|  🧠 RAM: 8.8/39.0G` |
 
 !!! tip "Saving Panel Space"
-**Icons** mode is the most compact — great for small panels or when you have many metrics enabled.
+    **Icons** mode is the most compact — great for small panels or when you have many metrics enabled.
 
 ### Layout Types
 
@@ -84,7 +84,7 @@ You can manually select a specific interface (e.g., `wlan0`, `enp3s0`) from the 
 single device.
 
 !!! note
-The manual interface list is populated dynamically from `/sys/class/net/`.
+    The manual interface list is populated dynamically from `/sys/class/net/`.
 
 ## Icons Tab
 
@@ -106,18 +106,18 @@ icon theme (Breeze, Papirus, Tela, etc.).
 Click **"Reset to defaults"** to restore all icons to their default values.
 
 !!! note "Monochrome Rendering"
-Icons are rendered with `isMask: true`, meaning they adopt the panel's text color (monochrome). This ensures visibility
-on both light and dark panels.
+    Icons are rendered with `isMask: true`, meaning they adopt the panel's text color (monochrome). This ensures
+    visibility on both light and dark panels.
 
 !!! tip "Finding Icons"
-The icon picker shows all icons from your installed theme. Use the search bar to find icons by name — try keywords
-like "chip", "thermometer", "download", or "lightning".
+    The icon picker shows all icons from your installed theme. Use the search bar to find icons by name — try keywords
+    like "chip", "thermometer", "download", or "lightning".
 
 ## Colors Tab
 
 | Setting                       | Description                                                  | Default                 |
 |-------------------------------|--------------------------------------------------------------|-------------------------|
-| **Use custom font color**     | Overrides the wudget text color with a custom color          | Off                     |
+| **Use custom font color**     | Overrides the widget text color with a custom color          | Off                     |
 | **Color**                     | Font color as a picked or typed `#RRGGBB` value              | Plasma theme text color |
 | **Enable threshold coloring** | Changes color of supported metric values based on thresholds | Off                     |
 | **Warning color**             | Color used when a warning threshold is reached               | `#e5a50a`               |
@@ -135,5 +135,5 @@ Threshold coloring supports CPU usage, CPU temperature, RAM usage, GPU usage, GP
 | Battery level   | 30%                   | 15%                    |
 
 !!! note "Battery Thresholds"
-Battery thresholds are inverted: warning and critical states trigger when the battery level falls _below_ the configured
-values.
+    Battery thresholds are inverted: warning and critical states trigger when the battery level falls _below_ the
+    configured values.
