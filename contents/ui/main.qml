@@ -22,6 +22,9 @@ PlasmoidItem {
     property string networkInterface: Plasmoid.configuration.networkInterface
     property string batteryDevice: Plasmoid.configuration.batteryDevice
     property string displayMode: Plasmoid.configuration.displayMode
+    property string layoutType: Plasmoid.configuration.layoutType
+    property bool mergeCpuTemp: Plasmoid.configuration.mergeCpuTemp
+    property bool mergeBatPwr: Plasmoid.configuration.mergeBatPwr
     property int iconSize: Plasmoid.configuration.iconSize
     property string cpuIcon: Plasmoid.configuration.cpuIcon
     property string ramIcon: Plasmoid.configuration.ramIcon
@@ -140,19 +143,29 @@ PlasmoidItem {
             var items = [];
             for (var i = 0; i < root.orderedKeys.length; i++) {
                 var key = root.orderedKeys[i];
-                if (key === "cpu" && root.showCpu && cpu.cpuValue)
-                    items.push({ icon: root.cpuIcon, label: "CPU:", value: cpu.cpuValue,
-                                 color: root.cpuColor });
+                if (key === "cpu" && root.showCpu && cpu.cpuValue) {
+                    if (root.mergeCpuTemp && root.showTemp && temp.tempValue && temp.tempValue !== "--") {
+                        items.push({ icon: root.cpuIcon, label: "CPU:",
+                                     segments: [
+                                         { value: cpu.cpuValue,   color: root.cpuColor },
+                                         { value: temp.tempValue, color: root.tempColor }
+                                     ]});
+                    } else {
+                        items.push({ icon: root.cpuIcon, label: "CPU:", value: cpu.cpuValue,
+                                     color: root.cpuColor });
+                    }
+                }
                 else if (key === "ram" && root.showRam && memory.ramValue)
                     items.push({ icon: root.ramIcon, label: "RAM:", value: memory.ramValue,
                                  color: root.ramColor });
-                else if (key === "temp" && root.showTemp && temp.tempValue && temp.tempValue !== "--")
+                else if (key === "temp" && root.showTemp && temp.tempValue && temp.tempValue !== "--"
+                         && !(root.mergeCpuTemp && root.showCpu))
                     items.push({ icon: root.tempIcon, label: "TEMP:", value: temp.tempValue,
                                  color: root.tempColor });
                 else if (key === "gpu" && root.showGpu && gpu.hasGpuData) {
                     var gpuSegs = [];
                     if (gpu.hasGpuUsageData)
-                        gpuSegs.push({ value: gpu.gpuValue,   color: root.gpuColor });
+                        gpuSegs.push({ value: gpu.gpuValue,    color: root.gpuColor });
                     if (gpu.hasGpuVramData)
                         gpuSegs.push({ value: gpu.gpuRamValue, color: root.baseTextColor });
                     if (gpu.hasGpuTempData)
@@ -160,18 +173,30 @@ PlasmoidItem {
                     items.push({ icon: root.gpuIcon, label: "GPU:", segments: gpuSegs,
                                  color: root.gpuColor });
                 }
-                else if (key === "bat" && root.showBattery && battery.batValue)
-                    items.push({ icon: root.batteryIcon, label: "BAT:", value: battery.batValue,
-                                 color: root.batteryColor });
-                else if (key === "pwr" && root.showPower && battery.powerValue)
+                else if (key === "bat" && root.showBattery && battery.batValue) {
+                    if (root.mergeBatPwr && root.showPower && battery.powerValue) {
+                        items.push({ icon: root.batteryIcon, label: "BAT:",
+                                     segments: [
+                                         { value: battery.batValue,   color: root.batteryColor },
+                                         { value: battery.powerValue, color: root.baseTextColor }
+                                     ]});
+                    } else {
+                        items.push({ icon: root.batteryIcon, label: "BAT:", value: battery.batValue,
+                                     color: root.batteryColor });
+                    }
+                }
+                else if (key === "pwr" && root.showPower && battery.powerValue
+                         && !(root.mergeBatPwr && root.showBattery))
                     items.push({ icon: root.powerIcon, label: "PWR:", value: battery.powerValue,
                                  color: root.baseTextColor });
                 else if (key === "net" && root.showNetwork)
-                    items.push({ icon: root.networkIcon, label: "NET:", value: "↓" + network.netDownValue + " ↑" + network.netUpValue,
+                    items.push({ icon: root.networkIcon, label: "NET:",
+                                 value: "↓" + network.netDownValue + " ↑" + network.netUpValue,
                                  color: root.baseTextColor });
             }
             return items;
         }
+        layoutType: root.layoutType
         useIcons: root.useIcons
         useText: root.useText
         effectiveFontSize: root.effectiveFontSize

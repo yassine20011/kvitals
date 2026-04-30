@@ -12,10 +12,14 @@ KCM.SimpleKCM {
     property alias cfg_fontSize: fontSizeSlider.value
     property string cfg_displayMode: "text"
     property string cfg_fontFamily: "monospace"
+    property string cfg_layoutType: "horizontal"
 
     readonly property var displayModes: ["text", "icons", "icons+text"]
     readonly property var displayModeLabels: [i18n("Text"), i18n("Icons"), i18n("Icons + Text")]
     readonly property bool iconsEnabled: cfg_displayMode !== "text"
+
+    readonly property var layoutTypes: ["horizontal", "vertical"]
+    readonly property var layoutTypeLabels: [i18n("Horizontal"), i18n("Vertical")]
 
     Kirigami.FormLayout {
 
@@ -29,6 +33,19 @@ KCM.SimpleKCM {
             }
             onActivated: {
                 cfg_displayMode = configPage.displayModes[currentIndex];
+            }
+        }
+
+        ComboBox {
+            id: layoutTypeCombo
+            Kirigami.FormData.label: i18n("Layout:")
+            model: configPage.layoutTypeLabels
+            currentIndex: {
+                var idx = configPage.layoutTypes.indexOf(cfg_layoutType);
+                return idx >= 0 ? idx : 0;
+            }
+            onActivated: {
+                cfg_layoutType = configPage.layoutTypes[currentIndex];
             }
         }
 
