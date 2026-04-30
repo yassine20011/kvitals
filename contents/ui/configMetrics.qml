@@ -232,12 +232,7 @@ KCM.SimpleKCM {
                             text: metricsPage.metricLabels[modelData] || modelData
                             checked: metricsPage.isChecked(modelData)
 
-                            onToggled: {
-                                metricsPage.setChecked(modelData, checked);
-
-                                if (!checked)
-                                    metricsPage.setCompactChecked(modelData, false);
-                            }
+                            onToggled: metricsPage.setChecked(modelData, checked);
                         }
 
                         Item {
