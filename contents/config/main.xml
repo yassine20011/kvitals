@@ -25,6 +25,27 @@
         <entry name="showNetwork" type="Bool">
             <default>true</default>
         </entry>
+        <entry name="compactShowCpu" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="compactShowRam" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="compactShowTemp" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="compactShowGpu" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="compactShowBattery" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="compactShowPower" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="compactShowNetwork" type="Bool">
+            <default>true</default>
+        </entry>
         <entry name="networkInterface" type="String">
             <default>auto</default>
         </entry>

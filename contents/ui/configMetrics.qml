@@ -15,6 +15,13 @@ KCM.SimpleKCM {
     property bool cfg_showBattery
     property bool cfg_showPower
     property bool cfg_showNetwork
+    property bool cfg_compactShowCpu
+    property bool cfg_compactShowRam
+    property bool cfg_compactShowTemp
+    property bool cfg_compactShowGpu
+    property bool cfg_compactShowBattery
+    property bool cfg_compactShowPower
+    property bool cfg_compactShowNetwork
     property string cfg_networkInterface: "auto"
     property string cfg_batteryDevice: "auto"
     property string cfg_metricOrder: "cpu,ram,temp,gpu,bat,pwr,net"
@@ -27,17 +34,21 @@ KCM.SimpleKCM {
     readonly property var allKeys: ["cpu", "ram", "temp", "gpu", "bat", "pwr", "net"]
 
     readonly property var metricLabels: ({
-        "cpu":  i18n("CPU Usage"),
-        "ram":  i18n("RAM Usage"),
+        "cpu": i18n("CPU Usage"),
+        "ram": i18n("RAM Usage"),
         "temp": i18n("CPU Temperature"),
-        "gpu":  i18n("GPU Metrics"),
-        "bat":  i18n("Battery Status"),
-        "pwr":  i18n("Power Consumption"),
-        "net":  i18n("Network Speed")
+        "gpu": i18n("GPU Metrics"),
+        "bat": i18n("Battery Status"),
+        "pwr": i18n("Power Consumption"),
+        "net": i18n("Network Speed")
     })
 
     property var currentOrder: {
-        var keys = cfg_metricOrder.split(",").map(function(k) { return k.trim(); }).filter(function(k) { return k.length > 0 && metricLabels[k] !== undefined; });
+        var keys = cfg_metricOrder.split(",").map(function (k) {
+            return k.trim();
+        }).filter(function (k) {
+            return k.length > 0 && metricLabels[k] !== undefined;
+        });
         // Add any missing keys at the end
         for (var j = 0; j < allKeys.length; j++) {
             if (keys.indexOf(allKeys[j]) < 0) {
@@ -49,26 +60,67 @@ KCM.SimpleKCM {
 
     function isChecked(key) {
         switch (key) {
-            case "cpu":  return cfg_showCpu;
-            case "ram":  return cfg_showRam;
-            case "temp": return cfg_showTemp;
-            case "gpu":  return cfg_showGpu;
-            case "bat":  return cfg_showBattery;
-            case "pwr":  return cfg_showPower;
-            case "net":  return cfg_showNetwork;
+            case "cpu":
+                return cfg_showCpu;
+            case "ram":
+                return cfg_showRam;
+            case "temp":
+                return cfg_showTemp;
+            case "gpu":
+                return cfg_showGpu;
+            case "bat":
+                return cfg_showBattery;
+            case "pwr":
+                return cfg_showPower;
+            case "net":
+                return cfg_showNetwork;
+        }
+        return false;
+    }
+
+    function isCompactChecked(key) {
+        switch (key) {
+            case "cpu":
+                return cfg_compactShowCpu;
+            case "ram":
+                return cfg_compactShowRam;
+            case "temp":
+                return cfg_compactShowTemp;
+            case "gpu":
+                return cfg_compactShowGpu;
+            case "bat":
+                return cfg_compactShowBattery;
+            case "pwr":
+                return cfg_compactShowPower;
+            case "net":
+                return cfg_compactShowNetwork;
         }
         return false;
     }
 
     function setChecked(key, val) {
         switch (key) {
-            case "cpu":  cfg_showCpu     = val; break;
-            case "ram":  cfg_showRam     = val; break;
-            case "temp": cfg_showTemp    = val; break;
-            case "gpu":  cfg_showGpu     = val; break;
-            case "bat":  cfg_showBattery = val; break;
-            case "pwr":  cfg_showPower   = val; break;
-            case "net":  cfg_showNetwork = val; break;
+            case "cpu":
+                cfg_showCpu = val;
+                break;
+            case "ram":
+                cfg_showRam = val;
+                break;
+            case "temp":
+                cfg_showTemp = val;
+                break;
+            case "gpu":
+                cfg_showGpu = val;
+                break;
+            case "bat":
+                cfg_showBattery = val;
+                break;
+            case "pwr":
+                cfg_showPower = val;
+                break;
+            case "net":
+                cfg_showNetwork = val;
+                break;
         }
         // Reset merge toggles when a prerequisite metric is disabled
         if (!val) {
@@ -78,6 +130,32 @@ KCM.SimpleKCM {
                 cfg_mergeBatPwr = false;
             if (key === "gpu" && cfg_splitGpu)
                 cfg_splitGpu = false;
+        }
+    }
+
+    function setCompactChecked(key, val) {
+        switch (key) {
+            case "cpu":
+                cfg_compactShowCpu = val;
+                break;
+            case "ram":
+                cfg_compactShowRam = val;
+                break;
+            case "temp":
+                cfg_compactShowTemp = val;
+                break;
+            case "gpu":
+                cfg_compactShowGpu = val;
+                break;
+            case "bat":
+                cfg_compactShowBattery = val;
+                break;
+            case "pwr":
+                cfg_compactShowPower = val;
+                break;
+            case "net":
+                cfg_compactShowNetwork = val;
+                break;
         }
     }
 
@@ -108,11 +186,11 @@ KCM.SimpleKCM {
         engine: "executable"
         connectedSources: ["ls /sys/class/net/"]
 
-        onNewData: function(source, data) {
+        onNewData: function (source, data) {
             if (data["exit code"] !== 0) return;
             var raw = data["stdout"].trim();
             if (raw.length === 0) return;
-            var ifaces = raw.split("\n").filter(function(name) {
+            var ifaces = raw.split("\n").filter(function (name) {
                 return name !== "lo" && name.length > 0;
             });
             ifaces.unshift("auto");
@@ -141,17 +219,29 @@ KCM.SimpleKCM {
 
                     spacing: Kirigami.Units.smallSpacing
                     Layout.fillWidth: true
+
                     // Hide metrics that are absorbed into a group
                     visible: !(modelData === "temp" && cfg_mergeCpuTemp && cfg_showCpu) &&
-                             !(modelData === "pwr"  && cfg_mergeBatPwr  && cfg_showBattery)
+                        !(modelData === "pwr" && cfg_mergeBatPwr && cfg_showBattery)
 
                     CheckBox {
                         checked: metricsPage.isChecked(modelData)
                         onToggled: metricsPage.setChecked(modelData, checked)
+                        ToolTip.visible: hovered
+                        ToolTip.text: i18n("Enable this metric")
+                    }
+
+                    CheckBox {
+                        checked: metricsPage.isCompactChecked(modelData)
+                        enabled: metricsPage.isChecked(modelData)
+                        onToggled: metricsPage.setCompactChecked(modelData, checked)
+                        ToolTip.visible: hovered
+                        ToolTip.text: i18n("Show in compact panel")
                     }
 
                     Label {
                         text: metricsPage.metricLabels[modelData] || modelData
+                        enabled: metricsPage.isChecked(modelData)
                         Layout.fillWidth: true
                     }
 
