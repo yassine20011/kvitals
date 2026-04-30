@@ -213,7 +213,7 @@ KCM.SimpleKCM {
             Repeater {
                 model: metricsPage.currentOrder
 
-                delegate: RowLayout {
+                delegate: ColumnLayout {
                     required property var modelData
                     required property int index
 
@@ -224,43 +224,56 @@ KCM.SimpleKCM {
                     visible: !(modelData === "temp" && cfg_mergeCpuTemp && cfg_showCpu) &&
                         !(modelData === "pwr" && cfg_mergeBatPwr && cfg_showBattery)
 
-                    CheckBox {
-                        checked: metricsPage.isChecked(modelData)
-                        onToggled: metricsPage.setChecked(modelData, checked)
-                        ToolTip.visible: hovered
-                        ToolTip.text: i18n("Enable this metric")
-                    }
-
-                    CheckBox {
-                        checked: metricsPage.isCompactChecked(modelData)
-                        enabled: metricsPage.isChecked(modelData)
-                        onToggled: metricsPage.setCompactChecked(modelData, checked)
-                        ToolTip.visible: hovered
-                        ToolTip.text: i18n("Show in compact panel")
-                    }
-
-                    Label {
-                        text: metricsPage.metricLabels[modelData] || modelData
-                        enabled: metricsPage.isChecked(modelData)
+                    RowLayout {
                         Layout.fillWidth: true
+
+                        CheckBox {
+                            id: enabledCheck
+                            text: metricsPage.metricLabels[modelData] || modelData
+                            checked: metricsPage.isChecked(modelData)
+
+                            onToggled: {
+                                metricsPage.setChecked(modelData, checked);
+
+                                if (!checked)
+                                    metricsPage.setCompactChecked(modelData, false);
+                            }
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
+                        Button {
+                            icon.name: "arrow-up"
+                            enabled: index > 0
+                            flat: true
+                            implicitWidth: 32
+                            implicitHeight: 32
+                            onClicked: metricsPage.moveMetric(index, index - 1)
+                        }
+
+                        Button {
+                            icon.name: "arrow-down"
+                            enabled: index < metricsPage.currentOrder.length - 1
+                            flat: true
+                            implicitWidth: 32
+                            implicitHeight: 32
+                            onClicked: metricsPage.moveMetric(index, index + 1)
+                        }
                     }
 
-                    Button {
-                        icon.name: "arrow-up"
-                        enabled: index > 0
-                        flat: true
-                        implicitWidth: 32
-                        implicitHeight: 32
-                        onClicked: metricsPage.moveMetric(index, index - 1)
-                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
 
-                    Button {
-                        icon.name: "arrow-down"
-                        enabled: index < metricsPage.currentOrder.length - 1
-                        flat: true
-                        implicitWidth: 32
-                        implicitHeight: 32
-                        onClicked: metricsPage.moveMetric(index, index + 1)
+                        CheckBox {
+                            text: i18n("Show in compact panel")
+                            checked: metricsPage.isCompactChecked(modelData)
+                            enabled: metricsPage.isChecked(modelData)
+
+                            onToggled: metricsPage.setCompactChecked(modelData, checked)
+                        }
                     }
                 }
             }
