@@ -169,6 +169,7 @@ RowLayout {
                     SegmentsRow {
                         visible: !!itemData.segments
                         segments: itemData.segments || []
+                        Layout.alignment: Qt.AlignHCenter
                     }
                 }
 

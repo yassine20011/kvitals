@@ -70,6 +70,15 @@ KCM.SimpleKCM {
             case "pwr":  cfg_showPower   = val; break;
             case "net":  cfg_showNetwork = val; break;
         }
+        // Reset merge toggles when a prerequisite metric is disabled
+        if (!val) {
+            if ((key === "cpu" || key === "temp") && cfg_mergeCpuTemp)
+                cfg_mergeCpuTemp = false;
+            if ((key === "bat" || key === "pwr") && cfg_mergeBatPwr)
+                cfg_mergeBatPwr = false;
+            if (key === "gpu" && cfg_splitGpu)
+                cfg_splitGpu = false;
+        }
     }
 
     function moveMetric(fromIndex, toIndex) {
