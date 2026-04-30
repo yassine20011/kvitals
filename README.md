@@ -22,7 +22,7 @@ CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 96°C  |  🔋BAT: 78%  |  PWR: +20W  |  N
 - **Display modes** — Text, Icons, or Icons + Text for the panel view
 - **Custom icons** — Pick any icon from your installed theme for each metric
 - **Font customization** — Choose any system font and size
-- **Configurable** — Toggle each metric, adjust refresh rate, organized in 3 settings tabs
+- **Configurable** — Toggle each metric, adjust refresh rate, tune colors, organized in 4 settings tabs
 - **Minimal footprint** — Native KDE KSysGuard sensors + QML, no heavy dependencies or excessive subprocesses
 - **Click to expand** — Detailed popup view with all stats
 
@@ -78,11 +78,12 @@ plasmashell --replace &
 
 ## Configuration
 
-Right-click the widget → **Configure KVitals...** to access settings in three tabs:
+Right-click the widget → **Configure KVitals...** to access settings in four tabs:
 
-- **General** — Display mode, icon size, font, update interval
-- **Metrics** — Toggle CPU, RAM, Temperature, Battery, Power, Network
+- **General** — Display mode, layout, icon size, font, update interval
+- **Metrics** — Toggle CPU, RAM, Temperature, GPU, Battery, Power, Network
 - **Icons** — Customize icons for each metric from your theme
+- **Colors** — Set custom font colors and optional threshold-based metric colors
 
 See the [full configuration reference](docs/configuration.md) for details.
 
@@ -119,6 +120,7 @@ kvitals/
         ├── configGeneral.qml       # General settings tab
         ├── configMetrics.qml       # Metrics settings tab
         ├── configIcons.qml         # Icons settings tab
+        ├── configColors.qml        # Colors settings tab
         └── sensors/                # Sensor modules
             ├── qmldir              # QML module definition
             ├── CpuSensors.qml      # CPU usage

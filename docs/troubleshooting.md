@@ -77,6 +77,19 @@ qdbus --literal org.kde.ksystemstats1 /org/kde/ksystemstats1 org.kde.ksystemstat
 !!! tip
     On multi-GPU systems, per-GPU sensors such as `gpu/gpu1/*` may exist even when aggregate sensors are partial.
 
+## Metric Shows in Popup But Not Panel
+
+**Cause:** The metric is enabled, but its **Show in compact panel** checkbox is disabled in the Metrics settings.
+
+**Fix:**
+
+1. Open **Settings → Metrics**.
+2. Find the metric in the order list.
+3. Enable **Show in compact panel** under that metric.
+
+!!! note
+    Compact grouping also depends on compact visibility. For example, **Merge CPU & Temp** only shows temperature next to CPU when both metrics are enabled and selected for the compact panel.
+
 ## Widget Shows "KVitals" or "..."
 
 **Cause:** The KSysGuard daemon hasn't returned sensor data yet.

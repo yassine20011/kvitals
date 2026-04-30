@@ -36,8 +36,10 @@ Thanks for your interest in contributing to KVitals!
 ### Adding a New Metric
 
 1. **Sensors** — Find the relevant `org.kde.ksysguard.sensors` sensor ID using `kstatsviewer`
-2. **Settings** — Add checkbox to `configMetrics.qml`, icon picker to `configIcons.qml`
-5. **UI** — Add property bindings and model entry in `main.qml`
+2. **Settings** — Add `show*` and `compactShow*` entries to `contents/config/main.xml`
+3. **Configuration UI** — Add the metric and compact visibility checkboxes to `configMetrics.qml`
+4. **Icons** — Add an icon picker to `configIcons.qml`
+5. **UI** — Add property bindings and model entries in `main.qml`
 
 !!! note
     Don't forget to add a default icon name for the new metric in `configIcons.qml`'s reset button handler.
@@ -45,7 +47,7 @@ Thanks for your interest in contributing to KVitals!
 ### Adding a New Setting
 
 1. Add the entry to `contents/config/main.xml` with a default value
-2. Add the UI control to the appropriate config tab (`configGeneral.qml`, `configMetrics.qml`, or `configIcons.qml`)
+2. Add the UI control to the appropriate config tab (`configGeneral.qml`, `configMetrics.qml`, `configIcons.qml`, or `configColors.qml`)
 3. Bind the value in `main.qml` via `Plasmoid.configuration.<key>`
 
 ## Pull Requests

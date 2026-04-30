@@ -65,9 +65,9 @@ plugins:
       markdown_description: >
         KVitals is a lightweight KDE Plasma 6 panel widget that displays live
         system vitals including CPU usage, memory usage, CPU temperature,
-        network upload/download speeds, and disk read/write speeds directly
-        in your panel. It uses a shell script backend with automatic network
-        interface detection and is fully configurable through a settings UI.
+        GPU metrics, battery status, power draw, and network upload/download
+        speeds directly in your panel. It uses native KDE KSysGuard sensors and 
+        is fully configurable through a settings UI.
       full_output: llms-full.txt
       sections:
         Getting started:
