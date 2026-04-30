@@ -25,6 +25,7 @@ PlasmoidItem {
     property string layoutType: Plasmoid.configuration.layoutType
     property bool mergeCpuTemp: Plasmoid.configuration.mergeCpuTemp
     property bool mergeBatPwr: Plasmoid.configuration.mergeBatPwr
+    property bool splitGpu: Plasmoid.configuration.splitGpu
     property int iconSize: Plasmoid.configuration.iconSize
     property string cpuIcon: Plasmoid.configuration.cpuIcon
     property string ramIcon: Plasmoid.configuration.ramIcon
@@ -146,6 +147,7 @@ PlasmoidItem {
                 if (key === "cpu" && root.showCpu && cpu.cpuValue) {
                     if (root.mergeCpuTemp && root.showTemp && temp.tempValue && temp.tempValue !== "--") {
                         items.push({ icon: root.cpuIcon, label: "CPU:",
+                                     color: root.cpuColor,
                                      segments: [
                                          { value: cpu.cpuValue,   color: root.cpuColor },
                                          { value: temp.tempValue, color: root.tempColor }
@@ -163,19 +165,29 @@ PlasmoidItem {
                     items.push({ icon: root.tempIcon, label: "TEMP:", value: temp.tempValue,
                                  color: root.tempColor });
                 else if (key === "gpu" && root.showGpu && gpu.hasGpuData) {
-                    var gpuSegs = [];
-                    if (gpu.hasGpuUsageData)
-                        gpuSegs.push({ value: gpu.gpuValue,    color: root.gpuColor });
-                    if (gpu.hasGpuVramData)
-                        gpuSegs.push({ value: gpu.gpuRamValue, color: root.baseTextColor });
-                    if (gpu.hasGpuTempData)
-                        gpuSegs.push({ value: gpu.gpuTempValue, color: root.gpuTempColor });
-                    items.push({ icon: root.gpuIcon, label: "GPU:", segments: gpuSegs,
-                                 color: root.gpuColor });
+                    if (root.splitGpu) {
+                        if (gpu.hasGpuUsageData)
+                            items.push({ icon: root.gpuIcon, label: "GPU:",  value: gpu.gpuValue,    color: root.gpuColor });
+                        if (gpu.hasGpuVramData)
+                            items.push({ icon: root.gpuIcon, label: "VRAM:", value: gpu.gpuRamValue, color: root.baseTextColor });
+                        if (gpu.hasGpuTempData)
+                            items.push({ icon: root.gpuIcon, label: "GTEMP:", value: gpu.gpuTempValue, color: root.gpuTempColor });
+                    } else {
+                        var gpuSegs = [];
+                        if (gpu.hasGpuUsageData)
+                            gpuSegs.push({ value: gpu.gpuValue,    color: root.gpuColor });
+                        if (gpu.hasGpuVramData)
+                            gpuSegs.push({ value: gpu.gpuRamValue, color: root.baseTextColor });
+                        if (gpu.hasGpuTempData)
+                            gpuSegs.push({ value: gpu.gpuTempValue, color: root.gpuTempColor });
+                        items.push({ icon: root.gpuIcon, label: "GPU:", segments: gpuSegs,
+                                     color: root.gpuColor });
+                    }
                 }
                 else if (key === "bat" && root.showBattery && battery.batValue) {
                     if (root.mergeBatPwr && root.showPower && battery.powerValue) {
                         items.push({ icon: root.batteryIcon, label: "BAT:",
+                                     color: root.batteryColor,
                                      segments: [
                                          { value: battery.batValue,   color: root.batteryColor },
                                          { value: battery.powerValue, color: root.baseTextColor }

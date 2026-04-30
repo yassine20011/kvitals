@@ -2,6 +2,23 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [2.5.0] - 2026-04-30
+
+### Added
+- **Layout Type** (`General` settings): Choose between **Horizontal** (default, unchanged) and **Vertical** layout for the compact panel view. In vertical mode, the metric value is displayed on top with the label/icon dimmed below — ideal for tall panels or icon-only display (#11).
+- **Metric Grouping** (`Metrics` settings — Grouping section):
+  - **Merge CPU & Temp**: Combines CPU temperature as a second value next to CPU usage (`CPU: 45% · 62°C`), using the same segment display as GPU. The CPU Temperature entry is hidden from the metric order list while merged.
+  - **Merge Battery & Power**: Combines power consumption as a second value next to battery level (`BAT: 87% · 12.4W`). Power Consumption entry is hidden from the metric order list while merged.
+  - **Split GPU Metrics**: Optionally break GPU usage, VRAM and temperature into separate panel entries instead of the default grouped display (default: grouped).
+
+### Changed
+- Metric order list now hides absorbed metrics when grouping is active (e.g. "CPU Temperature" disappears when "Merge CPU & Temp" is enabled), keeping the list clean and non-redundant.
+- `CompactView` refactored to use a `Loader`-based delegate system, enabling runtime layout switching without widget reload.
+
+### Fixed
+- `Unable to assign [undefined] to QColor` runtime error when CPU+Temp or Battery+Power merge was enabled — missing top-level `color` field on segmented metric objects.
+- Defensive `|| baseTextColor` fallback added to all value label color bindings in `CompactView`.
+
 ## [2.4.0] - 2026-04-01
 
 ### Added

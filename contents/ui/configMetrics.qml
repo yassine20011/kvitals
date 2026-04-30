@@ -20,6 +20,7 @@ KCM.SimpleKCM {
     property string cfg_metricOrder: "cpu,ram,temp,gpu,bat,pwr,net"
     property bool cfg_mergeCpuTemp: false
     property bool cfg_mergeBatPwr: false
+    property bool cfg_splitGpu: false
 
     property var ifaceList: ["auto"]
 
@@ -126,8 +127,14 @@ KCM.SimpleKCM {
                 model: metricsPage.currentOrder
 
                 delegate: RowLayout {
+                    required property var modelData
+                    required property int index
+
                     spacing: Kirigami.Units.smallSpacing
                     Layout.fillWidth: true
+                    // Hide metrics that are absorbed into a group
+                    visible: !(modelData === "temp" && cfg_mergeCpuTemp && cfg_showCpu) &&
+                             !(modelData === "pwr"  && cfg_mergeBatPwr  && cfg_showBattery)
 
                     CheckBox {
                         checked: metricsPage.isChecked(modelData)
@@ -226,6 +233,23 @@ KCM.SimpleKCM {
             opacity: 0.7
             font.italic: true
             visible: cfg_showBattery && cfg_showPower
+            wrapMode: Text.WordWrap
+            Layout.maximumWidth: 300
+        }
+
+        CheckBox {
+            id: splitGpuCheck
+            Kirigami.FormData.label: i18n("Split GPU metrics:")
+            checked: cfg_splitGpu
+            enabled: cfg_showGpu
+            onToggled: cfg_splitGpu = checked
+        }
+
+        Label {
+            text: i18n("Shows GPU usage, VRAM and temperature as separate entries instead of grouped.")
+            opacity: 0.7
+            font.italic: true
+            visible: cfg_showGpu
             wrapMode: Text.WordWrap
             Layout.maximumWidth: 300
         }

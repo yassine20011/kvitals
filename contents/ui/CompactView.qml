@@ -117,7 +117,7 @@ RowLayout {
                 text: itemData.value || ""
                 font.pixelSize: compactRow.effectiveFontSize
                 font.family: compactRow.fontFamily
-                color: itemData.color
+                color: itemData.color || compactRow.baseTextColor
                 Layout.alignment: Qt.AlignVCenter
             }
 
@@ -162,7 +162,7 @@ RowLayout {
                         font.pixelSize: compactRow.effectiveFontSize
                         font.family: compactRow.fontFamily
                         font.bold: true
-                        color: itemData.color
+                        color: itemData.color || compactRow.baseTextColor
                         horizontalAlignment: Text.AlignHCenter
                     }
 
@@ -188,7 +188,10 @@ RowLayout {
 
                     PlasmaComponents.Label {
                         visible: compactRow.useText || !compactRow.useIcons
-                        text: itemData.label
+                        text: {
+                            var lbl = itemData.label || "";
+                            return lbl.endsWith(":") ? lbl.slice(0, -1) : lbl;
+                        }
                         font.pixelSize: Math.max(8, compactRow.effectiveFontSize - 2)
                         font.family: compactRow.fontFamily
                         color: compactRow.baseTextColor
