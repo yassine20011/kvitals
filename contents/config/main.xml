@@ -7,6 +7,9 @@
         <entry name="showCpu" type="Bool">
             <default>true</default>
         </entry>
+        <entry name="showCpuFreq" type="Bool">
+            <default>false</default>
+        </entry>
         <entry name="showRam" type="Bool">
             <default>true</default>
         </entry>
@@ -59,6 +62,9 @@
             <default>horizontal</default>
         </entry>
         <entry name="mergeCpuTemp" type="Bool">
+            <default>false</default>
+        </entry>
+        <entry name="mergeCpuFreq" type="Bool">
             <default>false</default>
         </entry>
         <entry name="mergeBatPwr" type="Bool">

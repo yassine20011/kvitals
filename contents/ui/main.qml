@@ -31,6 +31,8 @@ PlasmoidItem {
     property string displayMode: Plasmoid.configuration.displayMode
     property string layoutType: Plasmoid.configuration.layoutType
     property bool mergeCpuTemp: Plasmoid.configuration.mergeCpuTemp
+    property bool mergeCpuFreq: Plasmoid.configuration.mergeCpuFreq
+    property bool showCpuFreq: Plasmoid.configuration.showCpuFreq
     property bool mergeBatPwr: Plasmoid.configuration.mergeBatPwr
     property bool splitGpu: Plasmoid.configuration.splitGpu
     property int iconSize: Plasmoid.configuration.iconSize
@@ -156,19 +158,21 @@ PlasmoidItem {
                 var key = root.orderedKeys[i];
                 if (key === "cpu" && root.showCpu && root.compactShowCpu && cpu.cpuValue) {
                     if (root.mergeCpuTemp && root.showTemp && root.compactShowTemp && temp.tempValue && temp.tempValue !== "--") {
+                        var segs = [{value: cpu.cpuValue, color: root.cpuColor},
+                                    {value: temp.tempValue, color: root.tempColor}];
+                        if (root.mergeCpuFreq && root.showCpuFreq)
+                            segs.push({value: cpu.cpuFreqValue, color: root.baseTextColor});
+                        items.push({icon: root.cpuIcon, label: "CPU:", color: root.cpuColor, segments: segs});
+                    } else if (root.mergeCpuFreq && root.showCpuFreq) {
                         items.push({
-                            icon: root.cpuIcon, label: "CPU:",
-                            color: root.cpuColor,
+                            icon: root.cpuIcon, label: "CPU:", color: root.cpuColor,
                             segments: [
                                 {value: cpu.cpuValue, color: root.cpuColor},
-                                {value: temp.tempValue, color: root.tempColor}
+                                {value: cpu.cpuFreqValue, color: root.baseTextColor}
                             ]
                         });
                     } else {
-                        items.push({
-                            icon: root.cpuIcon, label: "CPU:", value: cpu.cpuValue,
-                            color: root.cpuColor
-                        });
+                        items.push({icon: root.cpuIcon, label: "CPU:", value: cpu.cpuValue, color: root.cpuColor});
                     }
                 } else if (key === "ram" && root.showRam && root.compactShowRam && memory.ramValue)
                     items.push({
@@ -265,6 +269,11 @@ PlasmoidItem {
                     items.push({
                         label: "CPU Usage", value: cpu.cpuValue,
                         color: root.cpuColor
+                    });
+                if (key === "cpu" && root.showCpu && root.showCpuFreq)
+                    items.push({
+                        label: "CPU Frequency", value: cpu.cpuFreqValue,
+                        color: root.baseTextColor
                     });
                 else if (key === "ram" && root.showRam)
                     items.push({

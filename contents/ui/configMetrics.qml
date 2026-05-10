@@ -26,8 +26,10 @@ KCM.SimpleKCM {
     property string cfg_batteryDevice: "auto"
     property string cfg_metricOrder: "cpu,ram,temp,gpu,bat,pwr,net"
     property bool cfg_mergeCpuTemp: false
+    property bool cfg_mergeCpuFreq: false
     property bool cfg_mergeBatPwr: false
     property bool cfg_splitGpu: false
+    property bool cfg_showCpuFreq: false
 
     property var ifaceList: ["auto"]
 
@@ -323,6 +325,36 @@ KCM.SimpleKCM {
             opacity: 0.7
             font.italic: true
             visible: cfg_showCpu && cfg_showTemp
+            wrapMode: Text.WordWrap
+            Layout.maximumWidth: 300
+        }
+
+        CheckBox {
+            id: showCpuFreqCheck
+            Kirigami.FormData.label: i18n("CPU Frequency:")
+            text: i18n("Show CPU frequency")
+            checked: cfg_showCpuFreq
+            enabled: cfg_showCpu
+            onToggled: {
+                cfg_showCpuFreq = checked;
+                if (!checked) cfg_mergeCpuFreq = false;
+            }
+        }
+
+        CheckBox {
+            id: mergeCpuFreqCheck
+            Kirigami.FormData.label: ""
+            text: i18n("Merge into CPU (compact view)")
+            checked: cfg_mergeCpuFreq
+            enabled: cfg_showCpu && cfg_showCpuFreq
+            onToggled: cfg_mergeCpuFreq = checked
+        }
+
+        Label {
+            text: i18n("Shows average CPU frequency (GHz/MHz). Merge appends it next to CPU usage in the panel.")
+            opacity: 0.7
+            font.italic: true
+            visible: cfg_showCpu && cfg_showCpuFreq
             wrapMode: Text.WordWrap
             Layout.maximumWidth: 300
         }
