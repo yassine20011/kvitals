@@ -5,6 +5,7 @@ All notable changes to KVitals will be documented in this file.
 ## [2.6.0] - 2026-05-10
 
 ### Added
+- **Compact Panel Visibility** (`Metrics` settings): Each metric now has an independent "Show in compact panel" toggle, allowing metrics to appear in the full popup view but stay hidden from the panel bar (#29, thanks @keiishu). Disabling a metric preserves its compact visibility state for when it is re-enabled.
 - **CPU Frequency** (`Metrics` settings): Display the average CPU frequency in the widget. Auto-formats as GHz (≥ 1000 MHz) or MHz (#33).
   - **Merge into CPU** (compact view): Appends frequency as a second segment next to CPU usage (`CPU: 34% · 3.20 GHz`). Compatible with Merge CPU & Temp — all three values appear as segments.
   - **Full view sub-item**: When enabled, CPU Frequency appears as a dedicated row directly under CPU Usage in the popup.
