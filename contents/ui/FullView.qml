@@ -15,7 +15,7 @@ ColumnLayout {
 
     PlasmaComponents.Label {
         text: "KVitals"
-        font.bold: true
+        font.bold: true // intentional: title always bold for visual hierarchy
         font.pixelSize: Kirigami.Theme.defaultFont.pixelSize * 1.2
         Layout.alignment: Qt.AlignHCenter
         Layout.bottomMargin: Kirigami.Units.smallSpacing
