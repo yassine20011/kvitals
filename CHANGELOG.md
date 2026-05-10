@@ -2,6 +2,17 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [2.6.0] - 2026-05-10
+
+### Added
+- **CPU Frequency** (`Metrics` settings): Display the average CPU frequency in the widget. Auto-formats as GHz (≥ 1000 MHz) or MHz (#33).
+  - **Merge into CPU** (compact view): Appends frequency as a second segment next to CPU usage (`CPU: 34% · 3.20 GHz`). Compatible with Merge CPU & Temp — all three values appear as segments.
+  - **Full view sub-item**: When enabled, CPU Frequency appears as a dedicated row directly under CPU Usage in the popup.
+- **Bold Font** (`General` settings): Toggle bold styling for all metric value labels across compact and full views (#30). Defaults to off.
+
+### Fixed
+- Inconsistent font weight across metrics in vertical layout: RAM and Network values (rendered via `SegmentsRow`) were always bold while CPU/GPU were not. All value labels now follow the new Bold Font setting uniformly.
+
 ## [2.5.0] - 2026-04-30
 
 ### Added
