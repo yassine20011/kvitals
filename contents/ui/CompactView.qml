@@ -12,6 +12,7 @@ RowLayout {
     required property bool useText
     required property int effectiveFontSize
     required property string fontFamily
+    required property bool fontBold
     required property int iconSize
     required property color baseTextColor
     required property string layoutType
@@ -41,6 +42,7 @@ RowLayout {
                     text: "·"
                     font.pixelSize: compactRow.effectiveFontSize
                     font.family: compactRow.fontFamily
+                    font.bold: compactRow.fontBold
                     color: compactRow.baseTextColor
                     opacity: 0.5
                 }
@@ -48,6 +50,7 @@ RowLayout {
                     text: modelData.value
                     font.pixelSize: compactRow.effectiveFontSize
                     font.family: compactRow.fontFamily
+                    font.bold: compactRow.fontBold
                     color: modelData.color
                 }
             }
@@ -117,6 +120,7 @@ RowLayout {
                 text: itemData.value || ""
                 font.pixelSize: compactRow.effectiveFontSize
                 font.family: compactRow.fontFamily
+                font.bold: compactRow.fontBold
                 color: itemData.color || compactRow.baseTextColor
                 Layout.alignment: Qt.AlignVCenter
             }
@@ -161,7 +165,7 @@ RowLayout {
                         text: itemData.value || ""
                         font.pixelSize: compactRow.effectiveFontSize
                         font.family: compactRow.fontFamily
-                        font.bold: true
+                        font.bold: compactRow.fontBold
                         color: itemData.color || compactRow.baseTextColor
                         horizontalAlignment: Text.AlignHCenter
                     }

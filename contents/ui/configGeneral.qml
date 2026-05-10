@@ -10,6 +10,7 @@ KCM.SimpleKCM {
     property alias cfg_updateInterval: intervalSlider.value
     property alias cfg_iconSize: iconSizeSlider.value
     property alias cfg_fontSize: fontSizeSlider.value
+    property alias cfg_fontBold: fontBoldCheck.checked
     property string cfg_displayMode: "text"
     property string cfg_fontFamily: "monospace"
     property string cfg_layoutType: "horizontal"
@@ -96,6 +97,12 @@ KCM.SimpleKCM {
         Label {
             text: fontSizeSlider.value === 0 ? i18n("System default") : fontSizeSlider.value + " px"
             opacity: 0.7
+        }
+
+        CheckBox {
+            id: fontBoldCheck
+            Kirigami.FormData.label: i18n("Bold font:")
+            text: i18n("Bold")
         }
 
         Slider {

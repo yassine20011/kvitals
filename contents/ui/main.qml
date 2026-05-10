@@ -43,6 +43,7 @@ PlasmoidItem {
     property string networkIcon: Plasmoid.configuration.networkIcon
     property string fontFamily: Plasmoid.configuration.fontFamily
     property int fontSize: Plasmoid.configuration.fontSize
+    property bool fontBold: Plasmoid.configuration.fontBold
     property int effectiveFontSize: fontSize > 0 ? fontSize : Kirigami.Theme.smallFont.pixelSize
 
     property bool useIcons: displayMode === "icons" || displayMode === "icons+text"
@@ -247,6 +248,7 @@ PlasmoidItem {
         useText: root.useText
         effectiveFontSize: root.effectiveFontSize
         fontFamily: root.fontFamily
+        fontBold: root.fontBold
         iconSize: root.iconSize
         baseTextColor: root.baseTextColor
         onToggleExpanded: root.expanded = !root.expanded
@@ -254,6 +256,7 @@ PlasmoidItem {
 
     fullRepresentation: FullView {
         baseTextColor: root.baseTextColor
+        fontBold: root.fontBold
         metricsModel: {
             var items = [];
             for (var i = 0; i < root.orderedKeys.length; i++) {

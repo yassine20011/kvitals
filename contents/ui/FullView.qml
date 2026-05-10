@@ -11,6 +11,7 @@ ColumnLayout {
 
     required property var metricsModel
     required property color baseTextColor
+    required property bool fontBold
 
     PlasmaComponents.Label {
         text: "KVitals"
@@ -38,7 +39,7 @@ ColumnLayout {
             }
             PlasmaComponents.Label {
                 text: modelData.value
-                font.bold: true
+                font.bold: fullView.fontBold
                 color: modelData.color
                 horizontalAlignment: Text.AlignRight
             }
