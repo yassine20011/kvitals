@@ -96,8 +96,11 @@ Item {
     // -------------------------------------------------------------------------
 
     readonly property var _activeIds: {
+        // "" (default) → all discovered; "none" → user explicitly deselected everything
         if (!gpuSelection || gpuSelection === "")
             return _discovered.map(function(g){ return g.id; });
+        if (gpuSelection === "none")
+            return [];
         return gpuSelection.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
     }
 
@@ -140,18 +143,6 @@ Item {
         return (val === undefined || val === null) ? NaN : val;
     }
 
-    // Returns the sensor's Maximum metadata value, or 0 if unavailable.
-    // ksystemstats sets max=0 when a sensor exists in the tree but has no real
-    // hardware source (e.g. Intel iGPU temperature on this generation).
-    function _modelMax(sensorId) {
-        var col = gpuData.column(sensorId);
-        if (col < 0) return 0;
-        var idx = gpuData.index(0, col);
-        if (!idx.valid) return 0;
-        var val = gpuData.data(idx, Sensors.SensorDataModel.Maximum);
-        return (val === undefined || val === null) ? 0 : val;
-    }
-
     function aggregate() {
         var ids = _activeIds;
         var customLabels = parseGpuLabels(gpuLabels);
@@ -173,23 +164,20 @@ Item {
             var uVal  = _modelValue("gpu/" + g + "/usage");
             var vuVal = _modelValue("gpu/" + g + "/usedVram");
             var vtVal = _modelValue("gpu/" + g + "/totalVram");
-            var tSensorId = "gpu/" + g + "/temperature";
-            var tVal  = _modelValue(tSensorId);
-            var tMax  = _modelMax(tSensorId);  // 0 = sensor not available (no hwmon)
+            var tVal  = _modelValue("gpu/" + g + "/temperature");
 
             var uStr = isNaN(uVal) ? "" : Math.round(uVal) + "%";
             var vStr = "";
             if (!isNaN(vuVal) && !isNaN(vtVal) && vtVal > 0 && vuVal >= 0)
                 vStr = Utils.formatBytes(vuVal) + "/" + Utils.formatBytes(vtVal) + "G";
-            // Only show temperature when the sensor has a real hardware source (max > 0).
-            // Intel iGPU on laptops without hwmon reports value=0 and max=0; guard on
-            // max to avoid displaying "0°C" for an unavailable sensor.
-            var tStr = (isNaN(tVal) || tMax <= 0) ? "" : Math.round(tVal) + "°C";
+            // tVal === 0 is ksystemstats' null sentinel for iGPU: no hwmon node exists,
+            // so the driver reports exactly 0. No real GPU can be at or below 0°C.
+            var tStr = (isNaN(tVal) || tVal <= 0) ? "" : Math.round(tVal) + "°C";
 
             newList.push({ id: g, name: name,
                            usage: uStr, vram: vStr, temp: tStr,
                            usageNumber: isNaN(uVal) ? NaN : uVal,
-                           tempNumber:  isNaN(tVal) ? NaN : tVal });
+                           tempNumber:  (isNaN(tVal) || tVal <= 0) ? NaN : tVal });
 
             if (!isNaN(uVal)) { totalUsage += uVal; usageCount++; }
             if (!isNaN(vuVal) && !isNaN(vtVal) && vtVal > 0 && vuVal >= 0) {
@@ -197,7 +185,7 @@ Item {
                 totalVramTotal += vtVal;
                 hasVram = true;
             }
-            if (!isNaN(tVal) && (isNaN(maxTemp) || tVal > maxTemp)) maxTemp = tVal;
+            if (!isNaN(tVal) && tVal > 0 && (isNaN(maxTemp) || tVal > maxTemp)) maxTemp = tVal;
         }
 
         _dataList = newList;
