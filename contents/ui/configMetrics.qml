@@ -436,12 +436,20 @@ KCM.SimpleKCM {
                         checked: {
                             if (!cfg_gpuSelection || cfg_gpuSelection === "")
                                 return true;
+                            if (cfg_gpuSelection === "none")
+                                return false;
                             return cfg_gpuSelection.split(",").indexOf(modelData.id) >= 0;
                         }
                         onToggled: {
-                            var ids = (cfg_gpuSelection && cfg_gpuSelection !== "")
-                                ? cfg_gpuSelection.split(",").filter(function(s) { return s.length > 0; })
-                                : gpuSelectorRepeater.model.map(function(g) { return g.id; });
+                            // Expand current selection into an explicit id list
+                            var ids;
+                            if (!cfg_gpuSelection || cfg_gpuSelection === "") {
+                                ids = gpuSelectorRepeater.model.map(function(g) { return g.id; });
+                            } else if (cfg_gpuSelection === "none") {
+                                ids = [];
+                            } else {
+                                ids = cfg_gpuSelection.split(",").filter(function(s) { return s.length > 0; });
+                            }
                             if (checked) {
                                 if (ids.indexOf(modelData.id) < 0) ids.push(modelData.id);
                             } else {
@@ -449,7 +457,12 @@ KCM.SimpleKCM {
                             }
                             var allIds = gpuSelectorRepeater.model.map(function(g) { return g.id; });
                             var allSelected = allIds.every(function(id) { return ids.indexOf(id) >= 0; });
-                            cfg_gpuSelection = allSelected ? "" : ids.join(",");
+                            if (allSelected)
+                                cfg_gpuSelection = "";        // default: all discovered
+                            else if (ids.length === 0)
+                                cfg_gpuSelection = "none";    // explicit: nothing polled
+                            else
+                                cfg_gpuSelection = ids.join(",");
                         }
                     }
 
