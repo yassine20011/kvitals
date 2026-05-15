@@ -4,6 +4,8 @@ import QtQuick.Layouts 1.0
 import org.kde.kirigami 2.5 as Kirigami
 import org.kde.kcmutils as KCM
 import org.kde.plasma.plasma5support as Plasma5Support
+import org.kde.ksysguard.sensors as Sensors
+import org.kde.kitemmodels as KItemModels
 
 KCM.SimpleKCM {
     id: metricsPage
@@ -23,7 +25,82 @@ KCM.SimpleKCM {
     property bool cfg_compactShowPower
     property bool cfg_compactShowNetwork
     property string cfg_networkInterface: "auto"
-    property string cfg_batteryDevice: "auto"
+    property string cfg_batteryDevice
+    property string cfg_gpuSelection: ""
+    property string cfg_gpuDiscovered
+    property string cfg_gpuLabels: ""
+
+    // Discover GPUs via SensorTreeModel — pure metadata, zero polling, no dGPU wakeup.
+    Sensors.SensorTreeModel {
+        id: cfgSensorTree
+    }
+
+    KItemModels.KDescendantsProxyModel {
+        id: cfgFlatSensors
+        model: cfgSensorTree
+    }
+
+    property var _liveDiscoveredGpus: []
+
+    function refreshConfigGpus() {
+        var found = [];
+        for (var row = 0; row < cfgFlatSensors.rowCount(); row++) {
+            var idx = cfgFlatSensors.index(row, 0);
+            var sensorId = cfgFlatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
+            if (!sensorId || sensorId.length === 0) continue;
+            var match = sensorId.match(/^gpu\/(gpu\d+)\/usage$/);
+            if (!match) continue;
+            found.push({ id: match[1], name: "GPU " + (found.length + 1) });
+        }
+        if (JSON.stringify(found) !== JSON.stringify(_liveDiscoveredGpus))
+            _liveDiscoveredGpus = found;
+    }
+
+    Connections {
+        target: cfgFlatSensors
+        function onRowsInserted() { metricsPage.refreshConfigGpus(); }
+        function onRowsRemoved()  { metricsPage.refreshConfigGpus(); }
+        function onModelReset()   { metricsPage.refreshConfigGpus(); }
+        function onDataChanged()  { metricsPage.refreshConfigGpus(); }
+    }
+
+    // Use live results first; fall back to persisted cfg_gpuDiscovered if the
+    // sensor tree hasn't populated yet (e.g. very fast dialog open).
+    readonly property var discoveredGpus: {
+        if (_liveDiscoveredGpus.length > 0) return _liveDiscoveredGpus;
+        if (!cfg_gpuDiscovered) return [];
+        return cfg_gpuDiscovered.split(",").filter(function(s){ return s.indexOf(":") >= 0; }).map(function(s){
+            var parts = s.split(":");
+            return { id: parts[0], name: parts.slice(1).join(":") };
+        });
+    }
+
+    // Parse "gpu0:Label A,gpu1:Label B" → { gpu0: "Label A", gpu1: "Label B" }
+    function parseGpuLabels(str) {
+        var result = {};
+        if (!str) return result;
+        var pairs = str.split(",");
+        for (var i = 0; i < pairs.length; i++) {
+            var sep = pairs[i].indexOf(":");
+            if (sep > 0)
+                result[pairs[i].substring(0, sep)] = pairs[i].substring(sep + 1);
+        }
+        return result;
+    }
+
+    // Save a custom label for one GPU ID back into cfg_gpuLabels
+    function saveGpuLabel(gpuId, label) {
+        var labels = parseGpuLabels(cfg_gpuLabels);
+        var trimmed = (label || "").trim();
+        if (trimmed.length > 0)
+            labels[gpuId] = trimmed;
+        else
+            delete labels[gpuId];
+        var parts = [];
+        for (var id in labels)
+            parts.push(id + ":" + labels[id]);
+        cfg_gpuLabels = parts.join(",");
+    }
     property string cfg_metricOrder: "cpu,ram,temp,gpu,bat,pwr,net"
     property bool cfg_mergeCpuTemp: false
     property bool cfg_mergeCpuFreq: false
@@ -305,6 +382,98 @@ KCM.SimpleKCM {
             text: i18n("Empty value uses automatic detection.")
             opacity: 0.7
             visible: cfg_showBattery
+        }
+
+        // --- GPU selector ---
+
+        Kirigami.Separator {
+            Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18n("GPU Selection")
+            visible: cfg_showGpu
+        }
+
+        Label {
+            text: i18n("Select which GPUs to monitor. All selected GPUs are shown as separate metrics.")
+            opacity: 0.7
+            font.italic: true
+            visible: cfg_showGpu
+            wrapMode: Text.WordWrap
+            Layout.maximumWidth: 300
+        }
+
+        Label {
+            text: i18n("No GPUs detected yet — they appear once the widget loads.")
+            opacity: 0.7
+            font.italic: true
+            visible: cfg_showGpu && metricsPage.discoveredGpus.length === 0
+        }
+
+        Label {
+            text: i18n("On hybrid GPU laptops (e.g. Intel/AMD + NVIDIA), uncheck the discrete GPU to allow it to suspend when idle and save power.")
+            opacity: 0.7
+            font.italic: true
+            visible: cfg_showGpu && metricsPage.discoveredGpus.length > 1
+            wrapMode: Text.WordWrap
+            Layout.maximumWidth: 300
+        }
+
+        ColumnLayout {
+            visible: cfg_showGpu && metricsPage.discoveredGpus.length > 0
+            spacing: Kirigami.Units.smallSpacing
+
+            Repeater {
+                id: gpuSelectorRepeater
+                model: metricsPage.discoveredGpus
+
+                delegate: ColumnLayout {
+                    required property var modelData
+                    spacing: 2
+                    Layout.fillWidth: true
+
+                    CheckBox {
+                        // Show detected GPU name (e.g. "GPU 1") or user-defined custom label
+                        text: modelData.name
+                        checked: {
+                            if (!cfg_gpuSelection || cfg_gpuSelection === "")
+                                return true;
+                            return cfg_gpuSelection.split(",").indexOf(modelData.id) >= 0;
+                        }
+                        onToggled: {
+                            var ids = (cfg_gpuSelection && cfg_gpuSelection !== "")
+                                ? cfg_gpuSelection.split(",").filter(function(s) { return s.length > 0; })
+                                : gpuSelectorRepeater.model.map(function(g) { return g.id; });
+                            if (checked) {
+                                if (ids.indexOf(modelData.id) < 0) ids.push(modelData.id);
+                            } else {
+                                ids = ids.filter(function(id) { return id !== modelData.id; });
+                            }
+                            var allIds = gpuSelectorRepeater.model.map(function(g) { return g.id; });
+                            var allSelected = allIds.every(function(id) { return ids.indexOf(id) >= 0; });
+                            cfg_gpuSelection = allSelected ? "" : ids.join(",");
+                        }
+                    }
+
+                    // Custom label rename field
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
+                        spacing: Kirigami.Units.smallSpacing
+
+                        Label {
+                            text: i18n("Label:")
+                            opacity: 0.8
+                        }
+
+                        TextField {
+                            Layout.fillWidth: true
+                            // Show current custom label or empty to let placeholder show
+                            text: metricsPage.parseGpuLabels(cfg_gpuLabels)[modelData.id] || ""
+                            placeholderText: modelData.name
+                            onTextEdited: metricsPage.saveGpuLabel(modelData.id, text)
+                        }
+                    }
+                }
+            }
         }
 
         Kirigami.Separator {

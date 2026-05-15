@@ -28,6 +28,8 @@ PlasmoidItem {
     property bool compactShowNetwork: Plasmoid.configuration.compactShowNetwork
     property string networkInterface: Plasmoid.configuration.networkInterface
     property string batteryDevice: Plasmoid.configuration.batteryDevice
+    property string gpuSelection: Plasmoid.configuration.gpuSelection
+    property string gpuLabels: Plasmoid.configuration.gpuLabels
     property string displayMode: Plasmoid.configuration.displayMode
     property string layoutType: Plasmoid.configuration.layoutType
     property bool mergeCpuTemp: Plasmoid.configuration.mergeCpuTemp
@@ -135,6 +137,8 @@ PlasmoidItem {
     GpuSensors {
         id: gpu
         updateInterval: root.updateInterval
+        gpuSelection: root.gpuSelection
+        gpuLabels: root.gpuLabels
     }
 
     BatterySensors {
@@ -186,7 +190,26 @@ PlasmoidItem {
                         color: root.tempColor
                     });
                 else if (key === "gpu" && root.showGpu && root.compactShowGpu && gpu.hasGpuData) {
-                    if (root.splitGpu) {
+                    var multiGpu = gpu.gpuDataList.length > 1;
+                    if (multiGpu) {
+                        // Show each GPU as a separate entry
+                        for (var g = 0; g < gpu.gpuDataList.length; g++) {
+                            var gd = gpu.gpuDataList[g];
+                            var label = (gd.name.length > 0 ? gd.name : gd.id) + ":";
+                            if (root.splitGpu) {
+                                if (gd.usage) items.push({icon: root.gpuIcon, label: label, value: gd.usage, color: root.gpuColor});
+                                if (gd.vram)  items.push({icon: root.gpuIcon, label: "VRAM:", value: gd.vram, color: root.baseTextColor});
+                                if (gd.temp)  items.push({icon: root.gpuIcon, label: "GTEMP:", value: gd.temp, color: root.gpuTempColor});
+                            } else {
+                                var segs2 = [];
+                                if (gd.usage) segs2.push({value: gd.usage, color: root.gpuColor});
+                                if (gd.vram)  segs2.push({value: gd.vram,  color: root.baseTextColor});
+                                if (gd.temp)  segs2.push({value: gd.temp,  color: root.gpuTempColor});
+                                if (segs2.length > 0)
+                                    items.push({icon: root.gpuIcon, label: label, segments: segs2, color: root.gpuColor});
+                            }
+                        }
+                    } else if (root.splitGpu) {
                         if (gpu.hasGpuUsageData)
                             items.push({icon: root.gpuIcon, label: "GPU:", value: gpu.gpuValue, color: root.gpuColor});
                         if (gpu.hasGpuVramData)
@@ -286,18 +309,28 @@ PlasmoidItem {
                         color: root.tempColor
                     });
                 else if (key === "gpu" && root.showGpu) {
-                    if (gpu.hasGpuUsageData) items.push({
-                        label: "GPU Usage", value: gpu.gpuValue,
-                        color: root.gpuColor
-                    });
-                    if (gpu.hasGpuVramData) items.push({
-                        label: "GPU VRAM", value: gpu.gpuRamValue,
-                        color: root.baseTextColor
-                    });
-                    if (gpu.hasGpuTempData) items.push({
-                        label: "GPU Temp", value: gpu.gpuTempValue,
-                        color: root.gpuTempColor
-                    });
+                    if (gpu.gpuDataList.length > 1) {
+                        for (var g = 0; g < gpu.gpuDataList.length; g++) {
+                            var gd = gpu.gpuDataList[g];
+                            var label = gd.name || gd.id;
+                            if (gd.usage) items.push({label: label + " Usage", value: gd.usage, color: root.gpuColor});
+                            if (gd.vram)  items.push({label: label + " VRAM",  value: gd.vram,  color: root.baseTextColor});
+                            if (gd.temp)  items.push({label: label + " Temp",  value: gd.temp,  color: root.gpuTempColor});
+                        }
+                    } else {
+                        if (gpu.hasGpuUsageData) items.push({
+                            label: "GPU Usage", value: gpu.gpuValue,
+                            color: root.gpuColor
+                        });
+                        if (gpu.hasGpuVramData) items.push({
+                            label: "GPU VRAM", value: gpu.gpuRamValue,
+                            color: root.baseTextColor
+                        });
+                        if (gpu.hasGpuTempData) items.push({
+                            label: "GPU Temp", value: gpu.gpuTempValue,
+                            color: root.gpuTempColor
+                        });
+                    }
                 } else if (key === "bat" && root.showBattery && battery.batValue)
                     items.push({
                         label: "Battery", value: battery.batValue,
@@ -331,9 +364,18 @@ PlasmoidItem {
             else if (key === "temp" && root.showTemp && temp.tempValue && temp.tempValue !== "--")
                 parts.push("TEMP: " + temp.tempValue);
             else if (key === "gpu" && root.showGpu && gpu.hasGpuData) {
-                if (gpu.hasGpuUsageData) parts.push("GPU: " + gpu.gpuValue);
-                if (gpu.hasGpuVramData) parts.push("VRAM: " + gpu.gpuRamValue);
-                if (gpu.hasGpuTempData) parts.push("GPU TEMP: " + gpu.gpuTempValue);
+                if (gpu.gpuDataList.length > 1) {
+                    for (var g = 0; g < gpu.gpuDataList.length; g++) {
+                        var gd = gpu.gpuDataList[g];
+                        var label = gd.name || gd.id;
+                        var vals = [gd.usage, gd.vram, gd.temp].filter(function(v) { return v; });
+                        if (vals.length > 0) parts.push(label + ": " + vals.join(" "));
+                    }
+                } else {
+                    if (gpu.hasGpuUsageData) parts.push("GPU: " + gpu.gpuValue);
+                    if (gpu.hasGpuVramData) parts.push("VRAM: " + gpu.gpuRamValue);
+                    if (gpu.hasGpuTempData) parts.push("GPU TEMP: " + gpu.gpuTempValue);
+                }
             } else if (key === "bat" && root.showBattery && battery.batValue)
                 parts.push("BAT: " + battery.batValue);
             else if (key === "pwr" && root.showPower && battery.powerValue)

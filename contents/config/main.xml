@@ -55,6 +55,15 @@
         <entry name="batteryDevice" type="String">
             <default>auto</default>
         </entry>
+        <entry name="gpuSelection" type="String">
+            <default></default>
+        </entry>
+        <entry name="gpuDiscovered" type="String">
+            <default></default>
+        </entry>
+        <entry name="gpuLabels" type="String">
+            <default></default>
+        </entry>
         <entry name="displayMode" type="String">
             <default>text</default>
         </entry>

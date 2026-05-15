@@ -48,7 +48,7 @@ Right-click the widget → **Configure KVitals...** to open the settings dialog.
 | **CPU Usage**         | `CPU:`        | CPU utilization percentage                          |
 | **RAM Usage**         | `RAM:`        | Used/total memory                                   |
 | **CPU Temperature**   | `TEMP:`       | CPU temperature in °C                               |
-| **GPU Metrics**       | `GPU:`        | GPU usage, VRAM, and GPU temperature when available |
+| **GPU Metrics**       | `GPU:` / `<name>:` | GPU usage %, VRAM used/total, and GPU temperature. On multi-GPU systems, each selected GPU appears as a separate labeled entry. |
 | **Battery Status**    | `BAT:`        | Battery percentage                                  |
 | **Power Consumption** | `PWR:`        | Power draw in watts                                 |
 | **Network Speed**     | `NET:`        | Download/upload speeds                              |
@@ -85,6 +85,23 @@ single device.
 
 !!! note
     The manual interface list is populated dynamically from `/sys/class/net/`.
+
+### GPU Selection
+
+When the **GPU Metrics** metric is enabled, a **GPU Selection** section appears listing every GPU detected on your
+system. GPUs are discovered dynamically via the KDE sensor tree — no polling is required during discovery.
+
+| Control          | Description                                                                                   |
+|------------------|-----------------------------------------------------------------------------------------------|
+| **Checkbox**     | Enable or disable monitoring for each individual GPU                                          |
+| **Label field**  | Override the display name for a GPU. Leave empty to use the name reported by ksystemstats.   |
+
+**Label resolution order**: custom label → ksystemstats-provided name (e.g. `GPU 1`) → `GPU N` fallback.
+
+!!! tip "Hybrid GPU Laptops (Intel/AMD + NVIDIA)"
+    On hybrid setups using tools such as `supergfxctl` or `asusctl`, KVitals will only poll the GPUs whose
+    checkboxes are ticked. **Unchecking the discrete GPU** stops all polling for it, allowing it to enter its
+    suspended/power-save state when idle.
 
 ## Icons Tab
 
