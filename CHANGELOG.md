@@ -15,7 +15,6 @@ All notable changes to KVitals will be documented in this file.
 ### Fixed
 
 - **Unintended dGPU Wakeup** on hybrid GPU laptops (Intel/AMD + NVIDIA setups using `supergfxctl` / `asusctl`): The previous implementation used permanent `Sensors.Sensor` subscriptions for up to 6 hardcoded GPU slots. These subscriptions polled every GPU continuously, preventing the dGPU from entering its suspended/power-save state even when it was idle (#26).
-  - **Root cause removed**: All hardcoded per-slot `Sensors.Sensor` probes (`probe0`–`probe5`) have been eliminated from both `GpuSensors.qml` and the settings dialog.
   - **New architecture**: Discovery uses `SensorTreeModel` + `KDescendantsProxyModel` (pure metadata query, no value subscriptions). Data polling uses a single `SensorDataModel` constrained strictly to the GPUs the user has selected.
   - **Result**: Deselecting a GPU in settings stops all polling for that GPU immediately. On hybrid setups, unchecking the dGPU allows it to fully suspend.
   - **Note**: If the dGPU remains active even after unchecking it in KVitals, the cause is likely unrelated — some Xwayland applications keep the GPU awake independently of any sensor polling. This is a system/compositor-level behavior outside the scope of KVitals.

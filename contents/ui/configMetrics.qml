@@ -75,11 +75,11 @@ KCM.SimpleKCM {
         });
     }
 
-    // Parse "gpu0:Label A,gpu1:Label B" → { gpu0: "Label A", gpu1: "Label B" }
+    // Parse "gpu0:Label A|gpu1:Label B" → { gpu0: "Label A", gpu1: "Label B" }
     function parseGpuLabels(str) {
         var result = {};
         if (!str) return result;
-        var pairs = str.split(",");
+        var pairs = str.split("|");
         for (var i = 0; i < pairs.length; i++) {
             var sep = pairs[i].indexOf(":");
             if (sep > 0)
@@ -99,7 +99,7 @@ KCM.SimpleKCM {
         var parts = [];
         for (var id in labels)
             parts.push(id + ":" + labels[id]);
-        cfg_gpuLabels = parts.join(",");
+        cfg_gpuLabels = parts.join("|");
     }
     property string cfg_metricOrder: "cpu,ram,temp,gpu,bat,pwr,net"
     property bool cfg_mergeCpuTemp: false

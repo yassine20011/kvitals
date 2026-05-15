@@ -52,11 +52,11 @@ Item {
         model: sensorTree
     }
 
-    // Parse "gpu0:Label A,gpu1:Label B" → { gpu0: "Label A", gpu1: "Label B" }
+    // Parse "gpu0:Label A|gpu1:Label B" → { gpu0: "Label A", gpu1: "Label B" }
     function parseGpuLabels(str) {
         var result = {};
         if (!str) return result;
-        var pairs = str.split(",");
+        var pairs = str.split("|");
         for (var i = 0; i < pairs.length; i++) {
             var sep = pairs[i].indexOf(":");
             if (sep > 0)
