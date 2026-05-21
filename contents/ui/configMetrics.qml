@@ -17,6 +17,7 @@ KCM.SimpleKCM {
     property bool cfg_showBattery
     property bool cfg_showPower
     property bool cfg_showNetwork
+    property bool cfg_showDisk
     property bool cfg_compactShowCpu
     property bool cfg_compactShowRam
     property bool cfg_compactShowTemp
@@ -24,6 +25,7 @@ KCM.SimpleKCM {
     property bool cfg_compactShowBattery
     property bool cfg_compactShowPower
     property bool cfg_compactShowNetwork
+    property bool cfg_compactShowDisk
     property string cfg_networkInterface: "auto"
     property string cfg_batteryDevice
     property string cfg_gpuSelection: ""
@@ -110,7 +112,7 @@ KCM.SimpleKCM {
 
     property var ifaceList: ["auto"]
 
-    readonly property var allKeys: ["cpu", "ram", "temp", "gpu", "bat", "pwr", "net"]
+    readonly property var allKeys: ["cpu", "ram", "temp", "gpu", "bat", "pwr", "net", "disk"]
 
     readonly property var metricLabels: ({
         "cpu": i18n("CPU Usage"),
@@ -119,7 +121,8 @@ KCM.SimpleKCM {
         "gpu": i18n("GPU Metrics"),
         "bat": i18n("Battery Status"),
         "pwr": i18n("Power Consumption"),
-        "net": i18n("Network Speed")
+        "net": i18n("Network Speed"),
+        "disk": i18n("Disk I/O & Temp")
     })
 
     property var currentOrder: {
@@ -153,6 +156,8 @@ KCM.SimpleKCM {
                 return cfg_showPower;
             case "net":
                 return cfg_showNetwork;
+            case "disk":
+                return cfg_showDisk;
         }
         return false;
     }
@@ -173,6 +178,8 @@ KCM.SimpleKCM {
                 return cfg_compactShowPower;
             case "net":
                 return cfg_compactShowNetwork;
+            case "disk":
+                return cfg_compactShowDisk;
         }
         return false;
     }
@@ -199,6 +206,9 @@ KCM.SimpleKCM {
                 break;
             case "net":
                 cfg_showNetwork = val;
+                break;
+            case "disk":
+                cfg_showDisk = val;
                 break;
         }
         // Reset merge toggles when a prerequisite metric is disabled
@@ -234,6 +244,9 @@ KCM.SimpleKCM {
                 break;
             case "net":
                 cfg_compactShowNetwork = val;
+                break;
+            case "disk":
+                cfg_compactShowDisk = val;
                 break;
         }
     }

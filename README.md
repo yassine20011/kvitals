@@ -92,43 +92,6 @@ rm -rf ~/.local/share/plasma/plasmoids/org.kde.plasma.kvitals
 
 Then restart Plasma: `plasmashell --replace &`
 
-## Project Structure
-
-```
-kvitals/
-├── metadata.json                   # Plasmoid metadata
-├── install.sh                      # Local install script
-├── install-remote.sh               # Remote install (curl/wget)
-├── CHANGELOG.md                    # Version history
-├── docs/                           # Documentation
-│   ├── installation.md
-│   ├── configuration.md
-│   ├── architecture.md
-│   ├── contributing.md
-│   └── troubleshooting.md
-└── contents/
-    ├── config/
-    │   ├── config.qml              # Tab registration
-    │   └── main.xml                # Config schema
-    └── ui/
-        ├── main.qml                # Widget orchestrator
-        ├── CompactView.qml         # Panel representation
-        ├── FullView.qml            # Popup representation
-        ├── configGeneral.qml       # General settings tab
-        ├── configMetrics.qml       # Metrics settings tab
-        ├── configIcons.qml         # Icons settings tab
-        ├── configColors.qml        # Colors settings tab
-        └── sensors/                # Sensor modules
-            ├── qmldir              # QML module definition
-            ├── CpuSensors.qml      # CPU usage
-            ├── MemorySensors.qml   # RAM usage
-            ├── TempSensors.qml     # CPU temperature
-            ├── GpuSensors.qml      # GPU usage, VRAM, temp
-            ├── BatterySensors.qml  # Battery & power
-            ├── NetworkSensors.qml  # Network speed
-            └── Utils.qml           # Shared formatting helpers
-```
-
 ## Documentation
 
 - [Installation](docs/installation.md)

@@ -19,6 +19,7 @@ PlasmoidItem {
     property bool showBattery: Plasmoid.configuration.showBattery
     property bool showPower: Plasmoid.configuration.showPower
     property bool showNetwork: Plasmoid.configuration.showNetwork
+    property bool showDisk: Plasmoid.configuration.showDisk
     property bool compactShowCpu: Plasmoid.configuration.compactShowCpu
     property bool compactShowRam: Plasmoid.configuration.compactShowRam
     property bool compactShowTemp: Plasmoid.configuration.compactShowTemp
@@ -26,6 +27,7 @@ PlasmoidItem {
     property bool compactShowBattery: Plasmoid.configuration.compactShowBattery
     property bool compactShowPower: Plasmoid.configuration.compactShowPower
     property bool compactShowNetwork: Plasmoid.configuration.compactShowNetwork
+    property bool compactShowDisk: Plasmoid.configuration.compactShowDisk
     property string networkInterface: Plasmoid.configuration.networkInterface
     property string batteryDevice: Plasmoid.configuration.batteryDevice
     property string gpuSelection: Plasmoid.configuration.gpuSelection
@@ -45,6 +47,7 @@ PlasmoidItem {
     property string batteryIcon: Plasmoid.configuration.batteryIcon
     property string powerIcon: Plasmoid.configuration.powerIcon
     property string networkIcon: Plasmoid.configuration.networkIcon
+    property string diskIcon: Plasmoid.configuration.diskIcon
     property string fontFamily: Plasmoid.configuration.fontFamily
     property int fontSize: Plasmoid.configuration.fontSize
     property bool fontBold: Plasmoid.configuration.fontBold
@@ -80,6 +83,8 @@ PlasmoidItem {
     property int gpuTempCriticalThreshold: Plasmoid.configuration.gpuTempCriticalThreshold
     property int batteryWarningThreshold: Plasmoid.configuration.batteryWarningThreshold
     property int batteryCriticalThreshold: Plasmoid.configuration.batteryCriticalThreshold
+    property int diskTempWarningThreshold: Plasmoid.configuration.diskTempWarningThreshold
+    property int diskTempCriticalThreshold: Plasmoid.configuration.diskTempCriticalThreshold
 
     // --- Computed base text color ---
 
@@ -117,6 +122,11 @@ PlasmoidItem {
             warningColor, criticalColor, baseTextColor, true)
         : baseTextColor
 
+    property color diskTempColor: enableThresholdColors
+        ? Utils.resolveColor(disk.diskTempNumber, diskTempWarningThreshold, diskTempCriticalThreshold,
+            warningColor, criticalColor, baseTextColor, false)
+        : baseTextColor
+
     // --- Sensor components ---
 
     CpuSensors {
@@ -151,6 +161,11 @@ PlasmoidItem {
         id: network
         updateInterval: root.updateInterval
         networkInterface: root.networkInterface
+    }
+
+    DiskSensors {
+        id: disk
+        updateInterval: root.updateInterval
     }
 
     // --- Representations ---
@@ -267,6 +282,13 @@ PlasmoidItem {
                         value: "↓" + network.netDownValue + " ↑" + network.netUpValue,
                         color: root.baseTextColor
                     });
+                else if (key === "disk" && root.showDisk && root.compactShowDisk) {
+                    var diskSegs = [{value: "↓" + disk.diskReadValue, color: root.baseTextColor},
+                                    {value: "↑" + disk.diskWriteValue, color: root.baseTextColor}];
+                    if (disk.diskTempValue)
+                        diskSegs.push({value: disk.diskTempValue, color: root.diskTempColor});
+                    items.push({icon: root.diskIcon, label: "DSK:", segments: diskSegs, color: root.baseTextColor});
+                }
             }
             return items;
         }
@@ -345,6 +367,12 @@ PlasmoidItem {
                     items.push({label: "Network ↓", value: network.netDownValue, color: root.baseTextColor});
                     items.push({label: "Network ↑", value: network.netUpValue, color: root.baseTextColor});
                 }
+                else if (key === "disk" && root.showDisk) {
+                    items.push({label: "Disk Read",  value: disk.diskReadValue,  color: root.baseTextColor});
+                    items.push({label: "Disk Write", value: disk.diskWriteValue, color: root.baseTextColor});
+                    if (disk.diskTempValue)
+                        items.push({label: "Disk Temp", value: disk.diskTempValue, color: root.diskTempColor});
+                }
             }
             return items;
         }
@@ -382,6 +410,11 @@ PlasmoidItem {
                 parts.push("PWR: " + battery.powerValue);
             else if (key === "net" && root.showNetwork)
                 parts.push("NET: ↓" + network.netDownValue + " ↑" + network.netUpValue);
+            else if (key === "disk" && root.showDisk) {
+                var dParts = ["↓" + disk.diskReadValue, "↑" + disk.diskWriteValue];
+                if (disk.diskTempValue) dParts.push(disk.diskTempValue);
+                parts.push("DSK: " + dParts.join(" "));
+            }
         }
         return parts.join("\n");
     }
