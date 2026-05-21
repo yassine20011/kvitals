@@ -56,7 +56,7 @@ PlasmoidItem {
     property bool useIcons: displayMode === "icons" || displayMode === "icons+text"
     property bool useText: displayMode === "text" || displayMode === "icons+text"
 
-    property string metricOrder: Plasmoid.configuration.metricOrder || "cpu,ram,temp,gpu,bat,pwr,net"
+    property string metricOrder: Plasmoid.configuration.metricOrder || "cpu,ram,temp,gpu,bat,pwr,net,disk"
     property var orderedKeys: metricOrder.split(",").map(function (k) {
         return k.trim();
     })
@@ -166,6 +166,7 @@ PlasmoidItem {
     DiskSensors {
         id: disk
         updateInterval: root.updateInterval
+        enabled: root.showDisk
     }
 
     // --- Representations ---

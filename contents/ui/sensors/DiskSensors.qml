@@ -6,6 +6,7 @@ Item {
     id: root
 
     property int updateInterval: 2000
+    property bool enabled: true
 
     readonly property string diskReadValue:  Utils.formatRate(diskReadSensor.status  === Sensors.Sensor.Ready ? diskReadSensor.value  : NaN)
     readonly property string diskWriteValue: Utils.formatRate(diskWriteSensor.status === Sensors.Sensor.Ready ? diskWriteSensor.value : NaN)
@@ -21,12 +22,14 @@ Item {
         id: diskReadSensor
         sensorId: "disk/all/read"
         updateRateLimit: root.updateInterval
+        enabled: root.enabled
     }
 
     Sensors.Sensor {
         id: diskWriteSensor
         sensorId: "disk/all/write"
         updateRateLimit: root.updateInterval
+        enabled: root.enabled
     }
 
     // Matches lmsensors chips that are NVMe (nvme-pci-*) or SATA drivetemp
@@ -60,6 +63,8 @@ Item {
         function onRowsRemoved()  { root._refreshTempSensors(); }
         function onModelReset()   { root._refreshTempSensors(); }
     }
+
+    Component.onCompleted: _refreshTempSensors()
 
     // Poll discovered temp sensors
     Sensors.SensorDataModel {

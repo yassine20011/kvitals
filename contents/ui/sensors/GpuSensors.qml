@@ -91,6 +91,8 @@ Item {
         function onDataChanged()     { root.refreshDiscovered(); }
     }
 
+    Component.onCompleted: refreshDiscovered()
+
     // -------------------------------------------------------------------------
     // Step 2: Compute active sensor IDs from user selection
     // -------------------------------------------------------------------------
