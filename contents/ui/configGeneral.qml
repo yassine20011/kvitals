@@ -137,7 +137,7 @@ KCM.SimpleKCM {
         ComboBox {
             id: networkUnitCombo
             Kirigami.FormData.label: i18n("Network/Disk I/O unit:")
-            model: [i18n("Bytes/s  (KB, MB)"), i18n("Bits/s  (Kbps, Mbps)")]
+            model: [i18n("Bytes  (KB, MB)"), i18n("Bits  (Kb, Mb)")]
             currentIndex: cfg_networkUnit === "bits" ? 1 : 0
             onActivated: cfg_networkUnit = (currentIndex === 1 ? "bits" : "bytes")
         }
