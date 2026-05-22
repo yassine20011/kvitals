@@ -2,6 +2,18 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [2.8.0] - 2026-05-22
+
+### Added
+
+- **Disk I/O & Temperature** (`Metrics` settings — Disk I/O & Temp): New metric showing real-time disk read/write rates and the highest drive temperature across all NVMe and SATA drives. Displayed as `DSK: ↓2.1MB ↑76KB · 42°C` in the compact panel (#36).
+  - Drive temperatures are discovered dynamically via `SensorTreeModel` + `lmsensors` (supports `nvme-pci-*` and `drivetemp-scsi-*` chips) — zero polling overhead when the metric is disabled.
+  - Dedicated **Disk Temp** threshold sliders added to the Colors settings page (default: warning 45°C, critical 60°C).
+- **Unit Preferences** (`General` settings — Unit Preferences section): Choose display units globally across all metrics (#37).
+  - **Temperature**: Celsius (°C, default) or Fahrenheit (°F). Applies to CPU temp, GPU temp, and Disk temp everywhere — panel, popup, and tooltip.
+  - **Network / Disk I/O**: Bytes (KB/MB, default) or Bits (Kb/Mb). Applies to Network and Disk I/O rates. Suffix convention follows industry standard: uppercase `B` = bytes, lowercase `b` = bits.
+  - Threshold slider labels in the Colors settings page update live to reflect the chosen temperature unit (stored values remain in °C for correct sensor comparison).
+
 ## [2.7.0] - 2026-05-15
 
 ### Added

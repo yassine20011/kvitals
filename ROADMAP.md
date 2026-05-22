@@ -9,11 +9,27 @@ Have a suggestion? Open an issue or start a discussion on GitHub.
 ## Currently Supported Metrics
 
 - CPU Usage
-- RAM Usage
 - CPU Temperature
-- GPU (Usage, VRAM, Temperature)
+- CPU Frequency
+- RAM Usage
+- GPU (Usage, VRAM, Temperature) — with multi-GPU and custom labels
 - Battery & Power Consumption
 - Network Speed (Download/Upload)
+- Disk I/O (Read/Write rates)
+- Disk Temperature (highest across all NVMe/SATA drives)
+
+---
+
+## Currently Supported UX Features
+
+- Custom metric order (drag to reorder)
+- Per-metric compact panel visibility toggle
+- Metric grouping (merge CPU+Temp, Battery+Power, split GPU)
+- Threshold-based coloring (warning/critical per metric)
+- Custom font color
+- Display modes: Text, Icons, Icons+Text
+- Horizontal / Vertical layout
+- **Unit Preferences** (°C/°F, Bytes/Bits)
 
 ---
 
@@ -25,11 +41,9 @@ Have a suggestion? Open an issue or start a discussion on GitHub.
 
 These sensors are exposed by `ksystemstats` and are planned for future releases:
 
-- **CPU Frequency** — Average, min, and max frequency via `cpu/all/averageFrequency`
+- **Disk Usage** — Used/free space per partition via `disk/all/usedPercent` or per-disk breakdown
 - **CPU Load Averages** — 1, 5, and 15-minute averages via `cpu/loadaverages/*`
 - **Swap Usage** — Used/total swap memory via `memory/swap/*`
-- **Disk I/O** — Read/write rates via `disk/all/read` and `disk/all/write`
-- **Disk Usage** — Used/free space percentage via `disk/all/usedPercent`
 - **GPU Frequency & Power** — Core frequency and power draw via `gpu/<device>/coreFrequency` and `gpu/<device>/power`
 - **Battery Health** — Degradation percentage via `power/<device>/health`
 - **System Uptime** — Via `os/system/uptime`
@@ -39,7 +53,6 @@ These sensors are exposed by `ksystemstats` and are planned for future releases:
 These require `lmsensors` to be installed and configured:
 
 - **Fan Speed** — CPU fan RPM (where available)
-- **NVMe Temperature** — Drive temperature (where available)
 
 ### UX & Configuration
 
