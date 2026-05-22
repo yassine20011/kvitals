@@ -62,6 +62,8 @@ PlasmoidItem {
     })
 
     property int updateInterval: Plasmoid.configuration.updateInterval || 2000
+    property string tempUnit: Plasmoid.configuration.tempUnit || "C"
+    property string networkUnit: Plasmoid.configuration.networkUnit || "bytes"
 
     // --- Color configuration properties ---
 
@@ -142,6 +144,7 @@ PlasmoidItem {
     TempSensors {
         id: temp
         updateInterval: root.updateInterval
+        tempUnit: root.tempUnit
     }
 
     GpuSensors {
@@ -149,6 +152,7 @@ PlasmoidItem {
         updateInterval: root.updateInterval
         gpuSelection: root.gpuSelection
         gpuLabels: root.gpuLabels
+        tempUnit: root.tempUnit
     }
 
     BatterySensors {
@@ -161,12 +165,15 @@ PlasmoidItem {
         id: network
         updateInterval: root.updateInterval
         networkInterface: root.networkInterface
+        networkUnit: root.networkUnit
     }
 
     DiskSensors {
         id: disk
         updateInterval: root.updateInterval
         enabled: root.showDisk
+        tempUnit: root.tempUnit
+        networkUnit: root.networkUnit
     }
 
     // --- Representations ---

@@ -14,6 +14,8 @@ KCM.SimpleKCM {
     property string cfg_displayMode: "text"
     property string cfg_fontFamily: "monospace"
     property string cfg_layoutType: "horizontal"
+    property string cfg_tempUnit: "C"
+    property string cfg_networkUnit: "bytes"
 
     readonly property var displayModes: ["text", "icons", "icons+text"]
     readonly property var displayModeLabels: [i18n("Text"), i18n("Icons"), i18n("Icons + Text")]
@@ -117,6 +119,27 @@ KCM.SimpleKCM {
         Label {
             text: (intervalSlider.value / 1000).toFixed(1) + " " + i18n("seconds")
             opacity: 0.7
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18n("Unit Preferences")
+        }
+
+        ComboBox {
+            id: tempUnitCombo
+            Kirigami.FormData.label: i18n("Temperature unit:")
+            model: [i18n("Celsius (°C)"), i18n("Fahrenheit (°F)")]
+            currentIndex: cfg_tempUnit === "F" ? 1 : 0
+            onActivated: cfg_tempUnit = (currentIndex === 1 ? "F" : "C")
+        }
+
+        ComboBox {
+            id: networkUnitCombo
+            Kirigami.FormData.label: i18n("Network/Disk I/O unit:")
+            model: [i18n("Bytes/s  (KB, MB)"), i18n("Bits/s  (Kbps, Mbps)")]
+            currentIndex: cfg_networkUnit === "bits" ? 1 : 0
+            onActivated: cfg_networkUnit = (currentIndex === 1 ? "bits" : "bytes")
         }
     }
 }

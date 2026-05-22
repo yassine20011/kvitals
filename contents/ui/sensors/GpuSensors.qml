@@ -13,6 +13,9 @@ Item {
     // User-defined labels: "gpu0:My iGPU,gpu1:dGPU". Empty string = use default "GPU N" name.
     property string gpuLabels: ""
 
+    // Temperature unit: "C" (default) or "F"
+    property string tempUnit: "C"
+
     // List of { id: "gpu0", name: "GPU 1" } derived from SensorTreeModel (no polling)
     readonly property var discoveredGpus: _discovered
     property var _discovered: []
@@ -174,7 +177,7 @@ Item {
                 vStr = Utils.formatBytes(vuVal) + "/" + Utils.formatBytes(vtVal) + "G";
             // tVal === 0 is ksystemstats' null sentinel for iGPU: no hwmon node exists,
             // so the driver reports exactly 0. No real GPU can be at or below 0°C.
-            var tStr = (isNaN(tVal) || tVal <= 0) ? "" : Math.round(tVal) + "°C";
+            var tStr = (isNaN(tVal) || tVal <= 0) ? "" : Utils.formatTemp(tVal, tempUnit);
 
             newList.push({ id: g, name: name,
                            usage: uStr, vram: vStr, temp: tStr,
@@ -197,10 +200,11 @@ Item {
         _vramStr  = (hasVram && totalVramTotal > 0)
                     ? Utils.formatBytes(totalVramUsed) + "/" + Utils.formatBytes(totalVramTotal) + "G" : "";
         _tempNum  = isNaN(maxTemp) ? NaN : maxTemp;
-        _tempStr  = isNaN(maxTemp) ? "" : Math.round(maxTemp) + "°C";
+        _tempStr  = isNaN(maxTemp) ? "" : Utils.formatTemp(maxTemp, tempUnit);
     }
 
-    // Re-aggregate when labels or selection change so panel updates immediately
+    // Re-aggregate when labels, selection, or unit change so panel updates immediately
     onGpuLabelsChanged:    aggregate()
     onGpuSelectionChanged: aggregate()
+    onTempUnitChanged:     aggregate()
 }

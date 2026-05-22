@@ -7,13 +7,15 @@ Item {
 
     property int updateInterval: 2000
     property bool enabled: true
+    property string tempUnit: "C"
+    property string networkUnit: "bytes"
 
-    readonly property string diskReadValue:  Utils.formatRate(diskReadSensor.status  === Sensors.Sensor.Ready ? diskReadSensor.value  : NaN)
-    readonly property string diskWriteValue: Utils.formatRate(diskWriteSensor.status === Sensors.Sensor.Ready ? diskWriteSensor.value : NaN)
+    readonly property string diskReadValue:  Utils.formatRate(diskReadSensor.status  === Sensors.Sensor.Ready ? diskReadSensor.value  : NaN, networkUnit)
+    readonly property string diskWriteValue: Utils.formatRate(diskWriteSensor.status === Sensors.Sensor.Ready ? diskWriteSensor.value : NaN, networkUnit)
 
-    // Highest temperature found across all discovered drive temp sensors (°C)
+    // Highest temperature found across all discovered drive temp sensors
     readonly property real   diskTempNumber: _diskTempNum
-    readonly property string diskTempValue:  isNaN(_diskTempNum) ? "" : Math.round(_diskTempNum) + "°C"
+    readonly property string diskTempValue:  isNaN(_diskTempNum) ? "" : Utils.formatTemp(_diskTempNum, tempUnit)
 
     property real _diskTempNum: NaN
 

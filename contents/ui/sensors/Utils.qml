@@ -10,14 +10,30 @@ QtObject {
         return gb.toFixed(1);
     }
 
-    function formatRate(bytesPerSec) {
+    // unit: "bytes" (default, KB/MB) or "bits" (Kb/Mb)
+    // Suffix convention: uppercase B = bytes, lowercase b = bits
+    function formatRate(bytesPerSec, unit) {
         if (typeof bytesPerSec !== "number" || isNaN(bytesPerSec))
             return "...";
-        var kbps = bytesPerSec / 1024;
-        if (kbps >= 1024) {
-            return (kbps / 1024).toFixed(1) + "M";
+        if (unit === "bits") {
+            var bps = bytesPerSec * 8;
+            if (bps >= 1000000)
+                return (bps / 1000000).toFixed(1) + "Mb";
+            return Math.max(0, bps / 1000).toFixed(1) + "Kb";
         }
-        return Math.max(0, kbps).toFixed(1) + "K";
+        var kbps = bytesPerSec / 1024;
+        if (kbps >= 1024)
+            return (kbps / 1024).toFixed(1) + "MB";
+        return Math.max(0, kbps).toFixed(1) + "KB";
+    }
+
+    // celsiusValue: raw °C number from sensor; unit: "C" or "F"
+    function formatTemp(celsiusValue, unit) {
+        if (typeof celsiusValue !== "number" || isNaN(celsiusValue))
+            return "";
+        if (unit === "F")
+            return Math.round(celsiusValue * 9 / 5 + 32) + "°F";
+        return Math.round(celsiusValue) + "°C";
     }
 
     function sensorValueOrNaN(sensor) {

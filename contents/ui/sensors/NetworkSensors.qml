@@ -6,6 +6,7 @@ Item {
 
     property int updateInterval: 2000
     property string networkInterface: "auto"
+    property string networkUnit: "bytes"
 
     readonly property string netIfacePath: {
         if (networkInterface === "" || networkInterface === "auto")
@@ -15,12 +16,12 @@ Item {
 
     readonly property string netDownValue: {
         if (netDownSensor.status !== Sensors.Sensor.Ready) return "...";
-        return Utils.formatRate(netDownSensor.value);
+        return Utils.formatRate(netDownSensor.value, networkUnit);
     }
 
     readonly property string netUpValue: {
         if (netUpSensor.status !== Sensors.Sensor.Ready) return "...";
-        return Utils.formatRate(netUpSensor.value);
+        return Utils.formatRate(netUpSensor.value, networkUnit);
     }
 
     Sensors.Sensor {

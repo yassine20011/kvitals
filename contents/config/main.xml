@@ -187,5 +187,11 @@
         <entry name="diskTempCriticalThreshold" type="Int">
             <default>60</default>
         </entry>
+        <entry name="tempUnit" type="String">
+            <default>C</default>
+        </entry>
+        <entry name="networkUnit" type="String">
+            <default>bytes</default>
+        </entry>
     </group>
 </kcfg>
