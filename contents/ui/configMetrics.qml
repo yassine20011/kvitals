@@ -108,6 +108,7 @@ KCM.SimpleKCM {
     property bool cfg_mergeCpuFreq: false
     property bool cfg_mergeBatPwr: false
     property bool cfg_splitGpu: false
+    property bool cfg_showGpuVram: true
     property bool cfg_showCpuFreq: false
 
     property var ifaceList: ["auto"]
@@ -500,6 +501,24 @@ KCM.SimpleKCM {
                     }
                 }
             }
+        }
+
+        CheckBox {
+            Kirigami.FormData.label: i18n("VRAM usage:")
+            text: i18n("Show GPU VRAM usage")
+            checked: cfg_showGpuVram
+            enabled: cfg_showGpu
+            onToggled: cfg_showGpuVram = checked
+            visible: cfg_showGpu
+        }
+
+        Label {
+            text: i18n("Hides the VRAM used/total metric to save horizontal space on the panel.")
+            opacity: 0.7
+            font.italic: true
+            visible: cfg_showGpu
+            wrapMode: Text.WordWrap
+            Layout.maximumWidth: 300
         }
 
         Kirigami.Separator {

@@ -16,6 +16,9 @@ Item {
     // Temperature unit: "C" (default) or "F"
     property string tempUnit: "C"
 
+    // Whether to poll and display VRAM usage
+    property bool showVram: true
+
     // List of { id: "gpu0", name: "GPU 1" } derived from SensorTreeModel (no polling)
     readonly property var discoveredGpus: _discovered
     property var _discovered: []
@@ -26,7 +29,12 @@ Item {
     readonly property string gpuValue:     _usageStr
     readonly property string gpuRamValue:  _vramStr
     readonly property string gpuTempValue: _tempStr
-    readonly property string gpuDisplayValue: [_usageStr, _vramStr, _tempStr].filter(function(v){return v;}).join(" ")
+    readonly property string gpuDisplayValue: {
+        var parts = [_usageStr];
+        if (showVram) parts.push(_vramStr);
+        parts.push(_tempStr);
+        return parts.filter(function(v){return v;}).join(" ");
+    }
     readonly property bool hasGpuData:      gpuDisplayValue.length > 0
     readonly property bool hasGpuUsageData: _usageStr.length > 0
     readonly property bool hasGpuVramData:  _vramStr.length > 0
@@ -114,8 +122,10 @@ Item {
         for (var i = 0; i < _activeIds.length; i++) {
             var g = _activeIds[i];
             ids.push("gpu/" + g + "/usage");
-            ids.push("gpu/" + g + "/usedVram");
-            ids.push("gpu/" + g + "/totalVram");
+            if (showVram) {
+                ids.push("gpu/" + g + "/usedVram");
+                ids.push("gpu/" + g + "/totalVram");
+            }
             ids.push("gpu/" + g + "/temperature");
         }
         return ids;
@@ -173,7 +183,7 @@ Item {
 
             var uStr = isNaN(uVal) ? "" : Math.round(uVal) + "%";
             var vStr = "";
-            if (!isNaN(vuVal) && !isNaN(vtVal) && vtVal > 0 && vuVal >= 0)
+            if (showVram && !isNaN(vuVal) && !isNaN(vtVal) && vtVal > 0 && vuVal >= 0)
                 vStr = Utils.formatBytes(vuVal) + "/" + Utils.formatBytes(vtVal) + "G";
             // tVal === 0 is ksystemstats' null sentinel for iGPU: no hwmon node exists,
             // so the driver reports exactly 0. No real GPU can be at or below 0°C.
@@ -185,7 +195,7 @@ Item {
                            tempNumber:  (isNaN(tVal) || tVal <= 0) ? NaN : tVal });
 
             if (!isNaN(uVal)) { totalUsage += uVal; usageCount++; }
-            if (!isNaN(vuVal) && !isNaN(vtVal) && vtVal > 0 && vuVal >= 0) {
+            if (showVram && !isNaN(vuVal) && !isNaN(vtVal) && vtVal > 0 && vuVal >= 0) {
                 totalVramUsed  += vuVal;
                 totalVramTotal += vtVal;
                 hasVram = true;
@@ -203,8 +213,9 @@ Item {
         _tempStr  = isNaN(maxTemp) ? "" : Utils.formatTemp(maxTemp, tempUnit);
     }
 
-    // Re-aggregate when labels, selection, or unit change so panel updates immediately
+    // Re-aggregate when labels, selection, unit, or vram visibility change so panel updates immediately
     onGpuLabelsChanged:    aggregate()
     onGpuSelectionChanged: aggregate()
     onTempUnitChanged:     aggregate()
+    onShowVramChanged:     aggregate()
 }
