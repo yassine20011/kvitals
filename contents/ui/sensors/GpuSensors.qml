@@ -19,6 +19,12 @@ Item {
     // Whether to poll and display VRAM usage
     property bool showVram: true
 
+    // Whether to display GPU usage percentage
+    property bool showUsage: true
+
+    // Whether to display GPU temperature
+    property bool showTemp: true
+
     // List of { id: "gpu0", name: "GPU 1" } derived from SensorTreeModel (no polling)
     readonly property var discoveredGpus: _discovered
     property var _discovered: []
@@ -30,15 +36,16 @@ Item {
     readonly property string gpuRamValue:  _vramStr
     readonly property string gpuTempValue: _tempStr
     readonly property string gpuDisplayValue: {
-        var parts = [_usageStr];
-        if (showVram) parts.push(_vramStr);
-        parts.push(_tempStr);
+        var parts = [];
+        if (showUsage) parts.push(_usageStr);
+        if (showVram)  parts.push(_vramStr);
+        if (showTemp)  parts.push(_tempStr);
         return parts.filter(function(v){return v;}).join(" ");
     }
     readonly property bool hasGpuData:      gpuDisplayValue.length > 0
-    readonly property bool hasGpuUsageData: _usageStr.length > 0
-    readonly property bool hasGpuVramData:  _vramStr.length > 0
-    readonly property bool hasGpuTempData:  _tempStr.length > 0
+    readonly property bool hasGpuUsageData: showUsage && _usageStr.length > 0
+    readonly property bool hasGpuVramData:  showVram  && _vramStr.length > 0
+    readonly property bool hasGpuTempData:  showTemp  && _tempStr.length > 0
 
     // Per-GPU list for multi display: [{ id, name, usage, vram, temp, usageNumber, tempNumber }]
     readonly property var gpuDataList: _dataList
@@ -121,12 +128,12 @@ Item {
         var ids = [];
         for (var i = 0; i < _activeIds.length; i++) {
             var g = _activeIds[i];
-            ids.push("gpu/" + g + "/usage");
+            if (showUsage) ids.push("gpu/" + g + "/usage");
             if (showVram) {
                 ids.push("gpu/" + g + "/usedVram");
                 ids.push("gpu/" + g + "/totalVram");
             }
-            ids.push("gpu/" + g + "/temperature");
+            if (showTemp) ids.push("gpu/" + g + "/temperature");
         }
         return ids;
     }
@@ -181,41 +188,43 @@ Item {
             var vtVal = _modelValue("gpu/" + g + "/totalVram");
             var tVal  = _modelValue("gpu/" + g + "/temperature");
 
-            var uStr = isNaN(uVal) ? "" : Math.round(uVal) + "%";
+            var uStr = showUsage && !isNaN(uVal) ? Math.round(uVal) + "%" : "";
             var vStr = "";
             if (showVram && !isNaN(vuVal) && !isNaN(vtVal) && vtVal > 0 && vuVal >= 0)
                 vStr = Utils.formatBytes(vuVal) + "/" + Utils.formatBytes(vtVal) + "G";
             // tVal === 0 is ksystemstats' null sentinel for iGPU: no hwmon node exists,
             // so the driver reports exactly 0. No real GPU can be at or below 0°C.
-            var tStr = (isNaN(tVal) || tVal <= 0) ? "" : Utils.formatTemp(tVal, tempUnit);
+            var tStr = (showTemp && !isNaN(tVal) && tVal > 0) ? Utils.formatTemp(tVal, tempUnit) : "";
 
             newList.push({ id: g, name: name,
                            usage: uStr, vram: vStr, temp: tStr,
-                           usageNumber: isNaN(uVal) ? NaN : uVal,
-                           tempNumber:  (isNaN(tVal) || tVal <= 0) ? NaN : tVal });
+                           usageNumber: (showUsage && !isNaN(uVal)) ? uVal : NaN,
+                           tempNumber:  (showTemp  && !isNaN(tVal) && tVal > 0) ? tVal : NaN });
 
-            if (!isNaN(uVal)) { totalUsage += uVal; usageCount++; }
+            if (showUsage && !isNaN(uVal)) { totalUsage += uVal; usageCount++; }
             if (showVram && !isNaN(vuVal) && !isNaN(vtVal) && vtVal > 0 && vuVal >= 0) {
                 totalVramUsed  += vuVal;
                 totalVramTotal += vtVal;
                 hasVram = true;
             }
-            if (!isNaN(tVal) && tVal > 0 && (isNaN(maxTemp) || tVal > maxTemp)) maxTemp = tVal;
+            if (showTemp && !isNaN(tVal) && tVal > 0 && (isNaN(maxTemp) || tVal > maxTemp)) maxTemp = tVal;
         }
 
         _dataList = newList;
 
-        _usageNum = usageCount > 0 ? totalUsage / usageCount : NaN;
-        _usageStr = usageCount > 0 ? Math.round(_usageNum) + "%" : "";
-        _vramStr  = (hasVram && totalVramTotal > 0)
+        _usageNum = (showUsage && usageCount > 0) ? totalUsage / usageCount : NaN;
+        _usageStr = (showUsage && usageCount > 0) ? Math.round(_usageNum) + "%" : "";
+        _vramStr  = (showVram && hasVram && totalVramTotal > 0)
                     ? Utils.formatBytes(totalVramUsed) + "/" + Utils.formatBytes(totalVramTotal) + "G" : "";
-        _tempNum  = isNaN(maxTemp) ? NaN : maxTemp;
-        _tempStr  = isNaN(maxTemp) ? "" : Utils.formatTemp(maxTemp, tempUnit);
+        _tempNum  = (showTemp && !isNaN(maxTemp)) ? maxTemp : NaN;
+        _tempStr  = (showTemp && !isNaN(maxTemp)) ? Utils.formatTemp(maxTemp, tempUnit) : "";
     }
 
-    // Re-aggregate when labels, selection, unit, or vram visibility change so panel updates immediately
+    // Re-aggregate when any visibility flag, labels, selection, or unit changes
     onGpuLabelsChanged:    aggregate()
     onGpuSelectionChanged: aggregate()
     onTempUnitChanged:     aggregate()
     onShowVramChanged:     aggregate()
+    onShowUsageChanged:    aggregate()
+    onShowTempChanged:     aggregate()
 }

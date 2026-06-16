@@ -109,6 +109,8 @@ KCM.SimpleKCM {
     property bool cfg_mergeBatPwr: false
     property bool cfg_splitGpu: false
     property bool cfg_showGpuVram: true
+    property bool cfg_showGpuUsage: true
+    property bool cfg_showGpuTemp: true
     property bool cfg_showCpuFreq: false
 
     property var ifaceList: ["auto"]
@@ -503,8 +505,32 @@ KCM.SimpleKCM {
             }
         }
 
+        Kirigami.Separator {
+            Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18n("GPU Sub-metrics")
+            visible: cfg_showGpu
+        }
+
+        Label {
+            text: i18n("Choose which GPU metrics to display. Hiding a metric saves horizontal panel space.")
+            opacity: 0.7
+            font.italic: true
+            visible: cfg_showGpu
+            wrapMode: Text.WordWrap
+            Layout.maximumWidth: 300
+        }
+
         CheckBox {
-            Kirigami.FormData.label: i18n("VRAM usage:")
+            Kirigami.FormData.label: i18n("Usage:")
+            text: i18n("Show GPU usage (%)")
+            checked: cfg_showGpuUsage
+            enabled: cfg_showGpu
+            onToggled: cfg_showGpuUsage = checked
+            visible: cfg_showGpu
+        }
+
+        CheckBox {
+            Kirigami.FormData.label: i18n("VRAM:")
             text: i18n("Show GPU VRAM usage")
             checked: cfg_showGpuVram
             enabled: cfg_showGpu
@@ -512,14 +538,15 @@ KCM.SimpleKCM {
             visible: cfg_showGpu
         }
 
-        Label {
-            text: i18n("Hides the VRAM used/total metric to save horizontal space on the panel.")
-            opacity: 0.7
-            font.italic: true
+        CheckBox {
+            Kirigami.FormData.label: i18n("Temperature:")
+            text: i18n("Show GPU temperature")
+            checked: cfg_showGpuTemp
+            enabled: cfg_showGpu
+            onToggled: cfg_showGpuTemp = checked
             visible: cfg_showGpu
-            wrapMode: Text.WordWrap
-            Layout.maximumWidth: 300
         }
+
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true

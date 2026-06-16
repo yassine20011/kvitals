@@ -91,6 +91,12 @@
         <entry name="showGpuVram" type="Bool">
             <default>true</default>
         </entry>
+        <entry name="showGpuUsage" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="showGpuTemp" type="Bool">
+            <default>true</default>
+        </entry>
         <entry name="iconSize" type="Int">
             <default>12</default>
         </entry>
