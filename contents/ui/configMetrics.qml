@@ -495,6 +495,13 @@ KCM.SimpleKCM {
                     // Reactive per-GPU enabled metrics list
                     property var _activeMetrics: metricsPage.gpuMetricsFor(modelData.id)
 
+                    // True when this GPU is part of the active selection
+                    property bool _gpuEnabled: {
+                        if (!cfg_gpuSelection || cfg_gpuSelection === "") return true;
+                        if (cfg_gpuSelection === "none") return false;
+                        return cfg_gpuSelection.split(",").indexOf(modelData.id) >= 0;
+                    }
+
                     CheckBox {
                         text: modelData.name
                         checked: {
@@ -556,22 +563,22 @@ KCM.SimpleKCM {
                         CheckBox {
                             text: i18n("Usage")
                             checked: gpuDelegate._activeMetrics.indexOf("usage") >= 0
-                            // Disable when it is the only remaining checked item
-                            enabled: cfg_showGpu && !(checked && gpuDelegate._activeMetrics.length <= 1)
+                            // Disable when GPU is inactive or this is the last remaining sub-metric
+                            enabled: cfg_showGpu && gpuDelegate._gpuEnabled && !(checked && gpuDelegate._activeMetrics.length <= 1)
                             onToggled: metricsPage.saveGpuMetric(gpuDelegate.modelData.id, "usage", checked)
                         }
 
                         CheckBox {
                             text: i18n("VRAM")
                             checked: gpuDelegate._activeMetrics.indexOf("vram") >= 0
-                            enabled: cfg_showGpu && !(checked && gpuDelegate._activeMetrics.length <= 1)
+                            enabled: cfg_showGpu && gpuDelegate._gpuEnabled && !(checked && gpuDelegate._activeMetrics.length <= 1)
                             onToggled: metricsPage.saveGpuMetric(gpuDelegate.modelData.id, "vram", checked)
                         }
 
                         CheckBox {
                             text: i18n("Temp")
                             checked: gpuDelegate._activeMetrics.indexOf("temp") >= 0
-                            enabled: cfg_showGpu && !(checked && gpuDelegate._activeMetrics.length <= 1)
+                            enabled: cfg_showGpu && gpuDelegate._gpuEnabled && !(checked && gpuDelegate._activeMetrics.length <= 1)
                             onToggled: metricsPage.saveGpuMetric(gpuDelegate.modelData.id, "temp", checked)
                         }
                     }
