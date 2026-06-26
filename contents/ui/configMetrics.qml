@@ -1,7 +1,7 @@
-import QtQuick 2.0
-import QtQuick.Controls 2.0
-import QtQuick.Layouts 1.0
-import org.kde.kirigami 2.5 as Kirigami
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCM
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.ksysguard.sensors as Sensors
@@ -10,6 +10,7 @@ import org.kde.kitemmodels as KItemModels
 KCM.SimpleKCM {
     id: metricsPage
 
+    // --- cfg_ bindings (must match main.xml keys exactly) ---
     property bool cfg_showCpu
     property bool cfg_showRam
     property bool cfg_showTemp
@@ -31,31 +32,41 @@ KCM.SimpleKCM {
     property string cfg_gpuSelection: ""
     property string cfg_gpuDiscovered
     property string cfg_gpuLabels: ""
+    property string cfg_metricOrder: "cpu,ram,temp,gpu,bat,pwr,net,disk"
+    property bool cfg_mergeCpuTemp: false
+    property bool cfg_mergeCpuFreq: false
+    property bool cfg_mergeBatPwr: false
+    property bool cfg_splitGpu: false
+    property string cfg_gpuMetrics: ""
+    property bool cfg_showCpuFreq: false
 
-    // Discover GPUs via SensorTreeModel — pure metadata, zero polling, no dGPU wakeup.
-    Sensors.SensorTreeModel {
-        id: cfgSensorTree
-    }
-
-    KItemModels.KDescendantsProxyModel {
-        id: cfgFlatSensors
-        model: cfgSensorTree
-    }
+    // --- GPU discovery via SensorTreeModel (pure metadata, no polling) ---
+    Sensors.SensorTreeModel { id: cfgSensorTree }
+    KItemModels.KDescendantsProxyModel { id: cfgFlatSensors; model: cfgSensorTree }
 
     property var _liveDiscoveredGpus: []
 
-    function refreshConfigGpus() {
-        var found = [];
-        for (var row = 0; row < cfgFlatSensors.rowCount(); row++) {
-            var idx = cfgFlatSensors.index(row, 0);
-            var sensorId = cfgFlatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
-            if (!sensorId || sensorId.length === 0) continue;
-            var match = sensorId.match(/^gpu\/(gpu\d+)\/usage$/);
-            if (!match) continue;
-            found.push({ id: match[1], name: "GPU " + (found.length + 1) });
+    Timer {
+        id: gpuRefreshDebounce
+        interval: 100
+        repeat: false
+        onTriggered: {
+            var found = [];
+            for (var row = 0; row < cfgFlatSensors.rowCount(); row++) {
+                var idx = cfgFlatSensors.index(row, 0);
+                var sensorId = cfgFlatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
+                if (!sensorId || sensorId.length === 0) continue;
+                var match = sensorId.match(/^gpu\/(gpu\d+)\/usage$/);
+                if (!match) continue;
+                found.push({ id: match[1], name: "GPU " + (found.length + 1) });
+            }
+            if (JSON.stringify(found) !== JSON.stringify(_liveDiscoveredGpus))
+                _liveDiscoveredGpus = found;
         }
-        if (JSON.stringify(found) !== JSON.stringify(_liveDiscoveredGpus))
-            _liveDiscoveredGpus = found;
+    }
+
+    function refreshConfigGpus() {
+        gpuRefreshDebounce.restart();
     }
 
     Connections {
@@ -66,8 +77,6 @@ KCM.SimpleKCM {
         function onDataChanged()  { metricsPage.refreshConfigGpus(); }
     }
 
-    // Use live results first; fall back to persisted cfg_gpuDiscovered if the
-    // sensor tree hasn't populated yet (e.g. very fast dialog open).
     readonly property var discoveredGpus: {
         if (_liveDiscoveredGpus.length > 0) return _liveDiscoveredGpus;
         if (!cfg_gpuDiscovered) return [];
@@ -77,255 +86,13 @@ KCM.SimpleKCM {
         });
     }
 
-    // Parse "gpu0:Label A|gpu1:Label B" → { gpu0: "Label A", gpu1: "Label B" }
-    function parseGpuLabels(str) {
-        var result = {};
-        if (!str) return result;
-        var pairs = str.split("|");
-        for (var i = 0; i < pairs.length; i++) {
-            var sep = pairs[i].indexOf(":");
-            if (sep > 0)
-                result[pairs[i].substring(0, sep)] = pairs[i].substring(sep + 1);
-        }
-        return result;
-    }
-
-    // Save a custom label for one GPU ID back into cfg_gpuLabels
-    function saveGpuLabel(gpuId, label) {
-        var labels = parseGpuLabels(cfg_gpuLabels);
-        var trimmed = (label || "").trim();
-        if (trimmed.length > 0)
-            labels[gpuId] = trimmed;
-        else
-            delete labels[gpuId];
-        var parts = [];
-        for (var id in labels)
-            parts.push(id + ":" + labels[id]);
-        cfg_gpuLabels = parts.join("|");
-    }
-    // Parse "gpu0:usage,vram|gpu1:temp" → { gpu0: ["usage","vram"], gpu1: ["temp"] }
-    function parseGpuMetrics(str) {
-        var result = {};
-        if (!str) return result;
-        var pairs = str.split("|");
-        for (var i = 0; i < pairs.length; i++) {
-            var sep = pairs[i].indexOf(":");
-            if (sep <= 0) continue;
-            var id = pairs[i].substring(0, sep);
-            var metrics = pairs[i].substring(sep + 1).split(",").filter(
-                function(m){ return m === "usage" || m === "vram" || m === "temp"; });
-            if (metrics.length > 0) result[id] = metrics;
-        }
-        return result;
-    }
-
-    // Returns enabled metrics for one GPU (defaults to all three)
-    function gpuMetricsFor(gpuId) {
-        var mm = parseGpuMetrics(cfg_gpuMetrics);
-        return (mm[gpuId] && mm[gpuId].length > 0) ? mm[gpuId] : ["usage", "vram", "temp"];
-    }
-
-    // Toggle one sub-metric for a GPU, save back to cfg_gpuMetrics.
-    // Enforces at-least-one: if only one remains, the call is ignored.
-    function saveGpuMetric(gpuId, metric, enable) {
-        var mm = parseGpuMetrics(cfg_gpuMetrics);
-        var current = mm[gpuId] ? mm[gpuId].slice() : ["usage", "vram", "temp"];
-        if (enable) {
-            if (current.indexOf(metric) < 0) current.push(metric);
-        } else {
-            if (current.length <= 1) return; // enforce minimum one
-            current = current.filter(function(m){ return m !== metric; });
-        }
-        // Sort canonical order
-        var order = ["usage", "vram", "temp"];
-        current.sort(function(a, b){ return order.indexOf(a) - order.indexOf(b); });
-        // If all three are enabled, remove this GPU from the map (use default)
-        if (current.length === 3) {
-            delete mm[gpuId];
-        } else {
-            mm[gpuId] = current;
-        }
-        var parts = [];
-        for (var id in mm) parts.push(id + ":" + mm[id].join(","));
-        cfg_gpuMetrics = parts.join("|");
-    }
-
-    property string cfg_metricOrder: "cpu,ram,temp,gpu,bat,pwr,net"
-    property bool cfg_mergeCpuTemp: false
-    property bool cfg_mergeCpuFreq: false
-    property bool cfg_mergeBatPwr: false
-    property bool cfg_splitGpu: false
-    property string cfg_gpuMetrics: ""
-    property bool cfg_showCpuFreq: false
-
+    // --- Network interface discovery ---
     property var ifaceList: ["auto"]
-
-    readonly property var allKeys: ["cpu", "ram", "temp", "gpu", "bat", "pwr", "net", "disk"]
-
-    readonly property var metricLabels: ({
-        "cpu": i18n("CPU Usage"),
-        "ram": i18n("RAM Usage"),
-        "temp": i18n("CPU Temperature"),
-        "gpu": i18n("GPU Metrics"),
-        "bat": i18n("Battery Status"),
-        "pwr": i18n("Power Consumption"),
-        "net": i18n("Network Speed"),
-        "disk": i18n("Disk I/O & Temp")
-    })
-
-    property var currentOrder: {
-        var keys = cfg_metricOrder.split(",").map(function (k) {
-            return k.trim();
-        }).filter(function (k) {
-            return k.length > 0 && metricLabels[k] !== undefined;
-        });
-        // Add any missing keys at the end
-        for (var j = 0; j < allKeys.length; j++) {
-            if (keys.indexOf(allKeys[j]) < 0) {
-                keys.push(allKeys[j]);
-            }
-        }
-        return keys;
-    }
-
-    function isChecked(key) {
-        switch (key) {
-            case "cpu":
-                return cfg_showCpu;
-            case "ram":
-                return cfg_showRam;
-            case "temp":
-                return cfg_showTemp;
-            case "gpu":
-                return cfg_showGpu;
-            case "bat":
-                return cfg_showBattery;
-            case "pwr":
-                return cfg_showPower;
-            case "net":
-                return cfg_showNetwork;
-            case "disk":
-                return cfg_showDisk;
-        }
-        return false;
-    }
-
-    function isCompactChecked(key) {
-        switch (key) {
-            case "cpu":
-                return cfg_compactShowCpu;
-            case "ram":
-                return cfg_compactShowRam;
-            case "temp":
-                return cfg_compactShowTemp;
-            case "gpu":
-                return cfg_compactShowGpu;
-            case "bat":
-                return cfg_compactShowBattery;
-            case "pwr":
-                return cfg_compactShowPower;
-            case "net":
-                return cfg_compactShowNetwork;
-            case "disk":
-                return cfg_compactShowDisk;
-        }
-        return false;
-    }
-
-    function setChecked(key, val) {
-        switch (key) {
-            case "cpu":
-                cfg_showCpu = val;
-                break;
-            case "ram":
-                cfg_showRam = val;
-                break;
-            case "temp":
-                cfg_showTemp = val;
-                break;
-            case "gpu":
-                cfg_showGpu = val;
-                break;
-            case "bat":
-                cfg_showBattery = val;
-                break;
-            case "pwr":
-                cfg_showPower = val;
-                break;
-            case "net":
-                cfg_showNetwork = val;
-                break;
-            case "disk":
-                cfg_showDisk = val;
-                break;
-        }
-        // Reset merge toggles when a prerequisite metric is disabled
-        if (!val) {
-            if ((key === "cpu" || key === "temp") && cfg_mergeCpuTemp)
-                cfg_mergeCpuTemp = false;
-            if ((key === "bat" || key === "pwr") && cfg_mergeBatPwr)
-                cfg_mergeBatPwr = false;
-            if (key === "gpu" && cfg_splitGpu)
-                cfg_splitGpu = false;
-        }
-    }
-
-    function setCompactChecked(key, val) {
-        switch (key) {
-            case "cpu":
-                cfg_compactShowCpu = val;
-                break;
-            case "ram":
-                cfg_compactShowRam = val;
-                break;
-            case "temp":
-                cfg_compactShowTemp = val;
-                break;
-            case "gpu":
-                cfg_compactShowGpu = val;
-                break;
-            case "bat":
-                cfg_compactShowBattery = val;
-                break;
-            case "pwr":
-                cfg_compactShowPower = val;
-                break;
-            case "net":
-                cfg_compactShowNetwork = val;
-                break;
-            case "disk":
-                cfg_compactShowDisk = val;
-                break;
-        }
-    }
-
-    function moveMetric(fromIndex, toIndex) {
-        var keys = currentOrder.slice();
-        var item = keys.splice(fromIndex, 1)[0];
-        keys.splice(toIndex, 0, item);
-        cfg_metricOrder = keys.join(",");
-    }
-
-    function trimmed(text) {
-        return (text || "").toString().trim();
-    }
-
-    function syncBatteryInput() {
-        if (!batteryInput)
-            return;
-        var desired = cfg_batteryDevice === "auto" ? "" : cfg_batteryDevice;
-        if (batteryInput.text !== desired)
-            batteryInput.text = desired;
-    }
-
-    onCfg_batteryDeviceChanged: syncBatteryInput()
-    Component.onCompleted: syncBatteryInput()
 
     Plasma5Support.DataSource {
         id: ifaceSource
         engine: "executable"
         connectedSources: ["ls /sys/class/net/"]
-
         onNewData: function (source, data) {
             if (data["exit code"] !== 0) return;
             var raw = data["stdout"].trim();
@@ -338,338 +105,545 @@ KCM.SimpleKCM {
         }
     }
 
-    Kirigami.FormLayout {
+    // --- GPU label helpers ---
+    function parseGpuLabels(str) {
+        var result = {};
+        if (!str) return result;
+        str.split("|").forEach(function(pair) {
+            var sep = pair.indexOf(":");
+            if (sep > 0) result[pair.substring(0, sep)] = pair.substring(sep + 1);
+        });
+        return result;
+    }
 
-        Label {
-            Kirigami.FormData.label: i18n("Metric order:")
-            text: i18n("Use ↑ ↓ to reorder metrics in the panel.")
-            opacity: 0.7
-            font.italic: true
+    function saveGpuLabel(gpuId, label) {
+        var labels = parseGpuLabels(cfg_gpuLabels);
+        var trimmed = (label || "").trim();
+        if (trimmed.length > 0) labels[gpuId] = trimmed;
+        else delete labels[gpuId];
+        var parts = [];
+        for (var id in labels) parts.push(id + ":" + labels[id]);
+        cfg_gpuLabels = parts.join("|");
+    }
+
+    // --- GPU sub-metric helpers ---
+    function parseGpuMetrics(str) {
+        var result = {};
+        if (!str) return result;
+        str.split("|").forEach(function(pair) {
+            var sep = pair.indexOf(":");
+            if (sep <= 0) return;
+            var id = pair.substring(0, sep);
+            var metrics = pair.substring(sep + 1).split(",").filter(function(m){
+                return m === "usage" || m === "vram" || m === "temp";
+            });
+            if (metrics.length > 0) result[id] = metrics;
+        });
+        return result;
+    }
+
+    function gpuMetricsFor(gpuId) {
+        var mm = parseGpuMetrics(cfg_gpuMetrics);
+        return (mm[gpuId] && mm[gpuId].length > 0) ? mm[gpuId] : ["usage", "vram", "temp"];
+    }
+
+    function saveGpuMetric(gpuId, metric, enable) {
+        var mm = parseGpuMetrics(cfg_gpuMetrics);
+        var current = mm[gpuId] ? mm[gpuId].slice() : ["usage", "vram", "temp"];
+        if (enable) {
+            if (current.indexOf(metric) < 0) current.push(metric);
+        } else {
+            if (current.length <= 1) return;
+            current = current.filter(function(m){ return m !== metric; });
+        }
+        var order = ["usage", "vram", "temp"];
+        current.sort(function(a, b){ return order.indexOf(a) - order.indexOf(b); });
+        if (current.length === 3) delete mm[gpuId];
+        else mm[gpuId] = current;
+        var parts = [];
+        for (var id in mm) parts.push(id + ":" + mm[id].join(","));
+        cfg_gpuMetrics = parts.join("|");
+    }
+
+    // --- Metric order helpers ---
+    readonly property var allKeys: ["cpu", "ram", "temp", "gpu", "bat", "pwr", "net", "disk"]
+
+    readonly property var metricMeta: ({
+        "cpu":  { label: i18n("CPU usage"),         icon: "cpu" },
+        "ram":  { label: i18n("RAM usage"),          icon: "memory" },
+        "temp": { label: i18n("CPU temperature"),    icon: "temperature-normal" },
+        "gpu":  { label: i18n("GPU metrics"),        icon: "video-card" },
+        "bat":  { label: i18n("Battery status"),     icon: "battery-good" },
+        "pwr":  { label: i18n("Power consumption"),  icon: "battery-charging-60" },
+        "net":  { label: i18n("Network speed"),      icon: "network-wireless" },
+        "disk": { label: i18n("Disk I/O & temp"),    icon: "drive-harddisk" }
+    })
+
+    property var currentOrder: {
+        var keys = cfg_metricOrder.split(",").map(function(k){ return k.trim(); })
+            .filter(function(k){ return k.length > 0 && metricMeta[k] !== undefined; });
+        allKeys.forEach(function(k){ if (keys.indexOf(k) < 0) keys.push(k); });
+        return keys;
+    }
+
+    function isChecked(key) {
+        switch (key) {
+            case "cpu":  return cfg_showCpu;
+            case "ram":  return cfg_showRam;
+            case "temp": return cfg_showTemp;
+            case "gpu":  return cfg_showGpu;
+            case "bat":  return cfg_showBattery;
+            case "pwr":  return cfg_showPower;
+            case "net":  return cfg_showNetwork;
+            case "disk": return cfg_showDisk;
+        }
+        return false;
+    }
+
+    function isCompactChecked(key) {
+        switch (key) {
+            case "cpu":  return cfg_compactShowCpu;
+            case "ram":  return cfg_compactShowRam;
+            case "temp": return cfg_compactShowTemp;
+            case "gpu":  return cfg_compactShowGpu;
+            case "bat":  return cfg_compactShowBattery;
+            case "pwr":  return cfg_compactShowPower;
+            case "net":  return cfg_compactShowNetwork;
+            case "disk": return cfg_compactShowDisk;
+        }
+        return false;
+    }
+
+    function setChecked(key, val) {
+        switch (key) {
+            case "cpu":  cfg_showCpu     = val; break;
+            case "ram":  cfg_showRam     = val; break;
+            case "temp": cfg_showTemp    = val; break;
+            case "gpu":  cfg_showGpu     = val; break;
+            case "bat":  cfg_showBattery = val; break;
+            case "pwr":  cfg_showPower   = val; break;
+            case "net":  cfg_showNetwork = val; break;
+            case "disk": cfg_showDisk    = val; break;
+        }
+        if (!val) {
+            if ((key === "cpu" || key === "temp") && cfg_mergeCpuTemp) cfg_mergeCpuTemp = false;
+            if ((key === "bat" || key === "pwr")  && cfg_mergeBatPwr)  cfg_mergeBatPwr  = false;
+            if (key === "gpu" && cfg_splitGpu) cfg_splitGpu = false;
+        }
+    }
+
+    function setCompactChecked(key, val) {
+        switch (key) {
+            case "cpu":  cfg_compactShowCpu     = val; break;
+            case "ram":  cfg_compactShowRam     = val; break;
+            case "temp": cfg_compactShowTemp    = val; break;
+            case "gpu":  cfg_compactShowGpu     = val; break;
+            case "bat":  cfg_compactShowBattery = val; break;
+            case "pwr":  cfg_compactShowPower   = val; break;
+            case "net":  cfg_compactShowNetwork = val; break;
+            case "disk": cfg_compactShowDisk    = val; break;
+        }
+    }
+
+    function moveMetric(fromIndex, toIndex) {
+        var keys = currentOrder.slice();
+        var item = keys.splice(fromIndex, 1)[0];
+        keys.splice(toIndex, 0, item);
+        cfg_metricOrder = keys.join(",");
+    }
+
+    // Battery device sync
+    function syncBatteryInput() {
+        if (!batteryInput) return;
+        var desired = cfg_batteryDevice === "auto" ? "" : cfg_batteryDevice;
+        if (batteryInput.text !== desired) batteryInput.text = desired;
+    }
+    onCfg_batteryDeviceChanged: syncBatteryInput()
+    Component.onCompleted: syncBatteryInput()
+
+    // =========================================================================
+    // UI
+    // =========================================================================
+    
+    // Prevent "ugly to correct" UI flash during initial layout calculations
+    property bool _isReady: false
+    Timer {
+        id: readyTimer
+        interval: 100
+        running: true
+        repeat: false
+        onTriggered: metricsPage._isReady = true
+    }
+
+    BusyIndicator {
+        anchors.centerIn: parent
+        running: !metricsPage._isReady
+        visible: running
+    }
+
+    Kirigami.FormLayout {
+        opacity: metricsPage._isReady ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 150 } }
+
+        // ----- Section header -----
+        Kirigami.Separator {
+            Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18n("Visibility & Order")
         }
 
+        // Column headers row
+        RowLayout {
+            spacing: Kirigami.Units.smallSpacing
+
+            Label {
+                text: i18n("Metric (Full view)")
+                font.bold: true
+                opacity: 0.7
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 14
+            }
+            Label {
+                text: i18n("Compact")
+                font.bold: true
+                opacity: 0.7
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 4
+                horizontalAlignment: Text.AlignHCenter
+            }
+            Item { Layout.fillWidth: true }
+        }
+
+        // Metric rows
         ColumnLayout {
-            spacing: 2
+            spacing: 0
+            Layout.fillWidth: true
 
             Repeater {
                 model: metricsPage.currentOrder
 
                 delegate: ColumnLayout {
+                    id: metricDelegate
                     required property var modelData
                     required property int index
 
-                    spacing: Kirigami.Units.smallSpacing
+                    spacing: 0
                     Layout.fillWidth: true
 
-                    // Hide metrics that are absorbed into a group
+                    // Hide metrics absorbed by a merge group
                     visible: !(modelData === "temp" && cfg_mergeCpuTemp && cfg_showCpu) &&
-                        !(modelData === "pwr" && cfg_mergeBatPwr && cfg_showBattery)
+                             !(modelData === "pwr"  && cfg_mergeBatPwr  && cfg_showBattery)
 
+                    // Resolved shorthands for readability inside this delegate
+                    readonly property bool metricEnabled: metricsPage.isChecked(modelData)
+                    readonly property string metricLabel: (metricsPage.metricMeta[modelData] || {}).label || modelData
+                    readonly property string metricIcon:  (metricsPage.metricMeta[modelData] || {}).icon  || "help-about"
+
+                    // ── Main row ──────────────────────────────────────────────
                     RowLayout {
                         Layout.fillWidth: true
-
-                        CheckBox {
-                            id: enabledCheck
-                            text: metricsPage.metricLabels[modelData] || modelData
-                            checked: metricsPage.isChecked(modelData)
-
-                            onToggled: metricsPage.setChecked(modelData, checked);
-                        }
-
-                        Item {
-                            Layout.fillWidth: true
-                        }
-
-                        Button {
-                            icon.name: "arrow-up"
-                            enabled: index > 0
-                            flat: true
-                            implicitWidth: 32
-                            implicitHeight: 32
-                            onClicked: metricsPage.moveMetric(index, index - 1)
-                        }
-
-                        Button {
-                            icon.name: "arrow-down"
-                            enabled: index < metricsPage.currentOrder.length - 1
-                            flat: true
-                            implicitWidth: 32
-                            implicitHeight: 32
-                            onClicked: metricsPage.moveMetric(index, index + 1)
-                        }
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Layout.leftMargin: Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
-
-                        CheckBox {
-                            text: i18n("Show in compact panel")
-                            checked: metricsPage.isCompactChecked(modelData)
-                            enabled: metricsPage.isChecked(modelData)
-
-                            onToggled: metricsPage.setCompactChecked(modelData, checked)
-                        }
-                    }
-                }
-            }
-        }
-
-        ComboBox {
-            id: ifaceCombo
-            Kirigami.FormData.label: i18n("Network interface:")
-            model: metricsPage.ifaceList
-            enabled: cfg_showNetwork
-            currentIndex: {
-                var idx = metricsPage.ifaceList.indexOf(cfg_networkInterface);
-                return idx >= 0 ? idx : 0;
-            }
-            onActivated: {
-                cfg_networkInterface = metricsPage.ifaceList[currentIndex];
-            }
-        }
-
-        TextField {
-            id: batteryInput
-            Kirigami.FormData.label: i18n("Battery device:")
-            enabled: cfg_showBattery
-            placeholderText: i18n("Leave empty for auto (e.g. battery_BAT0)")
-            onTextEdited: {
-                var value = metricsPage.trimmed(text);
-                cfg_batteryDevice = value.length > 0 ? value : "auto";
-            }
-        }
-
-        Label {
-            text: i18n("Empty value uses automatic detection.")
-            opacity: 0.7
-            visible: cfg_showBattery
-        }
-
-        // --- GPU selector ---
-
-        Kirigami.Separator {
-            Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: i18n("GPU Selection")
-            visible: cfg_showGpu
-        }
-
-        Label {
-            text: i18n("Select which GPUs to monitor. All selected GPUs are shown as separate metrics.")
-            opacity: 0.7
-            font.italic: true
-            visible: cfg_showGpu
-            wrapMode: Text.WordWrap
-            Layout.maximumWidth: 300
-        }
-
-        Label {
-            text: i18n("No GPUs detected yet — they appear once the widget loads.")
-            opacity: 0.7
-            font.italic: true
-            visible: cfg_showGpu && metricsPage.discoveredGpus.length === 0
-        }
-
-        Label {
-            text: i18n("On hybrid GPU laptops (e.g. Intel/AMD + NVIDIA), uncheck the discrete GPU to allow it to suspend when idle and save power.")
-            opacity: 0.7
-            font.italic: true
-            visible: cfg_showGpu && metricsPage.discoveredGpus.length > 1
-            wrapMode: Text.WordWrap
-            Layout.maximumWidth: 300
-        }
-
-        ColumnLayout {
-            visible: cfg_showGpu && metricsPage.discoveredGpus.length > 0
-            spacing: Kirigami.Units.smallSpacing
-
-            Repeater {
-                id: gpuSelectorRepeater
-                model: metricsPage.discoveredGpus
-
-                delegate: ColumnLayout {
-                    id: gpuDelegate
-                    required property var modelData
-                    spacing: 2
-                    Layout.fillWidth: true
-
-                    // Reactive per-GPU enabled metrics list
-                    property var _activeMetrics: metricsPage.gpuMetricsFor(modelData.id)
-
-                    // True when this GPU is part of the active selection
-                    property bool _gpuEnabled: {
-                        if (!cfg_gpuSelection || cfg_gpuSelection === "") return true;
-                        if (cfg_gpuSelection === "none") return false;
-                        return cfg_gpuSelection.split(",").indexOf(modelData.id) >= 0;
-                    }
-
-                    CheckBox {
-                        text: modelData.name
-                        checked: {
-                            if (!cfg_gpuSelection || cfg_gpuSelection === "")
-                                return true;
-                            if (cfg_gpuSelection === "none")
-                                return false;
-                            return cfg_gpuSelection.split(",").indexOf(modelData.id) >= 0;
-                        }
-                        onToggled: {
-                            var ids;
-                            if (!cfg_gpuSelection || cfg_gpuSelection === "") {
-                                ids = gpuSelectorRepeater.model.map(function(g) { return g.id; });
-                            } else if (cfg_gpuSelection === "none") {
-                                ids = [];
-                            } else {
-                                ids = cfg_gpuSelection.split(",").filter(function(s) { return s.length > 0; });
-                            }
-                            if (checked) {
-                                if (ids.indexOf(modelData.id) < 0) ids.push(modelData.id);
-                            } else {
-                                ids = ids.filter(function(id) { return id !== modelData.id; });
-                            }
-                            var allIds = gpuSelectorRepeater.model.map(function(g) { return g.id; });
-                            var allSelected = allIds.every(function(id) { return ids.indexOf(id) >= 0; });
-                            if (allSelected)
-                                cfg_gpuSelection = "";
-                            else if (ids.length === 0)
-                                cfg_gpuSelection = "none";
-                            else
-                                cfg_gpuSelection = ids.join(",");
-                        }
-                    }
-
-                    // Label row
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Layout.leftMargin: Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
                         spacing: Kirigami.Units.smallSpacing
 
-                        Label { text: i18n("Label:"); opacity: 0.8 }
+                        // Metric toggle
+                        CheckBox {
+                            id: enabledCheck
+                            text: metricDelegate.metricLabel
+                            checked: metricDelegate.metricEnabled
+                            onToggled: metricsPage.setChecked(modelData, checked)
+                            Layout.preferredWidth: Kirigami.Units.gridUnit * 14
+                        }
 
-                        TextField {
-                            Layout.fillWidth: true
-                            text: metricsPage.parseGpuLabels(cfg_gpuLabels)[modelData.id] || ""
-                            placeholderText: modelData.name
-                            onTextEdited: metricsPage.saveGpuLabel(modelData.id, text)
+                        // Compact-view toggle
+                        Item {
+                            Layout.preferredWidth: Kirigami.Units.gridUnit * 4
+                            Layout.minimumHeight: compactCheck.implicitHeight
+                            CheckBox {
+                                id: compactCheck
+                                anchors.centerIn: parent
+                                checked: metricsPage.isCompactChecked(modelData)
+                                enabled: metricDelegate.metricEnabled
+                                onToggled: metricsPage.setCompactChecked(modelData, checked)
+                                // Accessible name for keyboard/screen-reader users
+                                Accessible.name: i18n("Show %1 in compact panel", metricDelegate.metricLabel)
+                            }
+                        }
+
+                        // Spacer
+                        Item { Layout.fillWidth: true }
+
+                        // Reorder buttons
+                        Button {
+                            icon.name: "arrow-up"
+                            flat: true
+                            enabled: index > 0
+                            implicitWidth:  Kirigami.Units.gridUnit * 2
+                            implicitHeight: Kirigami.Units.gridUnit * 2
+                            onClicked: metricsPage.moveMetric(index, index - 1)
+                            ToolTip.text: i18n("Move up")
+                            ToolTip.visible: hovered
+                            ToolTip.delay: Kirigami.Units.toolTipDelay
+                        }
+                        Button {
+                            icon.name: "arrow-down"
+                            flat: true
+                            enabled: index < metricsPage.currentOrder.length - 1
+                            implicitWidth:  Kirigami.Units.gridUnit * 2
+                            implicitHeight: Kirigami.Units.gridUnit * 2
+                            onClicked: metricsPage.moveMetric(index, index + 1)
+                            ToolTip.text: i18n("Move down")
+                            ToolTip.visible: hovered
+                            ToolTip.delay: Kirigami.Units.toolTipDelay
                         }
                     }
 
-                    // Per-GPU sub-metric toggles (at least one must stay enabled)
-                    RowLayout {
+                    // ── Inline per-metric settings (visible only when enabled) ──
+                    // Each block is keyed to its metric so context is never lost.
+
+                    // CPU settings
+                    Loader {
+                        active: modelData === "cpu" && metricDelegate.metricEnabled
+                        visible: active
                         Layout.fillWidth: true
                         Layout.leftMargin: Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
-                        spacing: Kirigami.Units.largeSpacing
+                        Layout.topMargin: Kirigami.Units.smallSpacing
 
-                        Label { text: i18n("Show:"); opacity: 0.8 }
+                        sourceComponent: ColumnLayout {
+                            spacing: Kirigami.Units.smallSpacing
 
-                        CheckBox {
-                            text: i18n("Usage")
-                            checked: gpuDelegate._activeMetrics.indexOf("usage") >= 0
-                            // Disable when GPU is inactive or this is the last remaining sub-metric
-                            enabled: cfg_showGpu && gpuDelegate._gpuEnabled && !(checked && gpuDelegate._activeMetrics.length <= 1)
-                            onToggled: metricsPage.saveGpuMetric(gpuDelegate.modelData.id, "usage", checked)
+                            RowLayout {
+                                spacing: Kirigami.Units.largeSpacing
+                                CheckBox {
+                                    text: i18n("Show CPU frequency")
+                                    checked: cfg_showCpuFreq
+                                    onToggled: {
+                                        cfg_showCpuFreq = checked;
+                                        if (!checked) cfg_mergeCpuFreq = false;
+                                    }
+                                }
+                                CheckBox {
+                                    text: i18n("Merge frequency into compact view")
+                                    checked: cfg_mergeCpuFreq
+                                    enabled: cfg_showCpuFreq
+                                    onToggled: cfg_mergeCpuFreq = checked
+                                }
+                            }
+                            CheckBox {
+                                visible: cfg_showTemp
+                                text: i18n("Show temperature next to usage (merge CPU & temp)")
+                                checked: cfg_mergeCpuTemp
+                                enabled: cfg_showTemp
+                                onToggled: cfg_mergeCpuTemp = checked
+                            }
                         }
+                    }
 
-                        CheckBox {
-                            text: i18n("VRAM")
-                            checked: gpuDelegate._activeMetrics.indexOf("vram") >= 0
-                            enabled: cfg_showGpu && gpuDelegate._gpuEnabled && !(checked && gpuDelegate._activeMetrics.length <= 1)
-                            onToggled: metricsPage.saveGpuMetric(gpuDelegate.modelData.id, "vram", checked)
-                        }
+                    // Network settings
+                    Loader {
+                        active: modelData === "net" && metricDelegate.metricEnabled
+                        visible: active
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
+                        Layout.topMargin: Kirigami.Units.smallSpacing
 
-                        CheckBox {
-                            text: i18n("Temp")
-                            checked: gpuDelegate._activeMetrics.indexOf("temp") >= 0
-                            enabled: cfg_showGpu && gpuDelegate._gpuEnabled && !(checked && gpuDelegate._activeMetrics.length <= 1)
-                            onToggled: metricsPage.saveGpuMetric(gpuDelegate.modelData.id, "temp", checked)
+                        sourceComponent: RowLayout {
+                            spacing: Kirigami.Units.smallSpacing
+                            Label { text: i18n("Interface:") }
+                            ComboBox {
+                                id: ifaceCombo
+                                model: metricsPage.ifaceList
+                                currentIndex: {
+                                    var idx = metricsPage.ifaceList.indexOf(cfg_networkInterface);
+                                    return idx >= 0 ? idx : 0;
+                                }
+                                onActivated: cfg_networkInterface = metricsPage.ifaceList[currentIndex]
+                                implicitWidth: Kirigami.Units.gridUnit * 10
+                            }
                         }
+                    }
+
+                    // Battery settings
+                    Loader {
+                        active: modelData === "bat" && metricDelegate.metricEnabled
+                        visible: active
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
+                        Layout.topMargin: Kirigami.Units.smallSpacing
+
+                        sourceComponent: ColumnLayout {
+                            spacing: Kirigami.Units.smallSpacing
+
+                            RowLayout {
+                                spacing: Kirigami.Units.smallSpacing
+                                Label { text: i18n("Device:") }
+                                TextField {
+                                    id: batteryInput
+                                    placeholderText: i18n("Leave empty for auto-detect (e.g. BAT0)")
+                                    implicitWidth: Kirigami.Units.gridUnit * 14
+                                    onTextEdited: {
+                                        var v = text.trim();
+                                        cfg_batteryDevice = v.length > 0 ? v : "auto";
+                                    }
+                                }
+                            }
+                            CheckBox {
+                                visible: cfg_showPower
+                                text: i18n("Show power consumption next to battery level (merge battery & power)")
+                                checked: cfg_mergeBatPwr
+                                enabled: cfg_showPower
+                                onToggled: cfg_mergeBatPwr = checked
+                            }
+                        }
+                    }
+
+                    // GPU settings
+                    Loader {
+                        active: modelData === "gpu" && metricDelegate.metricEnabled
+                        visible: active
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
+                        Layout.topMargin: Kirigami.Units.smallSpacing
+
+                        sourceComponent: ColumnLayout {
+                            spacing: Kirigami.Units.smallSpacing
+
+                            // Split GPU option
+                            CheckBox {
+                                text: i18n("Show usage, VRAM and temperature as separate entries (split GPU metrics)")
+                                checked: cfg_splitGpu
+                                onToggled: cfg_splitGpu = checked
+                            }
+
+                            // No GPU found yet (Loading state)
+                            RowLayout {
+                                visible: metricsPage.discoveredGpus.length === 0
+                                spacing: Kirigami.Units.smallSpacing
+
+                                BusyIndicator {
+                                    running: parent.visible
+                                    Layout.preferredWidth: Kirigami.Units.gridUnit
+                                    Layout.preferredHeight: Kirigami.Units.gridUnit
+                                }
+
+                                Label {
+                                    text: i18n("Discovering GPUs...")
+                                    opacity: 0.7
+                                    font.italic: true
+                                }
+                            }
+
+                            // Hybrid GPU tip
+                            Label {
+                                visible: metricsPage.discoveredGpus.length > 1
+                                text: i18n("Tip: on hybrid-GPU laptops, uncheck the discrete GPU to let it suspend and save power.")
+                                opacity: 0.7
+                                font.italic: true
+                                wrapMode: Text.WordWrap
+                                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                            }
+
+                            // Per-GPU rows
+                            Repeater {
+                                id: gpuSelectorRepeater
+                                model: metricsPage.discoveredGpus
+
+                                delegate: ColumnLayout {
+                                    id: gpuDelegate
+                                    required property var modelData
+                                    spacing: Kirigami.Units.smallSpacing
+                                    Layout.fillWidth: true
+                                    Layout.leftMargin: Kirigami.Units.smallSpacing
+
+                                    property var _activeMetrics: metricsPage.gpuMetricsFor(modelData.id)
+
+                                    property bool _gpuEnabled: {
+                                        if (!cfg_gpuSelection || cfg_gpuSelection === "") return true;
+                                        if (cfg_gpuSelection === "none") return false;
+                                        return cfg_gpuSelection.split(",").indexOf(modelData.id) >= 0;
+                                    }
+
+                                    // GPU enable checkbox
+                                    CheckBox {
+                                        text: gpuDelegate.modelData.name
+                                        checked: gpuDelegate._gpuEnabled
+                                        onToggled: {
+                                            var ids;
+                                            if (!cfg_gpuSelection || cfg_gpuSelection === "") {
+                                                ids = gpuSelectorRepeater.model.map(function(g){ return g.id; });
+                                            } else if (cfg_gpuSelection === "none") {
+                                                ids = [];
+                                            } else {
+                                                ids = cfg_gpuSelection.split(",").filter(function(s){ return s.length > 0; });
+                                            }
+                                            if (checked) {
+                                                if (ids.indexOf(modelData.id) < 0) ids.push(modelData.id);
+                                            } else {
+                                                ids = ids.filter(function(id){ return id !== modelData.id; });
+                                            }
+                                            var allIds = gpuSelectorRepeater.model.map(function(g){ return g.id; });
+                                            var allSelected = allIds.every(function(id){ return ids.indexOf(id) >= 0; });
+                                            if (allSelected)           cfg_gpuSelection = "";
+                                            else if (ids.length === 0) cfg_gpuSelection = "none";
+                                            else                       cfg_gpuSelection = ids.join(",");
+                                        }
+                                    }
+
+                                    // Label + sub-metrics (indented under GPU checkbox)
+                                    ColumnLayout {
+                                        enabled: gpuDelegate._gpuEnabled
+                                        opacity: gpuDelegate._gpuEnabled ? 1.0 : 0.4
+                                        spacing: Kirigami.Units.smallSpacing
+                                        Layout.leftMargin: Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
+
+                                        // Custom label
+                                        RowLayout {
+                                            spacing: Kirigami.Units.smallSpacing
+                                            Label { text: i18n("Label:"); opacity: 0.8 }
+                                            TextField {
+                                                implicitWidth: Kirigami.Units.gridUnit * 12
+                                                text: metricsPage.parseGpuLabels(cfg_gpuLabels)[gpuDelegate.modelData.id] || ""
+                                                placeholderText: gpuDelegate.modelData.name
+                                                onTextEdited: metricsPage.saveGpuLabel(gpuDelegate.modelData.id, text)
+                                            }
+                                        }
+
+                                        // Sub-metric toggles
+                                        RowLayout {
+                                            spacing: Kirigami.Units.largeSpacing
+                                            Label { text: i18n("Show:"); opacity: 0.8 }
+                                            CheckBox {
+                                                text: i18n("Usage")
+                                                checked: gpuDelegate._activeMetrics.indexOf("usage") >= 0
+                                                enabled: !(checked && gpuDelegate._activeMetrics.length <= 1)
+                                                onToggled: metricsPage.saveGpuMetric(gpuDelegate.modelData.id, "usage", checked)
+                                            }
+                                            CheckBox {
+                                                text: i18n("VRAM")
+                                                checked: gpuDelegate._activeMetrics.indexOf("vram") >= 0
+                                                enabled: !(checked && gpuDelegate._activeMetrics.length <= 1)
+                                                onToggled: metricsPage.saveGpuMetric(gpuDelegate.modelData.id, "vram", checked)
+                                            }
+                                            CheckBox {
+                                                text: i18n("Temperature")
+                                                checked: gpuDelegate._activeMetrics.indexOf("temp") >= 0
+                                                enabled: !(checked && gpuDelegate._activeMetrics.length <= 1)
+                                                onToggled: metricsPage.saveGpuMetric(gpuDelegate.modelData.id, "temp", checked)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Thin divider between rows (not after the last one)
+                    Rectangle {
+                        visible: index < metricsPage.currentOrder.length - 1
+                        Layout.fillWidth: true
+                        height: 1
+                        color: Kirigami.Theme.textColor
+                        opacity: 0.08
+                        Layout.topMargin: Kirigami.Units.smallSpacing
+                        Layout.bottomMargin: Kirigami.Units.smallSpacing
                     }
                 }
             }
-        }
-
-        Kirigami.Separator {
-            Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: i18n("Grouping")
-        }
-
-        CheckBox {
-            id: mergeCpuTempCheck
-            Kirigami.FormData.label: i18n("Merge CPU & Temp:")
-            checked: cfg_mergeCpuTemp
-            enabled: cfg_showCpu && cfg_showTemp
-            onToggled: cfg_mergeCpuTemp = checked
-        }
-
-        Label {
-            text: i18n("Shows CPU temperature as a second value next to CPU usage.")
-            opacity: 0.7
-            font.italic: true
-            visible: cfg_showCpu && cfg_showTemp
-            wrapMode: Text.WordWrap
-            Layout.maximumWidth: 300
-        }
-
-        CheckBox {
-            id: showCpuFreqCheck
-            Kirigami.FormData.label: i18n("CPU Frequency:")
-            text: i18n("Show CPU frequency")
-            checked: cfg_showCpuFreq
-            enabled: cfg_showCpu
-            onToggled: {
-                cfg_showCpuFreq = checked;
-                if (!checked) cfg_mergeCpuFreq = false;
-            }
-        }
-
-        CheckBox {
-            id: mergeCpuFreqCheck
-            Kirigami.FormData.label: ""
-            text: i18n("Merge into CPU (compact view)")
-            checked: cfg_mergeCpuFreq
-            enabled: cfg_showCpu && cfg_showCpuFreq
-            onToggled: cfg_mergeCpuFreq = checked
-        }
-
-        Label {
-            text: i18n("Shows average CPU frequency (GHz/MHz). Merge appends it next to CPU usage in the panel.")
-            opacity: 0.7
-            font.italic: true
-            visible: cfg_showCpu && cfg_showCpuFreq
-            wrapMode: Text.WordWrap
-            Layout.maximumWidth: 300
-        }
-
-        CheckBox {
-            id: mergeBatPwrCheck
-            Kirigami.FormData.label: i18n("Merge Battery & Power:")
-            checked: cfg_mergeBatPwr
-            enabled: cfg_showBattery && cfg_showPower
-            onToggled: cfg_mergeBatPwr = checked
-        }
-
-        Label {
-            text: i18n("Shows power consumption as a second value next to battery level.")
-            opacity: 0.7
-            font.italic: true
-            visible: cfg_showBattery && cfg_showPower
-            wrapMode: Text.WordWrap
-            Layout.maximumWidth: 300
-        }
-
-        CheckBox {
-            id: splitGpuCheck
-            Kirigami.FormData.label: i18n("Split GPU metrics:")
-            checked: cfg_splitGpu
-            enabled: cfg_showGpu
-            onToggled: cfg_splitGpu = checked
-        }
-
-        Label {
-            text: i18n("Shows GPU usage, VRAM and temperature as separate entries instead of grouped.")
-            opacity: 0.7
-            font.italic: true
-            visible: cfg_showGpu
-            wrapMode: Text.WordWrap
-            Layout.maximumWidth: 300
         }
     }
 }
