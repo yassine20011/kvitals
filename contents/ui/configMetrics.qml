@@ -252,14 +252,6 @@ KCM.SimpleKCM {
         cfg_metricOrder = keys.join(",");
     }
 
-    // Battery device sync
-    function syncBatteryInput() {
-        if (!batteryInput) return;
-        var desired = cfg_batteryDevice === "auto" ? "" : cfg_batteryDevice;
-        if (batteryInput.text !== desired) batteryInput.text = desired;
-    }
-    onCfg_batteryDeviceChanged: syncBatteryInput()
-    Component.onCompleted: syncBatteryInput()
 
     // =========================================================================
     // UI
@@ -474,6 +466,7 @@ KCM.SimpleKCM {
                                 Label { text: i18n("Device:") }
                                 TextField {
                                     id: batteryInput
+                                    text: cfg_batteryDevice === "auto" ? "" : cfg_batteryDevice
                                     placeholderText: i18n("Leave empty for auto-detect (e.g. BAT0)")
                                     implicitWidth: Kirigami.Units.gridUnit * 14
                                     onTextEdited: {
@@ -632,9 +625,17 @@ KCM.SimpleKCM {
                         }
                     }
 
-                    // Thin divider between rows (not after the last one)
+                    // Thin divider between rows (not after the last visible one)
                     Rectangle {
-                        visible: index < metricsPage.currentOrder.length - 1
+                        visible: {
+                            for (var i = index + 1; i < metricsPage.currentOrder.length; i++) {
+                                var nextData = metricsPage.currentOrder[i];
+                                var isHidden = (nextData === "temp" && cfg_mergeCpuTemp && cfg_showCpu) ||
+                                               (nextData === "pwr"  && cfg_mergeBatPwr  && cfg_showBattery);
+                                if (!isHidden) return true;
+                            }
+                            return false;
+                        }
                         Layout.fillWidth: true
                         height: 1
                         color: Kirigami.Theme.textColor
