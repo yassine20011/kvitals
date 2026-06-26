@@ -17,9 +17,9 @@ KCM.SimpleKCM {
     property string cfg_tempUnit: "C"
     property string cfg_networkUnit: "bytes"
 
-    readonly property var displayModes: ["text", "icons", "icons+text"]
-    readonly property var displayModeLabels: [i18n("Text"), i18n("Icons"), i18n("Icons + Text")]
-    readonly property bool iconsEnabled: cfg_displayMode !== "text"
+    readonly property var displayModes: ["text", "icons", "icons+text", "none"]
+    readonly property var displayModeLabels: [i18n("Text"), i18n("Icons"), i18n("Icons + Text"), i18n("None")]
+    readonly property bool iconsEnabled: cfg_displayMode === "icons" || cfg_displayMode === "icons+text"
 
     readonly property var layoutTypes: ["horizontal", "vertical"]
     readonly property var layoutTypeLabels: [i18n("Horizontal"), i18n("Vertical")]

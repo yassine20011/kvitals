@@ -179,6 +179,7 @@ RowLayout {
 
                 // Bottom: icon + label
                 RowLayout {
+                    visible: compactRow.useIcons || compactRow.useText
                     spacing: 2
                     Layout.alignment: Qt.AlignHCenter
 
@@ -192,7 +193,7 @@ RowLayout {
                     }
 
                     PlasmaComponents.Label {
-                        visible: compactRow.useText || !compactRow.useIcons
+                        visible: compactRow.useText
                         text: {
                             var lbl = itemData.label || "";
                             return lbl.endsWith(":") ? lbl.slice(0, -1) : lbl;
