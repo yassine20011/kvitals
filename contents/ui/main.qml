@@ -20,6 +20,7 @@ PlasmoidItem {
     property bool showPower: Plasmoid.configuration.showPower
     property bool showNetwork: Plasmoid.configuration.showNetwork
     property bool showDisk: Plasmoid.configuration.showDisk
+    property bool showFan: Plasmoid.configuration.showFan
     property bool compactShowCpu: Plasmoid.configuration.compactShowCpu
     property bool compactShowRam: Plasmoid.configuration.compactShowRam
     property bool compactShowTemp: Plasmoid.configuration.compactShowTemp
@@ -28,6 +29,7 @@ PlasmoidItem {
     property bool compactShowPower: Plasmoid.configuration.compactShowPower
     property bool compactShowNetwork: Plasmoid.configuration.compactShowNetwork
     property bool compactShowDisk: Plasmoid.configuration.compactShowDisk
+    property bool compactShowFan: Plasmoid.configuration.compactShowFan
     property string networkInterface: Plasmoid.configuration.networkInterface
     property string batteryDevice: Plasmoid.configuration.batteryDevice
     property string gpuSelection: Plasmoid.configuration.gpuSelection
@@ -49,6 +51,7 @@ PlasmoidItem {
     property string powerIcon: Plasmoid.configuration.powerIcon
     property string networkIcon: Plasmoid.configuration.networkIcon
     property string diskIcon: Plasmoid.configuration.diskIcon
+    property string fanIcon: Plasmoid.configuration.fanIcon
     property string fontFamily: Plasmoid.configuration.fontFamily
     property int fontSize: Plasmoid.configuration.fontSize
     property bool fontBold: Plasmoid.configuration.fontBold
@@ -65,6 +68,7 @@ PlasmoidItem {
     property int updateInterval: Plasmoid.configuration.updateInterval || 2000
     property string tempUnit: Plasmoid.configuration.tempUnit || "C"
     property string networkUnit: Plasmoid.configuration.networkUnit || "bytes"
+    property string fanUnit: Plasmoid.configuration.fanUnit || "rpm"
 
     // --- Color configuration properties ---
 
@@ -176,6 +180,12 @@ PlasmoidItem {
         enabled: root.showDisk
         tempUnit: root.tempUnit
         networkUnit: root.networkUnit
+    }
+
+    FanSensors {
+        id: fans
+        updateInterval: root.updateInterval
+        fanUnit: root.fanUnit
     }
 
     // --- Representations ---
@@ -299,6 +309,12 @@ PlasmoidItem {
                         diskSegs.push({value: disk.diskTempValue, color: root.diskTempColor});
                     items.push({icon: root.diskIcon, label: "DSK:", segments: diskSegs, color: root.baseTextColor});
                 }
+                else if (key === "fan" && root.showFan && root.compactShowFan && fans.hasFanData) {
+                    items.push({
+                        icon: root.fanIcon, label: "FAN:", value: fans.fanValue,
+                        color: root.baseTextColor
+                    });
+                }
             }
             return items;
         }
@@ -383,6 +399,9 @@ PlasmoidItem {
                     if (disk.diskTempValue)
                         items.push({label: "Disk Temp", value: disk.diskTempValue, color: root.diskTempColor});
                 }
+                else if (key === "fan" && root.showFan && fans.hasFanData) {
+                    items.push({label: "Fans", value: fans.fanValue, color: root.baseTextColor});
+                }
             }
             return items;
         }
@@ -424,6 +443,9 @@ PlasmoidItem {
                 var dParts = ["↓" + disk.diskReadValue, "↑" + disk.diskWriteValue];
                 if (disk.diskTempValue) dParts.push(disk.diskTempValue);
                 parts.push("DSK: " + dParts.join(" "));
+            }
+            else if (key === "fan" && root.showFan && fans.hasFanData) {
+                parts.push("FAN: " + fans.fanValue);
             }
         }
         return parts.join("\n");

@@ -16,6 +16,7 @@ KCM.SimpleKCM {
     property string cfg_layoutType: "horizontal"
     property string cfg_tempUnit: "C"
     property string cfg_networkUnit: "bytes"
+    property string cfg_fanUnit: "rpm"
 
     readonly property var displayModes: ["text", "icons", "icons+text", "none"]
     readonly property var displayModeLabels: [i18n("Text"), i18n("Icons"), i18n("Icons + Text"), i18n("None")]
@@ -140,6 +141,14 @@ KCM.SimpleKCM {
             model: [i18n("Bytes  (KB, MB)"), i18n("Bits  (Kb, Mb)")]
             currentIndex: cfg_networkUnit === "bits" ? 1 : 0
             onActivated: cfg_networkUnit = (currentIndex === 1 ? "bits" : "bytes")
+        }
+
+        ComboBox {
+            id: fanUnitCombo
+            Kirigami.FormData.label: i18n("Fan Speed unit:")
+            model: [i18n("RPM"), i18n("Percentage (%)")]
+            currentIndex: cfg_fanUnit === "percent" ? 1 : 0
+            onActivated: cfg_fanUnit = (currentIndex === 1 ? "percent" : "rpm")
         }
     }
 }

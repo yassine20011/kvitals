@@ -16,6 +16,7 @@ KCM.SimpleKCM {
     property string cfg_powerIcon: "battery-charging-60"
     property string cfg_networkIcon: "network-wireless"
     property string cfg_diskIcon: "drive-harddisk"
+    property string cfg_fanIcon: "fan"
 
     KIconThemes.IconDialog {
         id: cpuIconDialog
@@ -48,6 +49,10 @@ KCM.SimpleKCM {
     KIconThemes.IconDialog {
         id: diskIconDialog
         onIconNameChanged: if (iconName) cfg_diskIcon = iconName
+    }
+    KIconThemes.IconDialog {
+        id: fanIconDialog
+        onIconNameChanged: if (iconName) cfg_fanIcon = iconName
     }
 
     Kirigami.FormLayout {
@@ -100,6 +105,12 @@ KCM.SimpleKCM {
             Button { text: i18n("Change..."); onClicked: diskIconDialog.open(); icon.name: "document-edit" }
         }
 
+        RowLayout {
+            Kirigami.FormData.label: i18n("Fan:")
+            Kirigami.Icon { source: cfg_fanIcon; isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
+            Button { text: i18n("Change..."); onClicked: fanIconDialog.open(); icon.name: "document-edit" }
+        }
+
         Button {
             icon.name: "edit-undo"
             text: i18n("Reset to defaults")
@@ -113,6 +124,7 @@ KCM.SimpleKCM {
                 cfg_powerIcon = "battery-charging-60";
                 cfg_networkIcon = "network-wireless";
                 cfg_diskIcon = "drive-harddisk";
+                cfg_fanIcon = "fan";
             }
         }
     }

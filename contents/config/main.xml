@@ -31,6 +31,9 @@
         <entry name="showDisk" type="Bool">
             <default>false</default>
         </entry>
+        <entry name="showFan" type="Bool">
+            <default>false</default>
+        </entry>
         <entry name="compactShowCpu" type="Bool">
             <default>true</default>
         </entry>
@@ -53,6 +56,9 @@
             <default>true</default>
         </entry>
         <entry name="compactShowDisk" type="Bool">
+            <default>false</default>
+        </entry>
+        <entry name="compactShowFan" type="Bool">
             <default>false</default>
         </entry>
         <entry name="networkInterface" type="String">
@@ -118,6 +124,9 @@
         <entry name="diskIcon" type="String">
             <default>drive-harddisk</default>
         </entry>
+        <entry name="fanIcon" type="String">
+            <default>fan</default>
+        </entry>
         <entry name="fontFamily" type="String">
             <default>monospace</default>
         </entry>
@@ -128,7 +137,7 @@
             <default>false</default>
         </entry>
         <entry name="metricOrder" type="String">
-            <default>cpu,ram,temp,gpu,bat,pwr,net,disk</default>
+            <default>cpu,ram,temp,gpu,bat,pwr,net,disk,fan</default>
         </entry>
         <entry name="updateInterval" type="Int">
             <default>2000</default>
@@ -195,6 +204,9 @@
         </entry>
         <entry name="networkUnit" type="String">
             <default>bytes</default>
+        </entry>
+        <entry name="fanUnit" type="String">
+            <default>rpm</default>
         </entry>
     </group>
 </kcfg>

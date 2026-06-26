@@ -19,6 +19,7 @@ KCM.SimpleKCM {
     property bool cfg_showPower
     property bool cfg_showNetwork
     property bool cfg_showDisk
+    property bool cfg_showFan
     property bool cfg_compactShowCpu
     property bool cfg_compactShowRam
     property bool cfg_compactShowTemp
@@ -27,6 +28,7 @@ KCM.SimpleKCM {
     property bool cfg_compactShowPower
     property bool cfg_compactShowNetwork
     property bool cfg_compactShowDisk
+    property bool cfg_compactShowFan
     property string cfg_networkInterface: "auto"
     property string cfg_batteryDevice
     property string cfg_gpuSelection: ""
@@ -166,7 +168,7 @@ KCM.SimpleKCM {
     }
 
     // --- Metric order helpers ---
-    readonly property var allKeys: ["cpu", "ram", "temp", "gpu", "bat", "pwr", "net", "disk"]
+    readonly property var allKeys: ["cpu", "ram", "temp", "gpu", "bat", "pwr", "net", "disk", "fan"]
 
     readonly property var metricMeta: ({
         "cpu":  { label: i18n("CPU usage"),         icon: "cpu" },
@@ -176,7 +178,8 @@ KCM.SimpleKCM {
         "bat":  { label: i18n("Battery status"),     icon: "battery-good" },
         "pwr":  { label: i18n("Power consumption"),  icon: "battery-charging-60" },
         "net":  { label: i18n("Network speed"),      icon: "network-wireless" },
-        "disk": { label: i18n("Disk I/O & temp"),    icon: "drive-harddisk" }
+        "disk": { label: i18n("Disk I/O & temp"),    icon: "drive-harddisk" },
+        "fan":  { label: i18n("Fan speed"),          icon: "fan" }
     })
 
     property var currentOrder: {
@@ -196,6 +199,7 @@ KCM.SimpleKCM {
             case "pwr":  return cfg_showPower;
             case "net":  return cfg_showNetwork;
             case "disk": return cfg_showDisk;
+            case "fan":  return cfg_showFan;
         }
         return false;
     }
@@ -210,6 +214,7 @@ KCM.SimpleKCM {
             case "pwr":  return cfg_compactShowPower;
             case "net":  return cfg_compactShowNetwork;
             case "disk": return cfg_compactShowDisk;
+            case "fan":  return cfg_compactShowFan;
         }
         return false;
     }
@@ -224,6 +229,7 @@ KCM.SimpleKCM {
             case "pwr":  cfg_showPower   = val; break;
             case "net":  cfg_showNetwork = val; break;
             case "disk": cfg_showDisk    = val; break;
+            case "fan":  cfg_showFan     = val; break;
         }
         if (!val) {
             if ((key === "cpu" || key === "temp") && cfg_mergeCpuTemp) cfg_mergeCpuTemp = false;
@@ -242,6 +248,7 @@ KCM.SimpleKCM {
             case "pwr":  cfg_compactShowPower   = val; break;
             case "net":  cfg_compactShowNetwork = val; break;
             case "disk": cfg_compactShowDisk    = val; break;
+            case "fan":  cfg_compactShowFan     = val; break;
         }
     }
 
