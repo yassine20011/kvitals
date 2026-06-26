@@ -266,11 +266,11 @@ KCM.SimpleKCM {
         repeat: false
         onTriggered: metricsPage._isReady = true
     }
-
     BusyIndicator {
-        anchors.centerIn: parent
+        anchors.centerIn: metricsPage
         running: !metricsPage._isReady
         visible: running
+        z: 999
     }
 
     Kirigami.FormLayout {
