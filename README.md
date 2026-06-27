@@ -15,7 +15,7 @@ CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 96°C  |  🔋BAT: 78%  |  PWR: +20W  |  N
 ## Features
 
 - **Live monitoring** — CPU usage, RAM, CPU temperature, GPU metrics (when available), battery status, power draw, network speed, disk I/O, fan speeds
-- **Display modes** — Text, Icons, or Icons + Text for the panel view
+- **Display modes** — Text, Icons, Icons + Text, or None (values only) for the panel view
 - **Custom icons** — Pick any icon from your installed theme for each metric
 - **Font customization** — Choose any system font and size
 - **Configurable** — Toggle each metric, adjust refresh rate, tune colors, organized in 4 settings tabs
