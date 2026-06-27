@@ -101,11 +101,10 @@ Item {
             if (fanUnit === "percent") {
                 var max = _modelMax(f.id);
                 if (isNaN(max) || max <= 0) {
-                    str = Math.round(v) + " RPM";
-                } else {
-                    var pct = Math.min(100, Math.round((v / max) * 100));
-                    str = pct + "%";
+                    continue;
                 }
+                var pct = Math.min(100, Math.round((v / max) * 100));
+                str = pct + "%";
             } else {
                 str = Math.round(v) + " RPM";
             }

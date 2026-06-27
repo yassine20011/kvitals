@@ -7,3 +7,4 @@ GpuSensors 1.0 GpuSensors.qml
 BatterySensors 1.0 BatterySensors.qml
 NetworkSensors 1.0 NetworkSensors.qml
 DiskSensors 1.0 DiskSensors.qml
+FanSensors 1.0 FanSensors.qml
