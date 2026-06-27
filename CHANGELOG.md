@@ -2,6 +2,18 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [2.10.0] - 2026-06-27
+
+### Added
+
+- **Fan Speed Monitoring** (`Metrics` settings): A new standalone "Fan" metric that dynamically discovers and reports fan speeds (including GPU and CPU fans) directly from the system (#47).
+  - Automatically identifies fans through `SensorTreeModel`.
+  - Supports RPM and Percentage display units (configurable in `General` settings).
+  - Fully integrates with compact panel, full popup, and tooltip views.
+  - Safely handles fans that do not report a maximum RPM by omitting them from percentage-based aggregations to prevent misleading data.
+- **Display Mode 'None'** (`General` settings): A new display mode that completely hides the metric labels and icons, showing only the raw values to save space (#47).
+- **Config UI Redesign** (`Metrics` settings): The metrics configuration page has been overhauled for better UX, with inline contextual settings (e.g. CPU, GPU, Network options expand directly under their respective metrics) and debounced sensor discovery to eliminate UI freezes on load (#48).
+
 ## [2.9.0] - 2026-06-19
 
 ### Added

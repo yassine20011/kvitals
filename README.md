@@ -14,7 +14,7 @@ CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 96°C  |  🔋BAT: 78%  |  PWR: +20W  |  N
 
 ## Features
 
-- **Live monitoring** — CPU usage, RAM, CPU temperature, GPU metrics (when available), battery status, power draw, network speed
+- **Live monitoring** — CPU usage, RAM, CPU temperature, GPU metrics (when available), battery status, power draw, network speed, disk I/O, fan speeds
 - **Display modes** — Text, Icons, or Icons + Text for the panel view
 - **Custom icons** — Pick any icon from your installed theme for each metric
 - **Font customization** — Choose any system font and size
@@ -78,7 +78,7 @@ plasmashell --replace &
 Right-click the widget → **Configure KVitals...** to access settings in four tabs:
 
 - **General** — Display mode, layout, icon size, font, update interval
-- **Metrics** — Toggle CPU, RAM, Temperature, GPU, Battery, Power, Network
+- **Metrics** — Toggle CPU, RAM, Temperature, GPU, Battery, Power, Network, Disk, Fan
 - **Icons** — Customize icons for each metric from your theme
 - **Colors** — Set custom font colors and optional threshold-based metric colors
 
