@@ -35,7 +35,7 @@ Item {
             var sensorId = flatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
             if (!sensorId || sensorId.length === 0) continue;
             // Match any sensor that contains /fan and doesn't end with a non-digit (typically fan1, fan2, etc)
-            var match = sensorId.match(/^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i) || sensorId.match(/.*fan.*/i);
+            var match = sensorId.match(/^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i);
             if (!match) continue;
             // Some names are like "cpu_fan", we can try to extract the last part or use the sensor Name
             var name = flatSensors.data(idx, Qt.DisplayRole) || "Fan " + (found.length + 1);
@@ -52,7 +52,6 @@ Item {
         function onRowsInserted() { root.refreshDiscovered(); }
         function onRowsRemoved()  { root.refreshDiscovered(); }
         function onModelReset()   { root.refreshDiscovered(); }
-        function onDataChanged()  { root.refreshDiscovered(); }
     }
 
     Component.onCompleted: refreshDiscovered()
@@ -100,9 +99,13 @@ Item {
 
             var str = "";
             if (fanUnit === "percent") {
-                var max = _modelMax(f.id) || 10000; // Fallback max if not provided
-                var pct = Math.min(100, Math.round((v / max) * 100));
-                str = pct + "%";
+                var max = _modelMax(f.id);
+                if (isNaN(max) || max <= 0) {
+                    str = Math.round(v) + " RPM";
+                } else {
+                    var pct = Math.min(100, Math.round((v / max) * 100));
+                    str = pct + "%";
+                }
             } else {
                 str = Math.round(v) + " RPM";
             }
