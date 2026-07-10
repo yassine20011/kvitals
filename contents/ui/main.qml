@@ -111,6 +111,17 @@ PlasmoidItem {
 
     property color baseTextColor: (useCustomColors && fontColor !== "") ? fontColor : Kirigami.Theme.textColor
 
+    // --- Per-metric icon colors (distinct per type, not affected by thresholds) ---
+    property color cpuIconColor:     "#3daee9"
+    property color ramIconColor:     "#9b59b6"
+    property color tempIconColor:    "#e74c3c"
+    property color gpuIconColor:     "#2ecc71"
+    property color batteryIconColor: "#f1c40f"
+    property color powerIconColor:   "#e67e22"
+    property color networkIconColor: "#1abc9c"
+    property color diskIconColor:    "#34495e"
+    property color fanIconColor:     "#95a5a6"
+
     // --- Pre-resolved per-metric colors (reactive properties) ---
 
     property color cpuColor: enableThresholdColors
@@ -375,19 +386,19 @@ PlasmoidItem {
                         cpuSegs.push({value: temp.tempValue, color: root.tempColor});
                     }
                     if (cpuSegs.length === 1)
-                        items.push({icon: root.cpuIcon, label: "CPU:", value: cpu.cpuValue, color: root.cpuColor, iconColor: root.cpuColor});
+                        items.push({icon: root.cpuIcon, label: "CPU:", value: cpu.cpuValue, color: root.cpuColor, iconColor: root.cpuIconColor});
                     else
-                        items.push({icon: root.cpuIcon, label: "CPU:", color: root.cpuColor, segments: cpuSegs, iconColor: root.cpuColor});
+                        items.push({icon: root.cpuIcon, label: "CPU:", color: root.cpuColor, segments: cpuSegs, iconColor: root.cpuIconColor});
                 } else if (key === "ram" && root.showRam && root.compactShowRam && memory.ramValue)
                     items.push({
                         icon: root.ramIcon, label: "RAM:", value: memory.ramValue,
-                        color: root.ramColor, iconColor: root.ramColor
+                        color: root.ramColor, iconColor: root.ramIconColor
                     });
                 else if (key === "temp" && root.showTemp && root.compactShowTemp && temp.tempValue && temp.tempValue !== "--"
                     && !(root.mergeCpuTemp && root.showCpu && root.compactShowCpu))
                     items.push({
                         icon: root.tempIcon, label: "TEMP:", value: temp.tempValue,
-                        color: root.tempColor, iconColor: root.tempColor
+                        color: root.tempColor, iconColor: root.tempIconColor
                     });
                 else if (key === "gpu" && root.showGpu && root.compactShowGpu && gpu.hasGpuData) {
                     var multiGpu = gpu.gpuDataList.length > 1;
@@ -397,28 +408,28 @@ PlasmoidItem {
                             var gd = gpu.gpuDataList[g];
                             var label = (gd.name.length > 0 ? gd.name : gd.id) + ":";
                             if (root.splitGpu) {
-                                if (gd.usage) items.push({icon: root.gpuIcon, label: label, value: gd.usage, color: root.gpuColor, iconColor: root.gpuColor});
-                                if (gd.vram)  items.push({icon: root.gpuIcon, label: "VRAM:", value: gd.vram, color: root.baseTextColor, iconColor: root.gpuColor});
-                                if (gd.temp)  items.push({icon: root.gpuIcon, label: "GTEMP:", value: gd.temp, color: root.gpuTempColor, iconColor: root.gpuTempColor});
+                                if (gd.usage) items.push({icon: root.gpuIcon, label: label, value: gd.usage, color: root.gpuColor, iconColor: root.gpuIconColor});
+                                if (gd.vram)  items.push({icon: root.gpuIcon, label: "VRAM:", value: gd.vram, color: root.baseTextColor, iconColor: root.gpuIconColor});
+                                if (gd.temp)  items.push({icon: root.gpuIcon, label: "GTEMP:", value: gd.temp, color: root.gpuTempColor, iconColor: root.gpuIconColor});
                             } else {
                                 var segs2 = [];
                                 if (gd.usage) segs2.push({value: gd.usage, color: root.gpuColor});
                                 if (gd.vram)  segs2.push({value: gd.vram,  color: root.baseTextColor});
                                 if (gd.temp)  segs2.push({value: gd.temp,  color: root.gpuTempColor});
                                 if (segs2.length > 0)
-                                    items.push({icon: root.gpuIcon, label: label, segments: segs2, color: root.gpuColor, iconColor: root.gpuColor});
+                                    items.push({icon: root.gpuIcon, label: label, segments: segs2, color: root.gpuColor, iconColor: root.gpuIconColor});
                             }
                         }
                     } else if (root.splitGpu) {
                         if (gpu.hasGpuUsageData)
-                            items.push({icon: root.gpuIcon, label: "GPU:", value: gpu.gpuValue, color: root.gpuColor, iconColor: root.gpuColor});
+                            items.push({icon: root.gpuIcon, label: "GPU:", value: gpu.gpuValue, color: root.gpuColor, iconColor: root.gpuIconColor});
                         if (gpu.hasGpuVramData)
                             items.push({
                                 icon: root.gpuIcon,
                                 label: "VRAM:",
                                 value: gpu.gpuRamValue,
                                 color: root.baseTextColor,
-                                iconColor: root.gpuColor
+                                iconColor: root.gpuIconColor
                             });
                         if (gpu.hasGpuTempData)
                             items.push({
@@ -426,7 +437,7 @@ PlasmoidItem {
                                 label: "GTEMP:",
                                 value: gpu.gpuTempValue,
                                 color: root.gpuTempColor,
-                                iconColor: root.gpuTempColor
+                                iconColor: root.gpuIconColor
                             });
                     } else {
                         var gpuSegs = [];
@@ -438,7 +449,7 @@ PlasmoidItem {
                             gpuSegs.push({value: gpu.gpuTempValue, color: root.gpuTempColor});
                         items.push({
                             icon: root.gpuIcon, label: "GPU:", segments: gpuSegs,
-                            color: root.gpuColor, iconColor: root.gpuColor
+                            color: root.gpuColor, iconColor: root.gpuIconColor
                         });
                     }
                 } else if (key === "bat" && root.showBattery && root.compactShowBattery && battery.batValue) {
@@ -450,25 +461,25 @@ PlasmoidItem {
                                 {value: battery.batValue, color: root.batteryColor},
                                 {value: battery.powerValue, color: root.baseTextColor}
                             ],
-                            iconColor: root.batteryColor
+                            iconColor: root.batteryIconColor
                         });
                     } else {
                         items.push({
                             icon: root.batteryIcon, label: "BAT:", value: battery.batValue,
-                            color: root.batteryColor, iconColor: root.batteryColor
+                            color: root.batteryColor, iconColor: root.batteryIconColor
                         });
                     }
                 } else if (key === "pwr" && root.showPower && root.compactShowPower && battery.powerValue
                     && !(root.mergeBatPwr && root.showBattery && root.compactShowBattery))
                     items.push({
                         icon: root.powerIcon, label: "PWR:", value: battery.powerValue,
-                        color: root.baseTextColor, iconColor: root.baseTextColor
+                        color: root.baseTextColor, iconColor: root.powerIconColor
                     });
                 else if (key === "net" && root.showNetwork && root.compactShowNetwork)
                     items.push({
                         icon: root.networkIcon, label: "NET:",
                         value: "↓" + network.netDownValue + " ↑" + network.netUpValue,
-                        color: root.baseTextColor, iconColor: root.baseTextColor
+                        color: root.baseTextColor, iconColor: root.networkIconColor
                     });
                 else if (key === "disk" && root.showDisk && root.compactShowDisk) {
                     var diskSegs = [];
@@ -478,12 +489,12 @@ PlasmoidItem {
                                   {value: "↑" + disk.diskWriteValue, color: root.baseTextColor});
                     if (disk.diskTempValue)
                         diskSegs.push({value: disk.diskTempValue, color: root.diskTempColor});
-                    items.push({icon: root.diskIcon, label: "DSK:", segments: diskSegs, color: root.baseTextColor, iconColor: root.baseTextColor});
+                    items.push({icon: root.diskIcon, label: "DSK:", segments: diskSegs, color: root.baseTextColor, iconColor: root.diskIconColor});
                 }
                 else if (key === "fan" && root.showFan && root.compactShowFan && fans.hasFanData) {
                     items.push({
                         icon: root.fanIcon, label: "FAN:", value: fans.fanValue,
-                        color: root.baseTextColor, iconColor: root.baseTextColor
+                        color: root.baseTextColor, iconColor: root.fanIconColor
                     });
                 }
             }
@@ -492,7 +503,7 @@ PlasmoidItem {
                 for (var f = 0; f < root.orderedKeys.length; f++) {
                     var fkey = root.orderedKeys[f];
                     var kv = {icon: root.cpuIcon, label: "KV:", value: "...",
-                              color: root.baseTextColor, iconColor: root.baseTextColor};
+                              color: root.baseTextColor, iconColor: root.cpuIconColor};
                     if (fkey === "cpu" && cpu.cpuValue)        { kv.value = cpu.cpuValue; kv.icon = root.cpuIcon; break; }
                     if (fkey === "ram" && memory.ramValue)      { kv.value = memory.ramValue; kv.icon = root.ramIcon; break; }
                     if (fkey === "temp" && temp.tempValue !== "--") { kv.value = temp.tempValue; kv.icon = root.tempIcon; break; }

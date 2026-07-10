@@ -1,6 +1,7 @@
 import QtQuick
 import org.kde.ksysguard.sensors as Sensors
 import org.kde.kitemmodels as KItemModels
+import org.kde.plasma.plasma5support as Plasma5Support
 
 Item {
     id: root
@@ -22,13 +23,24 @@ Item {
     readonly property string diskWriteValue: Utils.formatRate(diskWriteSensor.status === Sensors.Sensor.Ready ? diskWriteSensor.value : NaN, networkUnit)
 
     // Disk space usage (from KSysGuard)
+    // Partition-based usage (from lsblk+df) — used when a specific device is selected
+    property string selectedDiskDevice: ""
+    property real summedPartitionUsed: 0
+    property real summedPartitionTotal: 0
+
     readonly property string diskUsedValue: {
-        if (diskUsedSensor.status !== Sensors.Sensor.Ready) return "...";
-        return Utils.formatBytes(diskUsedSensor.value);
+        if (selectedDiskDevice !== "" && summedPartitionTotal > 0)
+            return Utils.formatBytes(summedPartitionUsed) + "G";
+        if (diskUsedSensor.status === Sensors.Sensor.Ready)
+            return Utils.formatBytes(diskUsedSensor.value) + "G";
+        return "...";
     }
     readonly property string diskTotalValue: {
-        if (diskTotalSensor.status !== Sensors.Sensor.Ready) return "...";
-        return Utils.formatBytes(diskTotalSensor.value);
+        if (selectedDiskDevice !== "" && summedPartitionTotal > 0)
+            return Utils.formatBytes(summedPartitionTotal) + "G";
+        if (diskTotalSensor.status === Sensors.Sensor.Ready)
+            return Utils.formatBytes(diskTotalSensor.value) + "G";
+        return "...";
     }
 
     // Highest temperature found across all discovered drive temp sensors
@@ -64,6 +76,71 @@ Item {
         sensorId: "disk/" + root._devicePath + "/total"
         updateRateLimit: root.updateInterval
         enabled: root.enabled
+    }
+
+    // ── Partition usage via lsblk + df (for specific device) ────────────────
+
+    Plasma5Support.DataSource {
+        id: partitionUsageSource
+        engine: "executable"
+
+        onNewData: function(sourceName, data) {
+            disconnectSource(sourceName);
+            if (data["exit code"] !== 0) return;
+            root.parsePartitionUsage(data["stdout"] || "");
+        }
+
+        function run(device) {
+            connectSource("lsblk -b -J /dev/" + device + " 2>/dev/null && df -B1 /dev/" + device + "* 2>/dev/null");
+        }
+    }
+
+    Timer {
+        id: partitionUpdateTimer
+        interval: root.updateInterval
+        repeat: true
+        running: root.selectedDiskDevice !== ""
+        onTriggered: partitionUsageSource.run(root.selectedDiskDevice)
+    }
+
+    function parsePartitionUsage(output) {
+        var totalSize = 0;
+        try {
+            var jsonMatch = output.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                var lsblkOutput = JSON.parse(jsonMatch[0]);
+                if (lsblkOutput.blockdevices && lsblkOutput.blockdevices[0]) {
+                    var device = lsblkOutput.blockdevices[0];
+                    if (device.children) {
+                        for (var i = 0; i < device.children.length; i++) {
+                            var child = device.children[i];
+                            if (child.size) totalSize += parseInt(child.size) || 0;
+                        }
+                    }
+                }
+            }
+        } catch(e) {
+            console.warn("[KVitals] lsblk parse failed, using df fallback");
+        }
+
+        var usedSpace = 0;
+        var lines = output.split("\n");
+        for (var i = 1; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (line.length === 0) continue;
+            var parts = line.split(/\s+/);
+            if (parts.length >= 3) {
+                var used = parseInt(parts[2]) || 0;
+                if (!isNaN(used)) usedSpace += used;
+                if (totalSize === 0 && parts[1]) {
+                    var size = parseInt(parts[1]) || 0;
+                    if (!isNaN(size)) totalSize += size;
+                }
+            }
+        }
+
+        summedPartitionUsed = usedSpace;
+        summedPartitionTotal = totalSize;
     }
 
     // Matches lmsensors chips that are NVMe (nvme-pci-*) or SATA drivetemp
@@ -118,6 +195,21 @@ Item {
     Component.onCompleted: {
         console.warn("[KVitals] DiskSensors: ready.");
         _refreshTempSensors();
+        if (root.diskDevice && root.diskDevice !== "" && root.diskDevice !== "auto") {
+            root.selectedDiskDevice = root.diskDevice;
+            partitionUsageSource.run(root.diskDevice);
+        }
+    }
+
+    onDiskDeviceChanged: {
+        if (diskDevice === "auto" || diskDevice === "" || !diskDevice) {
+            selectedDiskDevice = "";
+            summedPartitionUsed = 0;
+            summedPartitionTotal = 0;
+        } else {
+            selectedDiskDevice = diskDevice;
+            partitionUsageSource.run(diskDevice);
+        }
     }
 
     // Poll discovered temp sensors
