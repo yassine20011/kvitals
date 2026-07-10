@@ -10,9 +10,26 @@ Item {
     property bool enabled: true
     property string tempUnit: "C"
     property string networkUnit: "bytes"
+    property string diskDevice: "auto"
+
+    readonly property string _devicePath: {
+        if (!diskDevice || diskDevice === "" || diskDevice === "auto")
+            return "all";
+        return diskDevice;
+    }
 
     readonly property string diskReadValue:  Utils.formatRate(diskReadSensor.status  === Sensors.Sensor.Ready ? diskReadSensor.value  : NaN, networkUnit)
     readonly property string diskWriteValue: Utils.formatRate(diskWriteSensor.status === Sensors.Sensor.Ready ? diskWriteSensor.value : NaN, networkUnit)
+
+    // Disk space usage (from KSysGuard)
+    readonly property string diskUsedValue: {
+        if (diskUsedSensor.status !== Sensors.Sensor.Ready) return "...";
+        return Utils.formatBytes(diskUsedSensor.value);
+    }
+    readonly property string diskTotalValue: {
+        if (diskTotalSensor.status !== Sensors.Sensor.Ready) return "...";
+        return Utils.formatBytes(diskTotalSensor.value);
+    }
 
     // Highest temperature found across all discovered drive temp sensors
     readonly property real   diskTempNumber: _diskTempNum
@@ -23,14 +40,28 @@ Item {
     // I/O sensors 
     Sensors.Sensor {
         id: diskReadSensor
-        sensorId: "disk/all/read"
+        sensorId: "disk/" + root._devicePath + "/read"
         updateRateLimit: root.updateInterval
         enabled: root.enabled
     }
 
     Sensors.Sensor {
         id: diskWriteSensor
-        sensorId: "disk/all/write"
+        sensorId: "disk/" + root._devicePath + "/write"
+        updateRateLimit: root.updateInterval
+        enabled: root.enabled
+    }
+
+    Sensors.Sensor {
+        id: diskUsedSensor
+        sensorId: "disk/" + root._devicePath + "/used"
+        updateRateLimit: root.updateInterval
+        enabled: root.enabled
+    }
+
+    Sensors.Sensor {
+        id: diskTotalSensor
+        sensorId: "disk/" + root._devicePath + "/total"
         updateRateLimit: root.updateInterval
         enabled: root.enabled
     }

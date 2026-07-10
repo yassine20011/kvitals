@@ -40,6 +40,8 @@ KCM.SimpleKCM {
     property bool cfg_splitGpu: false
     property string cfg_gpuMetrics: ""
     property bool cfg_showCpuFreq: false
+    property bool cfg_showCpuPower: false
+    property string cfg_diskDevice: "auto"
 
     // --- GPU discovery via SensorTreeModel (pure metadata, no polling) ---
     Sensors.SensorTreeModel { id: cfgSensorTree }
@@ -102,6 +104,7 @@ KCM.SimpleKCM {
 
     // --- Network interface discovery ---
     property var ifaceList: ["auto"]
+    property var diskList: ["auto"]
 
     Plasma5Support.DataSource {
         id: ifaceSource
@@ -116,6 +119,22 @@ KCM.SimpleKCM {
             });
             ifaces.unshift("auto");
             metricsPage.ifaceList = ifaces;
+        }
+    }
+
+    Plasma5Support.DataSource {
+        id: diskSource
+        engine: "executable"
+        connectedSources: ["ls /sys/block/"]
+        onNewData: function(source, data) {
+            if (data["exit code"] !== 0) return;
+            var raw = data["stdout"].trim();
+            if (raw.length === 0) return;
+            var disks = raw.split("\n").filter(function(name) {
+                return !name.startsWith("loop") && name.length > 0;
+            });
+            disks.unshift("auto");
+            metricsPage.diskList = disks;
         }
     }
 
@@ -436,6 +455,11 @@ KCM.SimpleKCM {
                                 }
                             }
                             CheckBox {
+                                text: i18n("Show CPU power draw")
+                                checked: cfg_showCpuPower
+                                onToggled: cfg_showCpuPower = checked
+                            }
+                            CheckBox {
                                 visible: cfg_showTemp
                                 text: i18n("Show temperature next to usage (merge CPU & temp)")
                                 checked: cfg_mergeCpuTemp
@@ -500,6 +524,30 @@ KCM.SimpleKCM {
                                 checked: cfg_mergeBatPwr
                                 enabled: cfg_showPower
                                 onToggled: cfg_mergeBatPwr = checked
+                            }
+                        }
+                    }
+
+                    // Disk settings
+                    Loader {
+                        active: modelData === "disk" && metricDelegate.metricEnabled
+                        visible: active
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
+                        Layout.topMargin: Kirigami.Units.smallSpacing
+
+                        sourceComponent: RowLayout {
+                            spacing: Kirigami.Units.smallSpacing
+                            Label { text: i18n("Device:") }
+                            ComboBox {
+                                id: diskCombo
+                                model: metricsPage.diskList
+                                currentIndex: {
+                                    var idx = metricsPage.diskList.indexOf(cfg_diskDevice);
+                                    return idx >= 0 ? idx : 0;
+                                }
+                                onActivated: cfg_diskDevice = metricsPage.diskList[currentIndex]
+                                implicitWidth: Kirigami.Units.gridUnit * 10
                             }
                         }
                     }

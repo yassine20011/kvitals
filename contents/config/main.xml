@@ -10,6 +10,12 @@
         <entry name="showCpuFreq" type="Bool">
             <default>false</default>
         </entry>
+        <entry name="showCpuPower" type="Bool">
+            <default>false</default>
+        </entry>
+        <entry name="transparentBackground" type="Bool">
+            <default>true</default>
+        </entry>
         <entry name="showRam" type="Bool">
             <default>true</default>
         </entry>
@@ -97,6 +103,9 @@
         <entry name="iconSize" type="Int">
             <default>12</default>
         </entry>
+        <entry name="compactSpacing" type="Int">
+            <default>2</default>
+        </entry>
         <entry name="cpuIcon" type="String">
             <default>cpu</default>
         </entry>
@@ -120,6 +129,9 @@
         </entry>
         <entry name="diskIcon" type="String">
             <default>drive-harddisk</default>
+        </entry>
+        <entry name="diskDevice" type="String">
+            <default>auto</default>
         </entry>
         <entry name="fanIcon" type="String">
             <default>fan</default>

@@ -3,9 +3,10 @@ import QtQuick.Layouts
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.kirigami as Kirigami
 
-RowLayout {
+Item {
     id: compactRow
-    spacing: Kirigami.Units.smallSpacing
+    implicitWidth:  inner.implicitWidth
+    implicitHeight: inner.implicitHeight
 
     required property var metricsModel
     required property bool useIcons
@@ -16,8 +17,10 @@ RowLayout {
     required property int iconSize
     required property color baseTextColor
     required property string layoutType
+    property int compactSpacing: 0
 
-    readonly property bool isVertical: layoutType === "vertical"
+    readonly property bool isRow:    layoutType === "horizontal"
+    readonly property bool isColumn: layoutType !== "horizontal"
 
     signal toggleExpanded()
 
@@ -57,155 +60,129 @@ RowLayout {
         }
     }
 
-    Repeater {
-        model: compactRow.metricsModel
-
-        delegate: Item {
-            required property var modelData
-            required property int index
-
-            implicitWidth:  loader.implicitWidth
-            implicitHeight: loader.implicitHeight
-
-            Loader {
-                id: loader
-                anchors.fill: parent
-                sourceComponent: compactRow.isVertical ? verticalDelegate : horizontalDelegate
-
-                property var itemData:  modelData
-                property int itemIndex: index
-            }
-        }
-    }
-
-    // ── Horizontal delegate (unchanged behaviour) ──────────────────────────
+    // ── Horizontal layout: all items in one row ──────────────────────────
 
     Component {
-        id: horizontalDelegate
-
-        RowLayout {
-            spacing: 2
-            Layout.fillHeight: true
-
-            PlasmaComponents.Label {
-                visible: itemIndex > 0 && !itemData.hideSeparator
-                text: "|"
-                font.pixelSize: compactRow.effectiveFontSize
-                font.family: compactRow.fontFamily
-                color: compactRow.baseTextColor
-                opacity: 0.4
-                Layout.alignment: Qt.AlignVCenter
-            }
-
-            Kirigami.Icon {
-                visible: compactRow.useIcons
-                source: itemData.icon
-                isMask: true
-                Layout.preferredWidth: compactRow.iconSize
-                Layout.preferredHeight: compactRow.iconSize
-                Layout.alignment: Qt.AlignVCenter
-            }
-
-            PlasmaComponents.Label {
-                visible: compactRow.useText
-                text: itemData.label
-                font.pixelSize: compactRow.effectiveFontSize
-                font.family: compactRow.fontFamily
-                color: compactRow.baseTextColor
-                Layout.alignment: Qt.AlignVCenter
-            }
-
-            PlasmaComponents.Label {
-                visible: !itemData.segments
-                text: itemData.value || ""
-                font.pixelSize: compactRow.effectiveFontSize
-                font.family: compactRow.fontFamily
-                font.bold: compactRow.fontBold
-                color: itemData.color || compactRow.baseTextColor
-                Layout.alignment: Qt.AlignVCenter
-            }
-
-            SegmentsRow {
-                visible: !!itemData.segments
-                segments: itemData.segments || []
-                Layout.alignment: Qt.AlignVCenter
-            }
-        }
-    }
-
-    // ── Vertical delegate (value on top, icon+label below) ─────────────────
-
-    Component {
-        id: verticalDelegate
+        id: rowLayoutComponent
 
         RowLayout {
             spacing: Kirigami.Units.smallSpacing
-            Layout.fillHeight: true
+            Repeater {
+                model: compactRow.metricsModel
+                delegate: RowLayout {
+                    spacing: 2
+                    Layout.fillHeight: true
 
-            // Thin line separator between metrics
-            Rectangle {
-                visible: itemIndex > 0 && !itemData.hideSeparator
-                width: 1
-                Layout.fillHeight: true
-                color: compactRow.baseTextColor
-                opacity: 0.2
-            }
-
-            ColumnLayout {
-                spacing: 1
-                Layout.alignment: Qt.AlignVCenter
-
-                // Top: value(s)
-                RowLayout {
-                    spacing: 0
-                    Layout.alignment: Qt.AlignHCenter
+                    required property var modelData
+                    required property int index
 
                     PlasmaComponents.Label {
-                        visible: !itemData.segments
-                        text: itemData.value || ""
+                        visible: index > 0 && !modelData.hideSeparator
+                        text: "|"
                         font.pixelSize: compactRow.effectiveFontSize
                         font.family: compactRow.fontFamily
-                        font.bold: compactRow.fontBold
-                        color: itemData.color || compactRow.baseTextColor
-                        horizontalAlignment: Text.AlignHCenter
+                        color: compactRow.baseTextColor
+                        opacity: 0.4
+                        Layout.alignment: Qt.AlignVCenter
                     }
-
-                    SegmentsRow {
-                        visible: !!itemData.segments
-                        segments: itemData.segments || []
-                        Layout.alignment: Qt.AlignHCenter
-                    }
-                }
-
-                // Bottom: icon + label
-                RowLayout {
-                    visible: compactRow.useIcons || compactRow.useText
-                    spacing: 2
-                    Layout.alignment: Qt.AlignHCenter
 
                     Kirigami.Icon {
                         visible: compactRow.useIcons
-                        source: itemData.icon
+                        source: modelData.icon
                         isMask: true
-                        Layout.preferredWidth:  Math.round(compactRow.iconSize * 0.85)
-                        Layout.preferredHeight: Math.round(compactRow.iconSize * 0.85)
+                        color: modelData.iconColor || compactRow.baseTextColor
+                        Layout.preferredWidth: compactRow.iconSize
+                        Layout.preferredHeight: compactRow.iconSize
                         Layout.alignment: Qt.AlignVCenter
                     }
 
                     PlasmaComponents.Label {
                         visible: compactRow.useText
-                        text: {
-                            var lbl = itemData.label || "";
-                            return lbl.endsWith(":") ? lbl.slice(0, -1) : lbl;
-                        }
-                        font.pixelSize: Math.max(8, compactRow.effectiveFontSize - 2)
+                        text: modelData.label
+                        font.pixelSize: compactRow.effectiveFontSize
                         font.family: compactRow.fontFamily
                         color: compactRow.baseTextColor
-                        opacity: 0.65
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    PlasmaComponents.Label {
+                        visible: !modelData.segments
+                        text: modelData.value || ""
+                        font.pixelSize: compactRow.effectiveFontSize
+                        font.family: compactRow.fontFamily
+                        font.bold: compactRow.fontBold
+                        color: modelData.color || compactRow.baseTextColor
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    SegmentsRow {
+                        visible: !!modelData.segments
+                        segments: modelData.segments || []
                         Layout.alignment: Qt.AlignVCenter
                     }
                 }
             }
         }
+    }
+
+    // ── Column layout: each item on its own row, stacked vertically ──────
+
+    Component {
+        id: columnLayoutComponent
+
+        ColumnLayout {
+            spacing: compactRow.compactSpacing
+            Repeater {
+                model: compactRow.metricsModel
+                delegate: RowLayout {
+                    spacing: 2
+
+                    required property var modelData
+
+                    Kirigami.Icon {
+                        visible: compactRow.useIcons
+                        source: modelData.icon
+                        isMask: true
+                        color: modelData.iconColor || compactRow.baseTextColor
+                        Layout.preferredWidth: compactRow.iconSize
+                        Layout.preferredHeight: compactRow.iconSize
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    PlasmaComponents.Label {
+                        visible: compactRow.useText
+                        text: modelData.label
+                        font.pixelSize: compactRow.effectiveFontSize
+                        font.family: compactRow.fontFamily
+                        color: compactRow.baseTextColor
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    PlasmaComponents.Label {
+                        visible: !modelData.segments
+                        text: modelData.value || ""
+                        font.pixelSize: compactRow.effectiveFontSize
+                        font.family: compactRow.fontFamily
+                        font.bold: compactRow.fontBold
+                        color: modelData.color || compactRow.baseTextColor
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    SegmentsRow {
+                        visible: !!modelData.segments
+                        segments: modelData.segments || []
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Outer container switched by layoutType ───────────────────────────
+
+    Loader {
+        id: inner
+        anchors.fill: parent
+        sourceComponent: compactRow.isRow ? rowLayoutComponent : columnLayoutComponent
     }
 }

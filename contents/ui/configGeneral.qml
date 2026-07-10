@@ -14,6 +14,8 @@ KCM.SimpleKCM {
     property string cfg_displayMode: "text"
     property string cfg_fontFamily: "monospace"
     property string cfg_layoutType: "horizontal"
+    property bool cfg_transparentBackground: true
+    property int cfg_compactSpacing: 2
     property string cfg_tempUnit: "C"
     property string cfg_networkUnit: "bytes"
     property string cfg_fanUnit: "rpm"
@@ -23,7 +25,7 @@ KCM.SimpleKCM {
     readonly property bool iconsEnabled: cfg_displayMode === "icons" || cfg_displayMode === "icons+text"
 
     readonly property var layoutTypes: ["horizontal", "vertical"]
-    readonly property var layoutTypeLabels: [i18n("Horizontal"), i18n("Vertical")]
+    readonly property var layoutTypeLabels: [i18n("Horizontal (single row)"), i18n("Vertical (stacked rows)")]
 
     Kirigami.FormLayout {
 
@@ -51,6 +53,23 @@ KCM.SimpleKCM {
             onActivated: {
                 cfg_layoutType = configPage.layoutTypes[currentIndex];
             }
+        }
+
+        Slider {
+            id: compactSpacingSlider
+            Kirigami.FormData.label: i18n("Compact spacing:")
+            from: 0
+            to: 10
+            stepSize: 1
+            value: cfg_compactSpacing
+            visible: cfg_layoutType !== "horizontal"
+            onValueChanged: cfg_compactSpacing = value
+        }
+
+        Label {
+            text: compactSpacingSlider.value + " " + i18n("units")
+            opacity: 0.7
+            visible: compactSpacingSlider.visible
         }
 
         Slider {
@@ -106,6 +125,14 @@ KCM.SimpleKCM {
             id: fontBoldCheck
             Kirigami.FormData.label: i18n("Bold font:")
             text: i18n("Bold")
+        }
+
+        CheckBox {
+            id: transparentBgCheck
+            Kirigami.FormData.label: i18n("Background:")
+            text: i18n("Transparent panel background")
+            checked: cfg_transparentBackground
+            onToggled: cfg_transparentBackground = checked
         }
 
         Slider {
