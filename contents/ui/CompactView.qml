@@ -3,8 +3,7 @@ import QtQuick.Layouts
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.kirigami as Kirigami
 
-// Root is a plain Item that only sizes to its content — no layout bias
-// so Plasma can draw the panel background at the correct size.
+
 Item {
     id: compactRow
 
@@ -178,15 +177,9 @@ Item {
         }
     }
 
-    // ── Outer container switched by layoutType ───────────────────────────
-
-    // Inner loader sizes to its content; the outer Item sizes to the loader.
     Loader {
         id: inner
+        anchors.fill: parent
         sourceComponent: compactRow.isRow ? rowLayoutComponent : columnLayoutComponent
     }
-
-    // Expose inner layout size so Plasma background fills correctly
-    implicitWidth:  inner.implicitWidth
-    implicitHeight: inner.implicitHeight
 }

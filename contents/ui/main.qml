@@ -11,8 +11,7 @@ PlasmoidItem {
     id: root
     property bool _dbg: { console.warn("[KVitals] main.qml: constructing..."); return true; }
 
-    property bool transparentBackground: Plasmoid.configuration.transparentBackground
-    Plasmoid.backgroundHints: root.transparentBackground ? PlasmaCore.Types.NoBackground : PlasmaCore.Types.DefaultBackground
+    Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
 
     preferredRepresentation: compactRepresentation
 

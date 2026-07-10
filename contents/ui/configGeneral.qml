@@ -14,7 +14,6 @@ KCM.SimpleKCM {
     property string cfg_displayMode: "text"
     property string cfg_fontFamily: "monospace"
     property string cfg_layoutType: "horizontal"
-    property bool cfg_transparentBackground: true
     property int cfg_compactSpacing: 2
     property string cfg_tempUnit: "C"
     property string cfg_networkUnit: "bytes"
@@ -125,14 +124,6 @@ KCM.SimpleKCM {
             id: fontBoldCheck
             Kirigami.FormData.label: i18n("Bold font:")
             text: i18n("Bold")
-        }
-
-        CheckBox {
-            id: transparentBgCheck
-            Kirigami.FormData.label: i18n("Background:")
-            text: i18n("Transparent panel background")
-            checked: cfg_transparentBackground
-            onToggled: cfg_transparentBackground = checked
         }
 
         Slider {
