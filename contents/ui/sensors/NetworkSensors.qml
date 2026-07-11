@@ -25,6 +25,11 @@ Item {
         return Utils.formatRate(netUpSensor.value, networkUnit);
     }
 
+    readonly property string netIpValue: {
+        if (netIpSensor.status !== Sensors.Sensor.Ready) return "...";
+        return netIpSensor.value;
+    }
+
     Sensors.Sensor {
         id: netDownSensor
         sensorId: "network/" + root.netIfacePath + "/download"
@@ -34,6 +39,12 @@ Item {
     Sensors.Sensor {
         id: netUpSensor
         sensorId: "network/" + root.netIfacePath + "/upload"
+        updateRateLimit: root.updateInterval
+    }
+
+    Sensors.Sensor {
+        id: netIpSensor
+        sensorId: "network/" + root.netIfacePath + "/ipv4address"
         updateRateLimit: root.updateInterval
     }
 

@@ -8,3 +8,4 @@ BatterySensors 1.0 BatterySensors.qml
 NetworkSensors 1.0 NetworkSensors.qml
 DiskSensors 1.0 DiskSensors.qml
 FanSensors 1.0 FanSensors.qml
+UptimeSensors 1.0 UptimeSensors.qml

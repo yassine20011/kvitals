@@ -17,6 +17,7 @@ KCM.SimpleKCM {
     property string cfg_networkIcon: "network-wireless"
     property string cfg_diskIcon: "drive-harddisk"
     property string cfg_fanIcon: "fan"
+    property string cfg_uptimeIcon: "clock"
 
     KIconThemes.IconDialog {
         id: cpuIconDialog
@@ -53,6 +54,11 @@ KCM.SimpleKCM {
     KIconThemes.IconDialog {
         id: fanIconDialog
         onIconNameChanged: if (iconName) cfg_fanIcon = iconName
+    }
+
+    KIconThemes.IconDialog {
+        id: uptimeIconDialog
+        onIconNameChanged: if (iconName) cfg_uptimeIcon = iconName
     }
 
     Kirigami.FormLayout {
@@ -111,6 +117,12 @@ KCM.SimpleKCM {
             Button { text: i18n("Change..."); onClicked: fanIconDialog.open(); icon.name: "document-edit" }
         }
 
+        RowLayout {
+            Kirigami.FormData.label: i18n("System Uptime:")
+            Kirigami.Icon { source: cfg_uptimeIcon; isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
+            Button { text: i18n("Change..."); onClicked: uptimeIconDialog.open(); icon.name: "document-edit" }
+        }
+
         Button {
             icon.name: "edit-undo"
             text: i18n("Reset to defaults")
@@ -125,6 +137,7 @@ KCM.SimpleKCM {
                 cfg_networkIcon = "network-wireless";
                 cfg_diskIcon = "drive-harddisk";
                 cfg_fanIcon = "fan";
+                cfg_uptimeIcon = "clock";
             }
         }
     }

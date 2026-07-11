@@ -20,6 +20,7 @@ KCM.SimpleKCM {
     property bool cfg_showNetwork
     property bool cfg_showDisk
     property bool cfg_showFan
+    property bool cfg_showUptime
     property bool cfg_compactShowCpu
     property bool cfg_compactShowRam
     property bool cfg_compactShowTemp
@@ -29,7 +30,9 @@ KCM.SimpleKCM {
     property bool cfg_compactShowNetwork
     property bool cfg_compactShowDisk
     property bool cfg_compactShowFan
+    property bool cfg_compactShowUptime
     property string cfg_networkInterface: "auto"
+    property bool cfg_showNetworkIp: false
     property string cfg_batteryDevice
     property string cfg_gpuSelection: ""
     property string cfg_gpuLabels: ""
@@ -180,7 +183,7 @@ KCM.SimpleKCM {
     }
 
     // --- Metric order helpers ---
-    readonly property var allKeys: ["cpu", "ram", "temp", "gpu", "bat", "pwr", "net", "disk", "fan"]
+    readonly property var allKeys: ["cpu", "ram", "temp", "gpu", "bat", "pwr", "net", "disk", "fan", "uptime"]
 
     readonly property var metricMeta: ({
         "cpu":  { label: i18n("CPU usage"),         icon: "cpu" },
@@ -191,7 +194,8 @@ KCM.SimpleKCM {
         "pwr":  { label: i18n("Power consumption"),  icon: "battery-charging-60" },
         "net":  { label: i18n("Network speed"),      icon: "network-wireless" },
         "disk": { label: i18n("Disk I/O & temp"),    icon: "drive-harddisk" },
-        "fan":  { label: i18n("Fan speed"),          icon: "fan" }
+        "fan":  { label: i18n("Fan speed"),          icon: "fan" },
+        "uptime": { label: i18n("System Uptime"),    icon: "clock" }
     })
 
     property var currentOrder: {
@@ -212,6 +216,7 @@ KCM.SimpleKCM {
             case "net":  return cfg_showNetwork;
             case "disk": return cfg_showDisk;
             case "fan":  return cfg_showFan;
+            case "uptime": return cfg_showUptime;
         }
         return false;
     }
@@ -227,6 +232,7 @@ KCM.SimpleKCM {
             case "net":  return cfg_compactShowNetwork;
             case "disk": return cfg_compactShowDisk;
             case "fan":  return cfg_compactShowFan;
+            case "uptime": return cfg_compactShowUptime;
         }
         return false;
     }
@@ -242,6 +248,7 @@ KCM.SimpleKCM {
             case "net":  cfg_showNetwork = val; break;
             case "disk": cfg_showDisk    = val; break;
             case "fan":  cfg_showFan     = val; break;
+            case "uptime": cfg_showUptime = val; break;
         }
         if (!val) {
             if ((key === "cpu" || key === "temp") && cfg_mergeCpuTemp) cfg_mergeCpuTemp = false;
@@ -261,6 +268,7 @@ KCM.SimpleKCM {
             case "net":  cfg_compactShowNetwork = val; break;
             case "disk": cfg_compactShowDisk    = val; break;
             case "fan":  cfg_compactShowFan     = val; break;
+            case "uptime": cfg_compactShowUptime = val; break;
         }
     }
 
@@ -453,18 +461,28 @@ KCM.SimpleKCM {
                         Layout.leftMargin: Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
                         Layout.topMargin: Kirigami.Units.smallSpacing
 
-                        sourceComponent: RowLayout {
+                        sourceComponent: ColumnLayout {
                             spacing: Kirigami.Units.smallSpacing
-                            Label { text: i18n("Interface:") }
-                            ComboBox {
-                                id: ifaceCombo
-                                model: metricsPage.ifaceList
-                                currentIndex: {
-                                    var idx = metricsPage.ifaceList.indexOf(cfg_networkInterface);
-                                    return idx >= 0 ? idx : 0;
+
+                            RowLayout {
+                                spacing: Kirigami.Units.smallSpacing
+                                Label { text: i18n("Interface:") }
+                                ComboBox {
+                                    id: ifaceCombo
+                                    model: metricsPage.ifaceList
+                                    currentIndex: {
+                                        var idx = metricsPage.ifaceList.indexOf(cfg_networkInterface);
+                                        return idx >= 0 ? idx : 0;
+                                    }
+                                    onActivated: cfg_networkInterface = metricsPage.ifaceList[currentIndex]
+                                    implicitWidth: Kirigami.Units.gridUnit * 10
                                 }
-                                onActivated: cfg_networkInterface = metricsPage.ifaceList[currentIndex]
-                                implicitWidth: Kirigami.Units.gridUnit * 10
+                            }
+
+                            CheckBox {
+                                text: i18n("Show Local IP Address")
+                                checked: cfg_showNetworkIp
+                                onToggled: cfg_showNetworkIp = checked
                             }
                         }
                     }

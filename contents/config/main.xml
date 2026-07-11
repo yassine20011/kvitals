@@ -34,6 +34,9 @@
         <entry name="showFan" type="Bool">
             <default>false</default>
         </entry>
+        <entry name="showUptime" type="Bool">
+            <default>false</default>
+        </entry>
         <entry name="compactShowCpu" type="Bool">
             <default>true</default>
         </entry>
@@ -61,8 +64,14 @@
         <entry name="compactShowFan" type="Bool">
             <default>false</default>
         </entry>
+        <entry name="compactShowUptime" type="Bool">
+            <default>false</default>
+        </entry>
         <entry name="networkInterface" type="String">
             <default>auto</default>
+        </entry>
+        <entry name="showNetworkIp" type="Bool">
+            <default>false</default>
         </entry>
         <entry name="batteryDevice" type="String">
             <default>auto</default>
@@ -124,6 +133,9 @@
         <entry name="fanIcon" type="String">
             <default>fan</default>
         </entry>
+        <entry name="uptimeIcon" type="String">
+            <default>clock</default>
+        </entry>
         <entry name="fontFamily" type="String">
             <default>monospace</default>
         </entry>
@@ -134,7 +146,7 @@
             <default>false</default>
         </entry>
         <entry name="metricOrder" type="String">
-            <default>cpu,ram,temp,gpu,bat,pwr,net,disk,fan</default>
+            <default>cpu,ram,temp,gpu,bat,pwr,net,disk,fan,uptime</default>
         </entry>
         <entry name="updateInterval" type="Int">
             <default>2000</default>

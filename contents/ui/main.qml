@@ -22,6 +22,7 @@ PlasmoidItem {
     property bool showNetwork: Plasmoid.configuration.showNetwork
     property bool showDisk: Plasmoid.configuration.showDisk
     property bool showFan: Plasmoid.configuration.showFan
+    property bool showUptime: Plasmoid.configuration.showUptime
     property bool compactShowCpu: Plasmoid.configuration.compactShowCpu
     property bool compactShowRam: Plasmoid.configuration.compactShowRam
     property bool compactShowTemp: Plasmoid.configuration.compactShowTemp
@@ -31,7 +32,9 @@ PlasmoidItem {
     property bool compactShowNetwork: Plasmoid.configuration.compactShowNetwork
     property bool compactShowDisk: Plasmoid.configuration.compactShowDisk
     property bool compactShowFan: Plasmoid.configuration.compactShowFan
+    property bool compactShowUptime: Plasmoid.configuration.compactShowUptime
     property string networkInterface: Plasmoid.configuration.networkInterface
+    property bool showNetworkIp: Plasmoid.configuration.showNetworkIp
     property string batteryDevice: Plasmoid.configuration.batteryDevice
     property string gpuSelection: Plasmoid.configuration.gpuSelection
     property string gpuLabels: Plasmoid.configuration.gpuLabels
@@ -53,6 +56,7 @@ PlasmoidItem {
     property string networkIcon: Plasmoid.configuration.networkIcon
     property string diskIcon: Plasmoid.configuration.diskIcon
     property string fanIcon: Plasmoid.configuration.fanIcon
+    property string uptimeIcon: Plasmoid.configuration.uptimeIcon
     property string fontFamily: Plasmoid.configuration.fontFamily
     property int fontSize: Plasmoid.configuration.fontSize
     property bool fontBold: Plasmoid.configuration.fontBold
@@ -61,7 +65,7 @@ PlasmoidItem {
     property bool useIcons: displayMode === "icons" || displayMode === "icons+text"
     property bool useText: displayMode === "text" || displayMode === "icons+text"
 
-    property string metricOrder: Plasmoid.configuration.metricOrder || "cpu,ram,temp,gpu,bat,pwr,net,disk"
+    property string metricOrder: Plasmoid.configuration.metricOrder || "cpu,ram,temp,gpu,bat,pwr,net,disk,fan,uptime"
     property var orderedKeys: metricOrder.split(",").map(function (k) {
         return k.trim();
     })
@@ -150,6 +154,7 @@ PlasmoidItem {
     property var network: _sensorsReady ? sensorLoader.item.network : _nullNetwork
     property var disk:    _sensorsReady ? sensorLoader.item.disk    : _nullDisk
     property var fans:    _sensorsReady ? sensorLoader.item.fans    : _nullFans
+    property var uptime:  _sensorsReady ? sensorLoader.item.uptime  : _nullUptime
 
     // Safe defaults so bindings don't error before sensors load
     QtObject {
@@ -206,6 +211,10 @@ PlasmoidItem {
         property string fanValue: ""
         property bool hasFanData: false
     }
+    QtObject {
+        id: _nullUptime
+        property string uptimeValue: ""
+    }
 
     Loader {
         id: sensorLoader
@@ -219,6 +228,7 @@ PlasmoidItem {
             property alias network: _network
             property alias disk:    _disk
             property alias fans:    _fans
+            property alias uptime:  _uptime
 
             CpuSensors {
                 id: _cpu
@@ -270,6 +280,11 @@ PlasmoidItem {
                 id: _fans
                 updateInterval: root.updateInterval
                 fanUnit: root.fanUnit
+            }
+
+            UptimeSensors {
+                id: _uptime
+                updateInterval: root.updateInterval
             }
         }
     }
@@ -401,12 +416,20 @@ PlasmoidItem {
                         icon: root.powerIcon, label: "PWR:", value: battery.powerValue,
                         color: root.baseTextColor
                     });
-                else if (key === "net" && root.showNetwork && root.compactShowNetwork)
+                else if (key === "net" && root.showNetwork && root.compactShowNetwork) {
+                    var netSegs = [
+                        {value: "↓" + network.netDownValue, color: root.baseTextColor},
+                        {value: "↑" + network.netUpValue, color: root.baseTextColor}
+                    ];
+                    if (root.showNetworkIp && network.netIpValue && network.netIpValue !== "..." && network.netIpValue !== "") {
+                        netSegs.push({value: network.netIpValue, color: root.baseTextColor});
+                    }
                     items.push({
                         icon: root.networkIcon, label: "NET:",
-                        value: "↓" + network.netDownValue + " ↑" + network.netUpValue,
+                        segments: netSegs,
                         color: root.baseTextColor
                     });
+                }
                 else if (key === "disk" && root.showDisk && root.compactShowDisk) {
                     var diskSegs = [{value: "↓" + disk.diskReadValue, color: root.baseTextColor},
                                     {value: "↑" + disk.diskWriteValue, color: root.baseTextColor}];
@@ -417,6 +440,12 @@ PlasmoidItem {
                 else if (key === "fan" && root.showFan && root.compactShowFan && fans.hasFanData) {
                     items.push({
                         icon: root.fanIcon, label: "FAN:", value: fans.fanValue,
+                        color: root.baseTextColor
+                    });
+                }
+                else if (key === "uptime" && root.showUptime && root.compactShowUptime && uptime.uptimeValue) {
+                    items.push({
+                        icon: root.uptimeIcon, label: "UPTIME:", value: uptime.uptimeValue,
                         color: root.baseTextColor
                     });
                 }
@@ -497,6 +526,9 @@ PlasmoidItem {
                 else if (key === "net" && root.showNetwork) {
                     items.push({label: "Network ↓", value: network.netDownValue, color: root.baseTextColor});
                     items.push({label: "Network ↑", value: network.netUpValue, color: root.baseTextColor});
+                    if (root.showNetworkIp && network.netIpValue && network.netIpValue !== "..." && network.netIpValue !== "") {
+                        items.push({label: "Local IP", value: network.netIpValue, color: root.baseTextColor});
+                    }
                 }
                 else if (key === "disk" && root.showDisk) {
                     items.push({label: "Disk Read",  value: disk.diskReadValue,  color: root.baseTextColor});
@@ -506,6 +538,9 @@ PlasmoidItem {
                 }
                 else if (key === "fan" && root.showFan && fans.hasFanData) {
                     items.push({label: "Fans", value: fans.fanValue, color: root.baseTextColor});
+                }
+                else if (key === "uptime" && root.showUptime && uptime.uptimeValue) {
+                    items.push({label: "System Uptime", value: uptime.uptimeValue, color: root.baseTextColor});
                 }
             }
             return items;
@@ -542,8 +577,10 @@ PlasmoidItem {
                 parts.push("BAT: " + battery.batValue);
             else if (key === "pwr" && root.showPower && battery.powerValue)
                 parts.push("PWR: " + battery.powerValue);
-            else if (key === "net" && root.showNetwork)
-                parts.push("NET: ↓" + network.netDownValue + " ↑" + network.netUpValue);
+            else if (key === "net" && root.showNetwork) {
+                var ipStr = (root.showNetworkIp && network.netIpValue && network.netIpValue !== "..." && network.netIpValue !== "") ? " " + network.netIpValue : "";
+                parts.push("NET: ↓" + network.netDownValue + " ↑" + network.netUpValue + ipStr);
+            }
             else if (key === "disk" && root.showDisk) {
                 var dParts = ["↓" + disk.diskReadValue, "↑" + disk.diskWriteValue];
                 if (disk.diskTempValue) dParts.push(disk.diskTempValue);
@@ -551,6 +588,9 @@ PlasmoidItem {
             }
             else if (key === "fan" && root.showFan && fans.hasFanData) {
                 parts.push("FAN: " + fans.fanValue);
+            }
+            else if (key === "uptime" && root.showUptime && uptime.uptimeValue) {
+                parts.push("UPTIME: " + uptime.uptimeValue);
             }
         }
         return parts.join("\n");
