@@ -151,7 +151,7 @@ RowLayout {
                 width: 1
                 Layout.fillHeight: true
                 color: compactRow.baseTextColor
-                opacity: compactRow.separatorOpacity * 0.5
+                opacity: compactRow.separatorOpacity
             }
 
             ColumnLayout {
