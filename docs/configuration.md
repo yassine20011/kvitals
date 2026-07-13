@@ -12,7 +12,7 @@ Right-click the widget → **Configure KVitals...** to open the settings dialog.
 | **Font**            | Font family for all panel text (searchable dropdown of system fonts, editable) | monospace          |
 | **Font size**       | Text size in pixels. `0` uses the system default                               | 0 (system default) |
 | **Update interval** | How often stats are refreshed                                                  | 2.0 seconds        |
-| **Label opacity**   | Transparency of metric labels (`CPU:`, `RAM:`, etc.) in the compact view       | 0.6                |
+| **Label opacity**   | Transparency of metric labels (`CPU:`, `RAM:`, etc.) in the compact view       | 0.65               |
 | **Separator opacity** | Transparency of the `|` dividers between metrics in the compact view         | 0.4                |
 
 ### Display Modes
