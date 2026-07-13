@@ -16,6 +16,8 @@ RowLayout {
     required property int iconSize
     required property color baseTextColor
     required property string layoutType
+    required property real labelOpacity
+    required property real separatorOpacity
 
     readonly property bool isVertical: layoutType === "vertical"
 
@@ -44,7 +46,7 @@ RowLayout {
                     font.family: compactRow.fontFamily
                     font.bold: compactRow.fontBold
                     color: compactRow.baseTextColor
-                    opacity: 0.5
+                    opacity: compactRow.separatorOpacity
                 }
                 PlasmaComponents.Label {
                     text: modelData.value
@@ -93,7 +95,7 @@ RowLayout {
                 font.pixelSize: compactRow.effectiveFontSize
                 font.family: compactRow.fontFamily
                 color: compactRow.baseTextColor
-                opacity: 0.4
+                opacity: compactRow.separatorOpacity
                 Layout.alignment: Qt.AlignVCenter
             }
 
@@ -112,6 +114,7 @@ RowLayout {
                 font.pixelSize: compactRow.effectiveFontSize
                 font.family: compactRow.fontFamily
                 color: compactRow.baseTextColor
+                opacity: compactRow.labelOpacity
                 Layout.alignment: Qt.AlignVCenter
             }
 
@@ -148,7 +151,7 @@ RowLayout {
                 width: 1
                 Layout.fillHeight: true
                 color: compactRow.baseTextColor
-                opacity: 0.2
+                opacity: compactRow.separatorOpacity * 0.5
             }
 
             ColumnLayout {
@@ -201,7 +204,7 @@ RowLayout {
                         font.pixelSize: Math.max(8, compactRow.effectiveFontSize - 2)
                         font.family: compactRow.fontFamily
                         color: compactRow.baseTextColor
-                        opacity: 0.65
+                        opacity: compactRow.labelOpacity
                         Layout.alignment: Qt.AlignVCenter
                     }
                 }

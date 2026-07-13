@@ -60,6 +60,8 @@ PlasmoidItem {
     property string fontFamily: Plasmoid.configuration.fontFamily
     property int fontSize: Plasmoid.configuration.fontSize
     property bool fontBold: Plasmoid.configuration.fontBold
+    property real labelOpacity: Plasmoid.configuration.labelOpacity
+    property real separatorOpacity: Plasmoid.configuration.separatorOpacity
     property int effectiveFontSize: fontSize > 0 ? fontSize : Kirigami.Theme.smallFont.pixelSize
 
     property bool useIcons: displayMode === "icons" || displayMode === "icons+text"
@@ -467,6 +469,8 @@ PlasmoidItem {
         fontBold: root.fontBold
         iconSize: root.iconSize
         baseTextColor: root.baseTextColor
+        labelOpacity: root.labelOpacity
+        separatorOpacity: root.separatorOpacity
         onToggleExpanded: root.expanded = !root.expanded
     }
 

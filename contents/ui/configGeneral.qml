@@ -11,6 +11,8 @@ KCM.SimpleKCM {
     property alias cfg_iconSize: iconSizeSlider.value
     property alias cfg_fontSize: fontSizeSlider.value
     property alias cfg_fontBold: fontBoldCheck.checked
+    property alias cfg_labelOpacity: labelOpacitySlider.value
+    property alias cfg_separatorOpacity: separatorOpacitySlider.value
     property string cfg_displayMode: "text"
     property string cfg_fontFamily: "monospace"
     property string cfg_layoutType: "horizontal"
@@ -106,6 +108,34 @@ KCM.SimpleKCM {
             id: fontBoldCheck
             Kirigami.FormData.label: i18n("Bold font:")
             text: i18n("Bold")
+        }
+
+        Slider {
+            id: labelOpacitySlider
+            Kirigami.FormData.label: i18n("Label opacity:")
+            from: 0
+            to: 1
+            stepSize: 0.05
+            value: 0.65
+        }
+
+        Label {
+            text: Math.round(labelOpacitySlider.value * 100) + "%"
+            opacity: 0.7
+        }
+
+        Slider {
+            id: separatorOpacitySlider
+            Kirigami.FormData.label: i18n("Separator opacity:")
+            from: 0
+            to: 1
+            stepSize: 0.05
+            value: 0.4
+        }
+
+        Label {
+            text: Math.round(separatorOpacitySlider.value * 100) + "%"
+            opacity: 0.7
         }
 
         Slider {

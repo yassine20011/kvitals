@@ -217,5 +217,11 @@
         <entry name="fanUnit" type="String">
             <default>rpm</default>
         </entry>
+        <entry name="labelOpacity" type="Double">
+            <default>0.65</default>
+        </entry>
+        <entry name="separatorOpacity" type="Double">
+            <default>0.4</default>
+        </entry>
     </group>
 </kcfg>
