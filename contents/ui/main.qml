@@ -66,9 +66,16 @@ PlasmoidItem {
     property bool useText: displayMode === "text" || displayMode === "icons+text"
 
     property string metricOrder: Plasmoid.configuration.metricOrder || "cpu,ram,temp,gpu,bat,pwr,net,disk,fan,uptime"
-    property var orderedKeys: metricOrder.split(",").map(function (k) {
-        return k.trim();
-    })
+    property var orderedKeys: {
+        var keys = metricOrder.split(",").map(function (k) { return k.trim(); }).filter(function(k) { return k.length > 0; });
+        var allKeys = ["cpu", "ram", "temp", "gpu", "bat", "pwr", "net", "disk", "fan", "uptime"];
+        for (var i = 0; i < allKeys.length; i++) {
+            if (keys.indexOf(allKeys[i]) === -1) {
+                keys.push(allKeys[i]);
+            }
+        }
+        return keys;
+    }
 
     property int updateInterval: Plasmoid.configuration.updateInterval || 2000
     property string tempUnit: Plasmoid.configuration.tempUnit || "C"
