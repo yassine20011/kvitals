@@ -12,6 +12,8 @@ Right-click the widget → **Configure KVitals...** to open the settings dialog.
 | **Font**            | Font family for all panel text (searchable dropdown of system fonts, editable) | monospace          |
 | **Font size**       | Text size in pixels. `0` uses the system default                               | 0 (system default) |
 | **Update interval** | How often stats are refreshed                                                  | 2.0 seconds        |
+| **Label opacity**   | Transparency of metric labels (`CPU:`, `RAM:`, etc.) in the compact view       | 0.6                |
+| **Separator opacity** | Transparency of the `|` dividers between metrics in the compact view         | 0.4                |
 
 ### Display Modes
 
@@ -52,6 +54,8 @@ Right-click the widget → **Configure KVitals...** to open the settings dialog.
 | **Battery Status**    | `BAT:`        | Battery percentage                                  |
 | **Power Consumption** | `PWR:`        | Power draw in watts                                 |
 | **Network Speed**     | `NET:`        | Download/upload speeds                              |
+| **System Uptime**     | `UP:`         | How long the system has been running (`Xd Xh Xm`)  |
+| **Local IP Address**  | (inline)      | IPv4 address of the active interface, shown next to network speeds |
 
 ### Compact Panel Visibility
 
@@ -116,6 +120,7 @@ Each metric has its own icon that can be customized:
 | Battery     | 🔋           | `battery-good`        |
 | Power       | ⚡            | `battery-charging-60` |
 | Network     | 📶           | `network-wireless`    |
+| Uptime      | 🕒           | `clock`               |
 
 Click **"Change..."** to open KDE's native icon picker, which lets you browse and search all icons from your installed
 icon theme (Breeze, Papirus, Tela, etc.).

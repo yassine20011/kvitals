@@ -127,6 +127,26 @@ systemctl --user restart plasma-ksystemstats.service
 !!! warning
     If the directory doesn't exist, the install failed. Re-run `bash install.sh` from the project directory.
 
+## Desktop Not Loading on Reboot (Widget on Desktop)
+
+**Affects:** Versions prior to 2.10.1, when KVitals is placed on the **desktop** (not the panel).
+
+**Symptom:** After a reboot, the KDE Plasma desktop fails to appear or enters a `plasmashell` crash loop. The system is still running but the desktop environment does not display. Logs show a `SIGSEGV` in `KirigamiPlasmaStyle::PlasmaTheme::syncColors()`.
+
+**Root cause:** When `ShellCorona::load()` attaches a widget to the desktop window at boot, it performs a deep recursive `QQuickItemPrivate::refWindow()` walk over the entire QML object tree. On versions before 2.10.1, all seven sensor modules (`CpuSensors`, `MemorySensors`, `TempSensors`, `GpuSensors`, `BatterySensors`, `NetworkSensors`, `FanSensors`) were direct children of `PlasmoidItem`, each owning `SensorTreeModel`, `KDescendantsProxyModel`, and multiple `Sensor` objects. This deep tree was enough to trigger a use-after-free race condition in Kirigami's theme initialization on certain hardware or distro combinations.
+
+**Fix:** Update to KVitals **2.10.1 or later**. Sensor loading is now deferred to the next event loop iteration after window attachment completes, so `refWindow()` always runs on a minimal QML tree. Safe `QtObject` null-stubs cover all sensor property bindings during the brief startup window.
+
+**Workaround (if you cannot update):** Move the widget from the desktop to the panel, or remove it entirely and reinstall after the desktop has fully loaded:
+
+```bash
+# Force-restart plasmashell to recover the desktop
+kquitapp6 plasmashell && kstart plasmashell &
+```
+
+!!! tip
+    If the desktop loads but the widget is missing after using the workaround, right-click the desktop → **Add Widgets** to re-add KVitals.
+
 ## Custom Font Not Applying
 
 **Cause:** The font name might not match exactly.

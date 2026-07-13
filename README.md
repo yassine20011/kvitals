@@ -14,10 +14,11 @@ CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 96°C  |  🔋BAT: 78%  |  PWR: +20W  |  N
 
 ## Features
 
-- **Live monitoring** — CPU usage, RAM, CPU temperature, GPU metrics (when available), battery status, power draw, network speed, disk I/O, fan speeds
+- **Live monitoring** — CPU usage, RAM, CPU temperature, GPU metrics (when available), battery status, power draw, network speed, disk I/O, fan speeds, system uptime, local IP address
 - **Display modes** — Text, Icons, Icons + Text, or None (values only) for the panel view
 - **Custom icons** — Pick any icon from your installed theme for each metric
 - **Font customization** — Choose any system font and size
+- **Opacity controls** — Independently adjust label and separator transparency in the compact view
 - **Configurable** — Toggle each metric, adjust refresh rate, tune colors, organized in 4 settings tabs
 - **Minimal footprint** — Native KDE KSysGuard sensors + QML, no heavy dependencies or excessive subprocesses
 - **Click to expand** — Detailed popup view with all stats
@@ -77,8 +78,8 @@ plasmashell --replace &
 
 Right-click the widget → **Configure KVitals...** to access settings in four tabs:
 
-- **General** — Display mode, layout, icon size, font, update interval
-- **Metrics** — Toggle CPU, RAM, Temperature, GPU, Battery, Power, Network, Disk, Fan
+- **General** — Display mode, layout, icon size, font, update interval, label/separator opacity
+- **Metrics** — Toggle CPU, RAM, Temperature, GPU, Battery, Power, Network (+ Local IP), Disk, Fan, Uptime
 - **Icons** — Customize icons for each metric from your theme
 - **Colors** — Set custom font colors and optional threshold-based metric colors
 

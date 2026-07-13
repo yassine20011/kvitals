@@ -2,6 +2,15 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [2.11.0] - 2026-07-13
+
+### Added
+
+- **System Uptime** (`Metrics` settings): New metric displaying how long the system has been running, formatted as `Xd Xh Xm`. Reads from the native `os/system/uptime` ksystemstats sensor — no shell subprocesses (#53).
+- **Local IP Address** (`Metrics` settings — Network): New toggle under the Network metric that shows the IPv4 address of the active network interface next to network speeds (e.g. `NET: ↓ 1.2 MB ↑ 48 KB · 192.168.1.5`). Automatically follows the selected interface, including `auto` mode (#53).
+- **Label Opacity** (`General` settings): Slider to control the transparency of metric labels (`CPU:`, `RAM:`, etc.) in the compact panel view, from 0 (invisible) to 1 (fully opaque). Applies to both horizontal and vertical layout modes (#55).
+- **Separator Opacity** (`General` settings): Slider to control the transparency of the `|` separators between metrics in the compact panel view (#55).
+
 ## [2.10.1] - 2026-06-29
 
 ### Fixed
