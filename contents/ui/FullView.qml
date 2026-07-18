@@ -12,6 +12,7 @@ ColumnLayout {
     required property var metricsModel
     required property color baseTextColor
     required property color labelColor
+    required property color iconColor
     required property bool fontBold
 
     PlasmaComponents.Label {
@@ -31,6 +32,16 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.leftMargin: Kirigami.Units.largeSpacing
             Layout.rightMargin: Kirigami.Units.largeSpacing
+
+            Kirigami.Icon {
+                visible: !!modelData.icon
+                source: modelData.icon || ""
+                isMask: true
+                color: fullView.iconColor
+                Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                Layout.alignment: Qt.AlignVCenter
+            }
 
             PlasmaComponents.Label {
                 text: modelData.label

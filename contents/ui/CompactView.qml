@@ -16,6 +16,7 @@ RowLayout {
     required property int iconSize
     required property color baseTextColor
     required property color labelColor
+    required property color iconColor
     required property string layoutType
     required property real labelOpacity
     required property real separatorOpacity
@@ -104,6 +105,7 @@ RowLayout {
                 visible: compactRow.useIcons
                 source: itemData.icon
                 isMask: true
+                color: compactRow.iconColor
                 Layout.preferredWidth: compactRow.iconSize
                 Layout.preferredHeight: compactRow.iconSize
                 Layout.alignment: Qt.AlignVCenter
@@ -191,6 +193,7 @@ RowLayout {
                         visible: compactRow.useIcons
                         source: itemData.icon
                         isMask: true
+                        color: compactRow.iconColor
                         Layout.preferredWidth:  Math.round(compactRow.iconSize * 0.85)
                         Layout.preferredHeight: Math.round(compactRow.iconSize * 0.85)
                         Layout.alignment: Qt.AlignVCenter

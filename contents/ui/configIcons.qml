@@ -8,16 +8,16 @@ import org.kde.iconthemes as KIconThemes
 KCM.SimpleKCM {
     id: iconsPage
 
-    property string cfg_cpuIcon: "cpu"
-    property string cfg_ramIcon: "memory"
+    property string cfg_cpuIcon: "am-cpu-symbolic"
+    property string cfg_ramIcon: "nvidia-ram-symbolic"
     property string cfg_tempIcon: "temperature-normal"
-    property string cfg_gpuIcon: "video-card"
+    property string cfg_gpuIcon: "gpu-symbolic"
     property string cfg_batteryIcon: "battery-good"
     property string cfg_powerIcon: "battery-charging-60"
     property string cfg_networkIcon: "network-wireless"
-    property string cfg_diskIcon: "drive-harddisk"
-    property string cfg_fanIcon: "fan"
-    property string cfg_uptimeIcon: "clock"
+    property string cfg_diskIcon: "am-disk-utility-symbolic"
+    property string cfg_fanIcon: "am-fan-symbolic"
+    property string cfg_uptimeIcon: "clock-symbolic"
 
     KIconThemes.IconDialog {
         id: cpuIconDialog
@@ -128,16 +128,16 @@ KCM.SimpleKCM {
             text: i18n("Reset to defaults")
             Kirigami.FormData.label: " "
             onClicked: {
-                cfg_cpuIcon = "cpu";
-                cfg_ramIcon = "memory";
+                cfg_cpuIcon = "am-cpu-symbolic";
+                cfg_ramIcon = "nvidia-ram-symbolic";
                 cfg_tempIcon = "temperature-normal";
-                cfg_gpuIcon = "video-card";
+                cfg_gpuIcon = "gpu-symbolic";
                 cfg_batteryIcon = "battery-good";
                 cfg_powerIcon = "battery-charging-60";
                 cfg_networkIcon = "network-wireless";
-                cfg_diskIcon = "drive-harddisk";
-                cfg_fanIcon = "fan";
-                cfg_uptimeIcon = "clock";
+                cfg_diskIcon = "am-disk-utility-symbolic";
+                cfg_fanIcon = "am-fan-symbolic";
+                cfg_uptimeIcon = "clock-symbolic";
             }
         }
     }
