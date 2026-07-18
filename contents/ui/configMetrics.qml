@@ -31,6 +31,7 @@ KCM.SimpleKCM {
     property bool cfg_compactShowDisk
     property bool cfg_compactShowFan
     property bool cfg_compactShowUptime
+    property string cfg_cpuLabel: "CPU"
     property string cfg_networkInterface: "auto"
     property bool cfg_showNetworkIp: false
     property string cfg_batteryDevice
@@ -425,6 +426,17 @@ KCM.SimpleKCM {
 
                         sourceComponent: ColumnLayout {
                             spacing: Kirigami.Units.smallSpacing
+
+                            RowLayout {
+                                spacing: Kirigami.Units.smallSpacing
+                                Label { text: i18n("Label:"); opacity: 0.8 }
+                                TextField {
+                                    implicitWidth: Kirigami.Units.gridUnit * 12
+                                    text: cfg_cpuLabel
+                                    placeholderText: i18n("CPU")
+                                    onTextEdited: cfg_cpuLabel = text.trim() || "CPU"
+                                }
+                            }
 
                             RowLayout {
                                 spacing: Kirigami.Units.largeSpacing

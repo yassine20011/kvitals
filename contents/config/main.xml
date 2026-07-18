@@ -7,6 +7,9 @@
         <entry name="showCpu" type="Bool">
             <default>true</default>
         </entry>
+        <entry name="cpuLabel" type="String">
+            <default>CPU</default>
+        </entry>
         <entry name="showCpuFreq" type="Bool">
             <default>false</default>
         </entry>
@@ -153,6 +156,9 @@
         </entry>
         <entry name="useCustomColors" type="Bool">
             <default>false</default>
+        </entry>
+        <entry name="labelColor" type="String">
+            <default></default>
         </entry>
         <entry name="fontColor" type="String">
             <default></default>

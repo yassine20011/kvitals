@@ -15,6 +15,7 @@ RowLayout {
     required property bool fontBold
     required property int iconSize
     required property color baseTextColor
+    required property color labelColor
     required property string layoutType
     required property real labelOpacity
     required property real separatorOpacity
@@ -113,7 +114,7 @@ RowLayout {
                 text: itemData.label
                 font.pixelSize: compactRow.effectiveFontSize
                 font.family: compactRow.fontFamily
-                color: compactRow.baseTextColor
+                color: compactRow.labelColor
                 opacity: compactRow.labelOpacity
                 Layout.alignment: Qt.AlignVCenter
             }
@@ -203,7 +204,7 @@ RowLayout {
                         }
                         font.pixelSize: Math.max(8, compactRow.effectiveFontSize - 2)
                         font.family: compactRow.fontFamily
-                        color: compactRow.baseTextColor
+                        color: compactRow.labelColor
                         opacity: compactRow.labelOpacity
                         Layout.alignment: Qt.AlignVCenter
                     }
