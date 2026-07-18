@@ -11,6 +11,7 @@ KCM.SimpleKCM {
 
     property alias cfg_useCustomColors: useCustomColorsCheck.checked
     property string cfg_fontColor
+    property string cfg_labelColor
     property alias cfg_enableThresholdColors: enableThresholdCheck.checked
     property string cfg_warningColor: "#e5a50a"
     property string cfg_criticalColor: "#da4453"
@@ -134,6 +135,71 @@ KCM.SimpleKCM {
                 text: i18n("Reset")
                 icon.name: "edit-undo"
                 onClicked: { fontColorField.text = ""; cfg_fontColor = "" }
+            }
+        }
+
+        // === Section: Label Color ===
+
+        Kirigami.Separator {
+            Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18n("Label Color")
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Color:")
+            spacing: Kirigami.Units.smallSpacing
+
+            Button {
+                id: labelColorButton
+                text: ""
+                padding: 0
+                implicitWidth: Kirigami.Units.gridUnit * 2
+                implicitHeight: Kirigami.Units.gridUnit * 1.5
+                onClicked: colorsPage.openColorDialog(labelColorDialog, cfg_labelColor, Kirigami.Theme.textColor)
+
+                background: Rectangle {
+                    radius: 4
+                    border.width: 1
+                    border.color: labelColorButton.visualFocus ? Kirigami.Theme.highlightColor : Qt.rgba(1, 1, 1, 0.15)
+                    color: "transparent"
+
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: 2
+                        radius: 3
+                        color: colorsPage.isRgbHex(cfg_labelColor) ? cfg_labelColor : Kirigami.Theme.textColor
+                    }
+                }
+            }
+
+            Platform.ColorDialog {
+                id: labelColorDialog
+                title: i18n("Choose Label Color")
+                parentWindow: colorsPage.Window.window
+                onAccepted: {
+                    const hex = colorsPage.colorToRgbHex(color)
+                    if (!hex) { return }
+                    if (hex !== labelColorField.text) { labelColorField.text = hex }
+                    cfg_labelColor = hex
+                }
+            }
+
+            TextField {
+                id: labelColorField
+                placeholderText: i18n("Empty = base text color")
+                text: cfg_labelColor
+                maximumLength: 7
+                Layout.preferredWidth: 100
+                onTextChanged: {
+                    if (/^#[0-9A-Fa-f]{6}$/.test(text))
+                        cfg_labelColor = text
+                }
+            }
+
+            Button {
+                text: i18n("Reset")
+                icon.name: "edit-undo"
+                onClicked: { labelColorField.text = ""; cfg_labelColor = "" }
             }
         }
 
@@ -407,6 +473,8 @@ KCM.SimpleKCM {
                 useCustomColorsCheck.checked = false
                 fontColorField.text = ""
                 cfg_fontColor = ""
+                labelColorField.text = ""
+                cfg_labelColor = ""
                 enableThresholdCheck.checked = false
                 warningColorField.text = colorsPage.defaultWarningColor
                 cfg_warningColor = colorsPage.defaultWarningColor

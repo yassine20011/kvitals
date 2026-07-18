@@ -11,6 +11,7 @@ ColumnLayout {
 
     required property var metricsModel
     required property color baseTextColor
+    required property color labelColor
     required property bool fontBold
 
     PlasmaComponents.Label {
@@ -33,7 +34,7 @@ ColumnLayout {
 
             PlasmaComponents.Label {
                 text: modelData.label
-                color: fullView.baseTextColor
+                color: fullView.labelColor
                 opacity: 0.7
                 Layout.fillWidth: true
             }
