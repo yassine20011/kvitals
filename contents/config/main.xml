@@ -137,7 +137,7 @@
             <default>am-fan-symbolic</default>
         </entry>
         <entry name="uptimeIcon" type="String">
-            <default>clock-symbolic</default>
+            <default>clock</default>
         </entry>
         <entry name="fontFamily" type="String">
             <default>monospace</default>
