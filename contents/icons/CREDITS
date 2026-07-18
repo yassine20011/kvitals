@@ -1,2 +1,3 @@
-The bundled SVG icons are from the Win11 icon theme
-(GPL-3.0). See: https://github.com/yeyushengfan258/Win11OS-kde
+The bundled SVG icons (am-*, nvidia-ram-symbolic, gpu-symbolic,
+mintupdate-checking-symbolic) are from the Win11-dark icon theme
+(GPL-3.0). See: https://github.com/yascentur/Win11-dark

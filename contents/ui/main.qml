@@ -92,7 +92,7 @@ PlasmoidItem {
     property string labelColor: Plasmoid.configuration.labelColor || ""
     property color resolvedLabelColor: (useCustomColors && labelColor) ? labelColor : baseTextColor
     property string iconColor: Plasmoid.configuration.iconColor || ""
-    property color resolvedIconColor: (useCustomColors && iconColor) ? iconColor : resolvedLabelColor
+    property color resolvedIconColor: iconColor ? iconColor : resolvedLabelColor
     property bool enableThresholdColors: Plasmoid.configuration.enableThresholdColors
     property string warningColor: Plasmoid.configuration.warningColor || "#e5a50a"
     property string criticalColor: Plasmoid.configuration.criticalColor || "#da4453"

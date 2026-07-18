@@ -17,7 +17,7 @@ KCM.SimpleKCM {
     property string cfg_networkIcon: "network-wireless"
     property string cfg_diskIcon: "am-disk-utility-symbolic"
     property string cfg_fanIcon: "am-fan-symbolic"
-    property string cfg_uptimeIcon: "clock"
+    property string cfg_uptimeIcon: "clock-symbolic"
 
     KIconThemes.IconDialog {
         id: cpuIconDialog
@@ -137,7 +137,7 @@ KCM.SimpleKCM {
                 cfg_networkIcon = "network-wireless";
                 cfg_diskIcon = "am-disk-utility-symbolic";
                 cfg_fanIcon = "am-fan-symbolic";
-                cfg_uptimeIcon = "clock";
+                cfg_uptimeIcon = "clock-symbolic";
             }
         }
     }
