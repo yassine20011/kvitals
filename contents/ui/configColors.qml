@@ -147,6 +147,7 @@ KCM.SimpleKCM {
 
         RowLayout {
             Kirigami.FormData.label: i18n("Color:")
+            enabled: cfg_useCustomColors
             spacing: Kirigami.Units.smallSpacing
 
             Button {
