@@ -147,4 +147,4 @@ KVitals is licensed under the GPL-3.0 license. See the [LICENSE](LICENSE) file f
 
 If the project helps you, consider giving it a star on GitHub. If you like my project, you can buy me a coffee:
 
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=flat-square&logo=buy-me-a-coffee&logoColor=black)](https://github.com/sponsors/yassine20011)
+[![Sponsor](https://img.shields.io/badge/Sponsor-EA4AAA?style=flat-square&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/yassine20011)
