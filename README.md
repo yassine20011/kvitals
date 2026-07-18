@@ -145,6 +145,6 @@ I welcome bug reports and pull requests. Please read [CONTRIBUTING.md](CONTRIBUT
 
 KVitals is licensed under the GPL-3.0 license. See the [LICENSE](LICENSE) file for the full text.
 
-If the project helps you, consider giving it a star on GitHub. If you like my project, you can buy me a coffee:
+If the project helps you, consider giving it a star. If you like my project, you can support me:
 
 [![Sponsor](https://img.shields.io/badge/Sponsor-EA4AAA?style=flat-square&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/yassine20011)
