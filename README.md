@@ -1,62 +1,77 @@
+<div align="center">
+
 # KVitals
 
-A lightweight KDE Plasma 6 panel widget that displays live system vitals directly in your top bar.
+**Live system stats in your KDE Plasma 6 panel bar: CPU, RAM, GPU, temp, battery, network, and disk.**
 
-```
-CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 96°C  |  🔋BAT: 78%  |  PWR: +20W  |  NET: ↓82.2K ↑58.9K
-```
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![KDE Store](https://img.shields.io/badge/KDE%20Store-KVitals-1d99f3?logo=kde)](https://www.opendesktop.org/p/2347917/)
+[![GitHub release](https://img.shields.io/github/v/release/yassine20011/kvitals)](https://github.com/yassine20011/kvitals/releases/latest)
+[![Stars](https://img.shields.io/github/stars/yassine20011/kvitals?style=flat)](https://github.com/yassine20011/kvitals/stargazers)
 
-## Screenshots
-
-<div align="center">
-  <img src="screenshots/demo.gif" alt="Demo">
 </div>
 
-## Features
-
-- **Live monitoring** — CPU usage, RAM, CPU temperature, GPU metrics (when available), battery status, power draw, network speed, disk I/O, fan speeds, system uptime, local IP address
-- **Display modes** — Text, Icons, Icons + Text, or None (values only) for the panel view
-- **Custom icons** — Pick any icon from your installed theme for each metric
-- **Font customization** — Choose any system font and size
-- **Opacity controls** — Independently adjust label and separator transparency in the compact view
-- **Configurable** — Toggle each metric, adjust refresh rate, tune colors, organized in 4 settings tabs
-- **Minimal footprint** — Native KDE KSysGuard sensors + QML, no heavy dependencies or excessive subprocesses
-- **Click to expand** — Detailed popup view with all stats
-
-## Requirements
-
-- KDE Plasma 6.0+
-
-## Installation
-
-### KDE Store (Recommended)
-
-Install directly from the KDE Store:
-
-👉 **[Get KVitals on the KDE Store](https://www.pling.com/p/2347917/)**
-
-Or from within KDE Plasma:
-
-1. Right-click on the panel → **Add Widgets...**
-2. Click **Get New Widgets...** → **Download New Plasma Widgets...**
-3. Search for **"KVitals"**
-4. Click **Install**
+<img src="screenshots/demo.gif" alt="KVitals demo" width="700"/>
 
 ---
 
-### Quick Install (curl)
+Most KDE system monitors rely on shell scripts or heavy background programs. They run terminal commands or constantly write to temporary files, which wastes CPU and disk resources just to update a few numbers on your screen.
 
-```bash
-curl -fsSL https://github.com/yassine20011/kvitals/releases/latest/download/install-remote.sh | bash
+KVitals reads directly from KDE's built-in sensors instead. Because it doesn't run background scripts, it adds zero overhead to your system. It also only checks the metrics you actually use. If you hide your graphics card in the settings, the widget completely stops asking it for data.
+
+```
+CPU: 26% · 3.2GHz  |  RAM: 8.8/39.0G  |  TEMP: 58°C  |  🔋BAT: 78% · 20W  |  NET: ↓82.2K ↑58.9K  |  DSK: ↓1.2MB ↑76KB · 42°C
 ```
 
-### Quick Install (wget)
+## Features
+
+Here is what you can track and customize:
+
+- **CPU**: Track usage percentage and frequency in a single panel entry. You can also customize the "CPU" label.
+- **RAM**: View used and total memory in gigabytes.
+- **CPU temperature**: Automatic detection across thermal zones, hwmon, and lm-sensors.
+- **GPU**: Monitor usage, VRAM, and temperature. You can toggle multiple GPUs independently and set custom labels like iGPU or dGPU. On single-GPU systems, the label is also customizable and dynamically discovered.
+- **Battery and power**: Automatically detects BAT0, BATT, CMB0, macsmc-battery, or other common interfaces, with an option to display current power draw in watts.
+- **Network**: Download and upload speeds on your active interface, detected automatically.
+- **Disk I/O and temperature**: Read and write rates, plus the highest drive temperature among your NVMe and SATA drives.
+- **Display modes**: Choose between text, icons, or icons and text, with horizontal or vertical panel layouts.
+- **Color customization**: Override base font, label, and icon colors, plus configure custom warning and critical colors using visual sliders.
+- **Panel filters**: Keep the panel bar clean by moving secondary metrics to the compact popup view only.
+- **Custom ordering**: Drag and drop metrics to rearrange them.
+- **Appearance**: Use any system font or pick icons from your active desktop theme.
+- **Resource efficiency**: Disabling a sensor stops all subscriptions, meaning zero background overhead.
+
+## Requirements
+
+- KDE Plasma 6.0 or newer
+
+## Get KVitals
+
+### Install from the KDE Store (recommended)
+
+You can search for KVitals directly in the Plasma widget explorer:
+
+1. Right-click your panel and select **Add Widgets...**
+2. Click **Get New Widgets...** and choose **Download New Plasma Widgets...**
+3. Search for **KVitals** and select install.
+
+Alternatively, you can visit the [KDE Store listing page](https://www.opendesktop.org/p/2347917/).
+
+### Run the one-liner installer
+
+Run one of these commands in your terminal to fetch and run the installer script:
 
 ```bash
+# Using curl
+curl -fsSL https://github.com/yassine20011/kvitals/releases/latest/download/install-remote.sh | bash
+
+# Using wget
 wget -qO- https://github.com/yassine20011/kvitals/releases/latest/download/install-remote.sh | bash
 ```
 
-### Manual Install
+### Build manually
+
+If you prefer to build from source:
 
 ```bash
 git clone https://github.com/yassine20011/kvitals.git
@@ -64,43 +79,68 @@ cd kvitals
 bash install.sh
 ```
 
-Then restart Plasma and add the widget:
+After the installation completes, restart the Plasma shell and add the widget:
 
 ```bash
 plasmashell --replace &
 ```
 
-1. Right-click on the panel → **Add Widgets...**
-2. Search for **KVitals**
-3. Drag it onto your panel
+Right-click the panel, select **Add Widgets...**, search for **KVitals**, and drag it to your panel.
 
-## Configuration
+## Customization
 
-Right-click the widget → **Configure KVitals...** to access settings in four tabs:
+Right-click the widget and select **Configure KVitals...** to open the settings dialog.
 
-- **General** — Display mode, layout, icon size, font, update interval, label/separator opacity
-- **Metrics** — Toggle CPU, RAM, Temperature, GPU, Battery, Power, Network (+ Local IP), Disk, Fan, Uptime
-- **Icons** — Customize icons for each metric from your theme
-- **Colors** — Set custom font colors and optional threshold-based metric colors
+| Tab         | Available settings                                                                                                                                                                  |
+| :---------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **General** | Display modes, layouts (horizontal or vertical), icon dimensions, font styles, refresh intervals, and unit settings (like Fahrenheit or bits per second).                           |
+| **Metrics** | Toggle individual sensors, hide them in the main panel, group related readings (like merging CPU and temperature, or battery and power draw), split GPU metrics, and reorder items. |
+| **Icons**   | Custom icon selectors mapped to your active theme.                                                                                                                                  |
+| **Colors**  | Font, label, and icon colors, threshold levels for warning and critical states, and customizable slider values.                                                                     |
 
-See the [full configuration reference](docs/configuration.md) for details.
+You can find more details on [kvitals.dev](https://kvitals.dev) or in the [local configuration guide](docs/configuration.md).
 
-## Uninstall
+## Uninstalling
+
+You can remove KVitals through the Plasma Widget Explorer without touching the terminal: right-click your panel, select **Add Widgets...**, and click the uninstall icon next to KVitals.
+
+### Manual / deep cleanup
+
+If you built from source or want to ensure all local files are completely removed, run the following commands:
 
 ```bash
 rm -rf ~/.local/share/plasma/plasmoids/org.kde.plasma.kvitals
+rm -rf ~/.local/share/kpackage/generic/org.kde.plasma.kvitals
+plasmashell --replace &
 ```
-
-Then restart Plasma: `plasmashell --replace &`
 
 ## Documentation
 
-- [Installation](docs/installation.md)
-- [Configuration](docs/configuration.md)
-- [Architecture](docs/architecture.md)
-- [Contributing](docs/contributing.md)
-- [Troubleshooting](docs/troubleshooting.md)
+Read the local markdown files for deeper details on how to use and modify the widget:
 
-## License
+- [Installation guide](docs/installation.md)
+- [Configuration options](docs/configuration.md)
+- [System architecture](docs/architecture.md)
+- [Troubleshooting tips](docs/troubleshooting.md)
+- [Contributing guidelines](docs/contributing.md)
 
-By contributing, you agree that your contributions will be licensed under the [GPL-3.0 License](LICENSE).
+Detailed documentation is also hosted at [kvitals.dev](https://kvitals.dev).
+
+## Contributing
+
+I welcome bug reports and pull requests. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting code.
+
+- Open issues or request features on [GitHub Issues](https://github.com/yassine20011/kvitals/issues).
+- Start a discussion or ask questions on [GitHub Discussions](https://github.com/yassine20011/kvitals/discussions).
+
+## Contributors
+
+<a href="https://github.com/yassine20011/kvitals/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=yassine20011/kvitals" />
+</a>
+
+## License and support
+
+KVitals is licensed under the GPL-3.0 license. See the [LICENSE](LICENSE) file for the full text.
+
+If the project helps you, consider giving it a star on GitHub. You can also support development directly: <iframe src="https://github.com/sponsors/yassine20011/button" title="Sponsor yassine20011" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>

@@ -47,7 +47,7 @@ Right-click the widget → **Configure KVitals...** to open the settings dialog.
 
 | Metric                | Compact Label | Description                                         |
 |-----------------------|---------------|-----------------------------------------------------|
-| **CPU Usage**         | `CPU:`        | CPU utilization percentage                          |
+| **CPU Usage**         | `CPU:` (customizable) | CPU utilization percentage                          |
 | **RAM Usage**         | `RAM:`        | Used/total memory                                   |
 | **CPU Temperature**   | `TEMP:`       | CPU temperature in °C                               |
 | **GPU Metrics**       | `GPU:` / `<name>:` | GPU usage %, VRAM used/total, and GPU temperature. On multi-GPU systems, each selected GPU appears as a separate labeled entry. |
@@ -111,16 +111,18 @@ system. GPUs are discovered dynamically via the KDE sensor tree — no polling i
 
 Each metric has its own icon that can be customized:
 
-| Metric      | Default Icon | Icon Name             |
-|-------------|--------------|-----------------------|
-| CPU         | 🖥           | `cpu`                 |
-| RAM         | 🧠           | `memory`              |
-| Temperature | 🌡           | `temperature-normal`  |
-| GPU         | GPU          | `video-card`          |
-| Battery     | 🔋           | `battery-good`        |
-| Power       | ⚡            | `battery-charging-60` |
-| Network     | 📶           | `network-wireless`    |
-| Uptime      | 🕒           | `clock`               |
+| Metric      | Default Icon | Icon Name                 |
+|-------------|--------------|---------------------------|
+| CPU         | 🖥           | `am-cpu-symbolic`         |
+| RAM         | 🧠           | `nvidia-ram-symbolic`     |
+| Temperature | 🌡           | `temperature-normal`      |
+| GPU         | GPU          | `gpu-symbolic`            |
+| Battery     | 🔋           | `battery-good`            |
+| Power       | ⚡            | `battery-charging-60`     |
+| Network     | 📶           | `network-wireless`        |
+| Disk        | 💾           | `am-disk-utility-symbolic`|
+| Fan         | 🪭           | `am-fan-symbolic`         |
+| Uptime      | 🕒           | `clock`                   |
 
 Click **"Change..."** to open KDE's native icon picker, which lets you browse and search all icons from your installed
 icon theme (Breeze, Papirus, Tela, etc.).
@@ -139,8 +141,10 @@ Click **"Reset to defaults"** to restore all icons to their default values.
 
 | Setting                       | Description                                                  | Default                 |
 |-------------------------------|--------------------------------------------------------------|-------------------------|
-| **Use custom font color**     | Overrides the widget text color with a custom color          | Off                     |
-| **Color**                     | Font color as a picked or typed `#RRGGBB` value              | Plasma theme text color |
+| **Use custom font color**     | Overrides the widget text, label, and icon colors            | Off                     |
+| **Font Color**                | Base font color as a picked or typed `#RRGGBB` value         | Plasma theme text color |
+| **Label Color**               | Color for metric labels (e.g. `CPU:`). Empty = Font Color    | Font Color              |
+| **Icon Color**                | Color for metric icons. Empty = Label Color                  | Label Color             |
 | **Enable threshold coloring** | Changes color of supported metric values based on thresholds | Off                     |
 | **Warning color**             | Color used when a warning threshold is reached               | `#e5a50a`               |
 | **Critical color**            | Color used when a critical threshold is reached              | `#da4453`               |

@@ -2,6 +2,19 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [2.12.0] - 2026-07-18
+
+### Added
+
+- **Customizable Label Color** (`Colors` settings): Added an option to set a distinct color for the metric labels (e.g. `CPU:`, `RAM:`), separate from the base font color. Disabling custom colors falls back to the Plasma theme text color.
+- **Customizable Icon Color** (`Colors` settings): Added an option to set a distinct color for the icons. If unset, it falls back to the label color.
+- **Customizable CPU Label** (`Metrics` settings): You can now rename the "CPU" label to a custom string.
+- **Improved GPU Labeling**: On single-GPU systems, the default label is now derived from the system (or customized via the UI) rather than hardcoded to "GPU".
+- **Expanded Full View Icons**: The full popup view now features icons for each metric, following the custom icon color settings.
+- **Bundled Default Icons**: Switched the default icon set to bundled high-quality SVGs from the Win11-dark theme for a cleaner look out-of-the-box (CPU, RAM, GPU, Disk, and Fan). Network, Uptime, Battery, Power, and Temp continue to use standard Freedesktop icons.
+
+*Huge thanks to [@francescopazzocco](https://github.com/francescopazzocco) for contributing all the features in this release! (#58, #59)*
+
 ## [2.11.0] - 2026-07-13
 
 ### Added
