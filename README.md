@@ -11,7 +11,9 @@
 
 </div>
 
-<img src="screenshots/demo.gif" alt="KVitals demo" width="700"/>
+<div align="center">
+  <img src="screenshots/demo.gif" alt="KVitals demo" width="550"/>
+</div>
 
 ---
 
@@ -143,4 +145,6 @@ I welcome bug reports and pull requests. Please read [CONTRIBUTING.md](CONTRIBUT
 
 KVitals is licensed under the GPL-3.0 license. See the [LICENSE](LICENSE) file for the full text.
 
-If the project helps you, consider giving it a star on GitHub. You can also support development directly: <iframe src="https://github.com/sponsors/yassine20011/button" title="Sponsor yassine20011" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
+If the project helps you, consider giving it a star on GitHub. If you like my project, you can buy me a coffee:
+
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=flat-square&logo=buy-me-a-coffee&logoColor=black)](https://github.com/sponsors/yassine20011)
