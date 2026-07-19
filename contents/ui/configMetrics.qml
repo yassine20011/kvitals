@@ -32,11 +32,15 @@ KCM.SimpleKCM {
     property bool cfg_compactShowFan
     property bool cfg_compactShowUptime
     property string cfg_cpuLabel: "CPU"
+    property string cfg_ramLabel: "RAM"
+    property string cfg_diskLabel: "DSK"
+    property string cfg_netLabel: "NET"
     property string cfg_networkInterface: "auto"
     property bool cfg_showNetworkIp: false
     property string cfg_batteryDevice
     property string cfg_gpuSelection: ""
     property string cfg_gpuLabels: ""
+    property string cfg_diskLabels: ""
     property string cfg_metricOrder: "cpu,ram,temp,gpu,bat,pwr,net,disk"
     property bool cfg_mergeCpuTemp: false
     property bool cfg_mergeCpuFreq: false
@@ -164,6 +168,81 @@ KCM.SimpleKCM {
         var mm = parseGpuMetrics(cfg_gpuMetrics);
         return (mm[gpuId] && mm[gpuId].length > 0) ? mm[gpuId] : ["usage", "vram", "temp"];
     }
+
+    // --- Disk discovery ---
+
+    property var _liveDiscoveredDisks: []
+
+    Timer {
+        id: diskRefreshDebounce
+        interval: 100
+        repeat: false
+        onTriggered: {
+            var found = [];
+            for (var row = 0; row < cfgFlatSensors.rowCount(); row++) {
+                var idx = cfgFlatSensors.index(row, 0);
+                var sensorId = cfgFlatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
+                if (!sensorId) continue;
+                var match = sensorId.match(/^disk\/(nvme\d+n\d+|sd[a-z]+)\/read$/);
+                if (!match) continue;
+                if (found.some(function(d){ return d.id === match[1]; })) continue;
+                found.push({ id: match[1], name: "DSK " + (found.length + 1) });
+            }
+            if (JSON.stringify(found) !== JSON.stringify(_liveDiscoveredDisks))
+                _liveDiscoveredDisks = found;
+        }
+    }
+
+    function refreshConfigDisks() {
+        diskRefreshDebounce.restart();
+    }
+
+    property var _discoveryDirtyDisk: false
+
+    Timer {
+        id: diskDiscoveryTimer
+        interval: 500
+        repeat: false
+        running: _discoveryDirtyDisk
+        onTriggered: {
+            _discoveryDirtyDisk = false;
+            metricsPage.refreshConfigDisks();
+        }
+    }
+
+    Connections {
+        target: cfgFlatSensors
+        function onRowsInserted() { metricsPage._discoveryDirtyDisk = true; }
+        function onRowsRemoved()  { metricsPage._discoveryDirtyDisk = true; }
+        function onModelReset()   { metricsPage._discoveryDirtyDisk = true; }
+        function onDataChanged()  { metricsPage._discoveryDirtyDisk = true; }
+    }
+
+    readonly property var discoveredDisks: _liveDiscoveredDisks
+
+    // --- Disk label helpers ---
+
+    function parseDiskLabels(str) {
+        var result = {};
+        if (!str) return result;
+        str.split("|").forEach(function(pair) {
+            var sep = pair.indexOf(":");
+            if (sep > 0) result[pair.substring(0, sep)] = pair.substring(sep + 1);
+        });
+        return result;
+    }
+
+    function saveDiskLabel(diskId, label) {
+        var labels = parseDiskLabels(cfg_diskLabels);
+        var trimmed = (label || "").trim();
+        if (trimmed.length > 0) labels[diskId] = trimmed;
+        else delete labels[diskId];
+        var parts = [];
+        for (var id in labels) parts.push(id + ":" + labels[id]);
+        cfg_diskLabels = parts.join("|");
+    }
+
+    // --- GPU ---
 
     function saveGpuMetric(gpuId, metric, enable) {
         var mm = parseGpuMetrics(cfg_gpuMetrics);
@@ -465,6 +544,30 @@ KCM.SimpleKCM {
                         }
                     }
 
+                    // RAM settings
+                    Loader {
+                        active: modelData === "ram" && metricDelegate.metricEnabled
+                        visible: active
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
+                        Layout.topMargin: Kirigami.Units.smallSpacing
+
+                        sourceComponent: ColumnLayout {
+                            spacing: Kirigami.Units.smallSpacing
+
+                            RowLayout {
+                                spacing: Kirigami.Units.smallSpacing
+                                Label { text: i18n("Label:"); opacity: 0.8 }
+                                TextField {
+                                    implicitWidth: Kirigami.Units.gridUnit * 12
+                                    text: cfg_ramLabel
+                                    placeholderText: i18n("RAM")
+                                    onTextEdited: cfg_ramLabel = text.trim() || "RAM"
+                                }
+                            }
+                        }
+                    }
+
                     // Network settings
                     Loader {
                         active: modelData === "net" && metricDelegate.metricEnabled
@@ -475,6 +578,17 @@ KCM.SimpleKCM {
 
                         sourceComponent: ColumnLayout {
                             spacing: Kirigami.Units.smallSpacing
+
+                            RowLayout {
+                                spacing: Kirigami.Units.smallSpacing
+                                Label { text: i18n("Label:"); opacity: 0.8 }
+                                TextField {
+                                    implicitWidth: Kirigami.Units.gridUnit * 12
+                                    text: cfg_netLabel
+                                    placeholderText: i18n("NET")
+                                    onTextEdited: cfg_netLabel = text.trim() || "NET"
+                                }
+                            }
 
                             RowLayout {
                                 spacing: Kirigami.Units.smallSpacing
@@ -668,6 +782,55 @@ KCM.SimpleKCM {
                                                 onToggled: metricsPage.saveGpuMetric(gpuDelegate.modelData.id, "temp", checked)
                                             }
                                         }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Disk settings
+                    Loader {
+                        active: modelData === "disk" && metricDelegate.metricEnabled
+                        visible: active
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.gridUnit + Kirigami.Units.smallSpacing
+                        Layout.topMargin: Kirigami.Units.smallSpacing
+
+                        sourceComponent: ColumnLayout {
+                            spacing: Kirigami.Units.smallSpacing
+
+                            // Aggregate label (used in compact panel and tooltip)
+                            RowLayout {
+                                spacing: Kirigami.Units.smallSpacing
+                                Label { text: i18n("Aggregate label:"); opacity: 0.8 }
+                                TextField {
+                                    implicitWidth: Kirigami.Units.gridUnit * 12
+                                    text: cfg_diskLabel
+                                    placeholderText: i18n("DSK")
+                                    onTextEdited: cfg_diskLabel = text.trim() || "DSK"
+                                }
+                            }
+
+                            // Per-disk labels (only shown when multiple disks)
+                            Repeater {
+                                model: metricsPage.discoveredDisks
+
+                                delegate: RowLayout {
+                                    required property var modelData
+                                    visible: metricsPage.discoveredDisks.length > 0
+                                    spacing: Kirigami.Units.smallSpacing
+                                    Layout.leftMargin: Kirigami.Units.smallSpacing
+
+                                    Label {
+                                        text: modelData.name + ":"
+                                        opacity: 0.8
+                                        Layout.minimumWidth: Kirigami.Units.gridUnit * 3
+                                    }
+                                    TextField {
+                                        implicitWidth: Kirigami.Units.gridUnit * 12
+                                        text: metricsPage.parseDiskLabels(cfg_diskLabels)[modelData.id] || ""
+                                        placeholderText: modelData.name
+                                        onTextEdited: metricsPage.saveDiskLabel(modelData.id, text)
                                     }
                                 }
                             }

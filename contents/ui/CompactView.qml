@@ -101,14 +101,24 @@ RowLayout {
                 Layout.alignment: Qt.AlignVCenter
             }
 
-            Kirigami.Icon {
+            Row {
                 visible: compactRow.useIcons
-                source: itemData.icon
-                isMask: true
-                color: compactRow.iconColor
-                Layout.preferredWidth: compactRow.iconSize
-                Layout.preferredHeight: compactRow.iconSize
+                spacing: 1
                 Layout.alignment: Qt.AlignVCenter
+                Repeater {
+                    model: {
+                        var src = itemData.icon;
+                        if (!src) return [];
+                        return typeof src === "string" ? [src] : src;
+                    }
+                    delegate: Kirigami.Icon {
+                        source: modelData
+                        isMask: true
+                        color: compactRow.iconColor
+                        width: compactRow.iconSize
+                        height: compactRow.iconSize
+                    }
+                }
             }
 
             PlasmaComponents.Label {
@@ -189,14 +199,24 @@ RowLayout {
                     spacing: 2
                     Layout.alignment: Qt.AlignHCenter
 
-                    Kirigami.Icon {
+                    Row {
                         visible: compactRow.useIcons
-                        source: itemData.icon
-                        isMask: true
-                        color: compactRow.iconColor
-                        Layout.preferredWidth:  Math.round(compactRow.iconSize * 0.85)
-                        Layout.preferredHeight: Math.round(compactRow.iconSize * 0.85)
+                        spacing: 1
                         Layout.alignment: Qt.AlignVCenter
+                        Repeater {
+                            model: {
+                                var src = itemData.icon;
+                                if (!src) return [];
+                                return typeof src === "string" ? [src] : src;
+                            }
+                            delegate: Kirigami.Icon {
+                                source: modelData
+                                isMask: true
+                                color: compactRow.iconColor
+                                width:  Math.round(compactRow.iconSize * 0.85)
+                                height: Math.round(compactRow.iconSize * 0.85)
+                            }
+                        }
                     }
 
                     PlasmaComponents.Label {

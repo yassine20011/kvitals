@@ -70,6 +70,18 @@
         <entry name="compactShowUptime" type="Bool">
             <default>false</default>
         </entry>
+        <entry name="ramLabel" type="String">
+            <default>RAM</default>
+        </entry>
+        <entry name="diskLabel" type="String">
+            <default>DSK</default>
+        </entry>
+        <entry name="diskLabels" type="String">
+            <default></default>
+        </entry>
+        <entry name="netLabel" type="String">
+            <default>NET</default>
+        </entry>
         <entry name="networkInterface" type="String">
             <default>auto</default>
         </entry>
@@ -231,6 +243,9 @@
         </entry>
         <entry name="separatorOpacity" type="Double">
             <default>0.4</default>
+        </entry>
+        <entry name="useCustomLabelsInCompact" type="Bool">
+            <default>true</default>
         </entry>
     </group>
 </kcfg>

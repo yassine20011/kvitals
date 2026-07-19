@@ -20,6 +20,8 @@ Item {
         return Utils.formatBytes(ramUsedSensor.value) + "/" + Utils.formatBytes(ramTotalSensor.value) + "G";
     }
 
+    readonly property string ramPercentValue: isNaN(ramPercentage) ? "..." : Math.round(ramPercentage) + "%"
+
     Sensors.Sensor {
         id: ramUsedSensor
         sensorId: "memory/physical/used"

@@ -33,14 +33,24 @@ ColumnLayout {
             Layout.leftMargin: Kirigami.Units.largeSpacing
             Layout.rightMargin: Kirigami.Units.largeSpacing
 
-            Kirigami.Icon {
+            Row {
                 visible: !!modelData.icon
-                source: modelData.icon || ""
-                isMask: true
-                color: fullView.iconColor
-                Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                spacing: 1
                 Layout.alignment: Qt.AlignVCenter
+                Repeater {
+                    model: {
+                        var src = modelData.icon;
+                        if (!src) return [];
+                        return typeof src === "string" ? [src] : src;
+                    }
+                    delegate: Kirigami.Icon {
+                        source: modelData
+                        isMask: true
+                        color: fullView.iconColor
+                        width: Kirigami.Units.iconSizes.small
+                        height: Kirigami.Units.iconSizes.small
+                    }
+                }
             }
 
             PlasmaComponents.Label {
