@@ -16,7 +16,7 @@ Item {
     readonly property string cpuValue: {
         if (isNaN(cpuNumericValue))
             return "...";
-        return Math.round(cpuNumericValue) + "%";
+        return Math.round(cpuNumericValue).toString().padStart(3) + "%";
     }
 
     // Frequency in MHz from KSysGuard (unit type 302 = MHz); displays as GHz above 1000 MHz

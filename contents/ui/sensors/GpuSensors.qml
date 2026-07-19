@@ -231,7 +231,7 @@ Item {
             var vtVal = showV ? _modelValue("gpu/" + g + "/totalVram")    : NaN;
             var tVal  = showT ? _modelValue("gpu/" + g + "/temperature")  : NaN;
 
-            var uStr = !isNaN(uVal) ? Math.round(uVal) + "%" : "";
+            var uStr = !isNaN(uVal) ? Math.round(uVal).toString().padStart(3) + "%" : "";
             var vStr = "";
             if (!isNaN(vuVal) && !isNaN(vtVal) && vtVal > 0 && vuVal >= 0)
                 vStr = Utils.formatBytes(vuVal) + "/" + Utils.formatBytes(vtVal) + "G";
@@ -255,7 +255,7 @@ Item {
         _dataList = newList;
 
         _usageNum = usageCount > 0 ? totalUsage / usageCount : NaN;
-        _usageStr = usageCount > 0 ? Math.round(_usageNum) + "%" : "";
+        _usageStr = usageCount > 0 ? Math.round(_usageNum).toString().padStart(3) + "%" : "";
         _vramStr  = (hasVram && totalVramTotal > 0)
                     ? Utils.formatBytes(totalVramUsed) + "/" + Utils.formatBytes(totalVramTotal) + "G" : "";
         _tempNum  = !isNaN(maxTemp) ? maxTemp : NaN;
