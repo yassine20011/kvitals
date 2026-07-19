@@ -1,12 +1,11 @@
 import QtQuick
 import org.kde.ksysguard.sensors as Sensors
 import org.kde.kitemmodels as KItemModels
+import org.kde.plasma.plasma5support as P5Support
 
 Item {
     id: root
     property bool _dbg: { console.warn("[KVitals] DiskSensors: constructing..."); return true; }
-
-
 
     property int updateInterval: 2000
     property bool enabled: true
@@ -63,6 +62,7 @@ Item {
             var match = sid.match(/^disk\/(nvme\d+n\d+|sd[a-z]+)\/read$/);
             if (!match) continue;
             var did = match[1];
+            if (_unplugged[did]) continue;
             if (found.some(function(d){ return d.id === did; })) continue;
             found.push({ id: did, name: "DSK " + (found.length + 1) });
         }
@@ -150,57 +150,37 @@ Item {
     }
 
     // ksystemstats' disk plugin does NOT remove sensors or emit rowsRemoved
-    // when a USB is unplugged — the sensor tree entries persist with 0 values
-    // indefinitely. We cross-reference against /proc/diskstats directly.
-    Timer {
-        id: procCheckTimer
-        interval: 5000
-        repeat: true
-        running: true
-        onTriggered: root._checkProcDisks()
+    // when a USB disk is unplugged — the sensor tree entries persist with 0
+    // values indefinitely. The Solid hotplug dataengine emits add/remove
+    // events for removable storage (driven by the same UDisks2 DBus signals
+    // plasmashell already listens to for the device notifier), so track
+    // devices we saw removed and filter them out of discovery. Internal
+    // disks never appear in this engine, so they are never filtered.
+    property var _unplugged: ({})
+
+    function _udiToDisk(udi) {
+        // e.g. /org/freedesktop/UDisks2/block_devices/sdb1 -> "sdb"
+        var m = String(udi).match(/\/(sd[a-z]+|nvme\d+n\d+)(?:p?\d+)?$/);
+        return m ? m[1] : "";
     }
 
-    function _checkProcDisks() {
-        console.warn("[KVitals] DiskSensors: _checkProcDisks running, _discovered:", JSON.stringify(root._discovered.map(function(d){return d.id;})));
-        var req = new XMLHttpRequest();
-        try {
-            req.open("GET", "file:///proc/diskstats");
-        } catch (e) {
-            console.warn("[KVitals] DiskSensors: XMLHttpRequest.open failed:", e);
-            return;
+    P5Support.DataSource {
+        id: hotplugSource
+        engine: "hotplug"
+        onSourceAdded: function(source) {
+            var disk = root._udiToDisk(source);
+            if (disk && root._unplugged[disk]) {
+                delete root._unplugged[disk];
+                root.refreshDiscovered();
+            }
         }
-        req.onreadystatechange = function() {
-            if (req.readyState !== XMLHttpRequest.DONE) return;
-            console.warn("[KVitals] DiskSensors: XHR done, status:", req.status, "text length:", (req.responseText || "").length);
-            var text = req.responseText;
-            if (!text) {
-                console.warn("[KVitals] DiskSensors: empty response from /proc/diskstats");
-                return;
+        onSourceRemoved: function(source) {
+            var disk = root._udiToDisk(source);
+            if (disk) {
+                root._unplugged[disk] = true;
+                root.refreshDiscovered();
             }
-            var exists = {};
-            var lines = text.split("\n");
-            for (var i = 0; i < lines.length; i++) {
-                var parts = lines[i].trim().split(/\s+/);
-                if (parts.length >= 3 && /^(nvme\d+n\d+|sd[a-z]+)$/.test(parts[2]) && !/\d$/.test(parts[2]))
-                    exists[parts[2]] = true;
-            }
-            console.warn("[KVitals] DiskSensors: /proc/diskstats has devices:", JSON.stringify(Object.keys(exists).sort()));
-            var changed = false;
-            var filtered = [];
-            for (var i = 0; i < root._discovered.length; i++) {
-                if (exists[root._discovered[i].id])
-                    filtered.push(root._discovered[i]);
-                else {
-                    console.warn("[KVitals] DiskSensors: removing", root._discovered[i].id, "- not in /proc/diskstats");
-                    changed = true;
-                }
-            }
-            if (changed) {
-                root._discovered = filtered;
-                root.aggregatePerDisk();
-            }
-        };
-        req.send();
+        }
     }
 
     // --- Temperature (lmsensors) ---
