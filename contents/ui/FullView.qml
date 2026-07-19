@@ -83,8 +83,9 @@ ColumnLayout {
             }
 
             // Sparkline: last maxChartPoints samples, right-aligned so the
-            // newest sample is always at the right edge, scaled to the
-            // window's own maximum.
+            // newest sample is always at the right edge. Rows with a fixed
+            // range (percentages, temps: chartMax) scale to it so flat lines
+            // sit at their true level; rates scale to the window's maximum.
             Canvas {
                 visible: metricRow._hasChart
                 Layout.preferredWidth: 80
@@ -104,7 +105,7 @@ ColumnLayout {
                     if (data.length < 2) return;
 
                     var maxPts = 60;
-                    var maxVal = Math.max(Math.max.apply(null, data), 1);
+                    var maxVal = Math.max(Math.max.apply(null, data), modelData.chartMax || 1);
                     var step = width / (maxPts - 1);
                     var offset = maxPts - data.length;
                     var c = modelData.color;

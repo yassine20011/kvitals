@@ -556,7 +556,7 @@ PlasmoidItem {
                 if (key === "cpu" && root.showCpu)
                     items.push({
                         label: root.cpuLabel + " Usage", value: cpu.cpuValue,
-                        color: root.cpuColor, icon: root.cpuIcon, chartKey: "cpu"
+                        color: root.cpuColor, icon: root.cpuIcon, chartKey: "cpu", chartMax: 100
                     });
                 if (key === "cpu" && root.showCpu && root.showCpuFreq)
                     items.push({
@@ -565,30 +565,30 @@ PlasmoidItem {
                     });
                 else if (key === "ram" && root.showRam) {
                     if (memory.ramPercentValue !== "...")
-                        items.push({label: root.ramLabel, value: memory.ramPercentValue, color: root.ramColor, icon: root.ramIcon, chartKey: "ram"});
+                        items.push({label: root.ramLabel, value: memory.ramPercentValue, color: root.ramColor, icon: root.ramIcon, chartKey: "ram", chartMax: 100});
                     if (memory.ramValue !== "...")
                         items.push({label: root.ramLabel, value: memory.ramValue, color: root.baseTextColor, icon: root.ramIcon});
                 }
                 else if (key === "temp" && root.showTemp && temp.tempValue !== "--")
                     items.push({
                         label: root.cpuLabel + " Temp", value: temp.tempValue,
-                        color: root.tempColor, icon: [root.cpuIcon, root.tempIcon], chartKey: "temp"
+                        color: root.tempColor, icon: [root.cpuIcon, root.tempIcon], chartKey: "temp", chartMax: 100
                     });
                 else if (key === "gpu" && root.showGpu) {
                     if (gpu.gpuDataList.length > 1) {
                         for (var g = 0; g < gpu.gpuDataList.length; g++) {
                             var gd = gpu.gpuDataList[g];
                             var label = gd.name || gd.id;
-                            if (gd.usage) items.push({label: label + " Usage", value: gd.usage, color: root.gpuColor, icon: root.gpuIcon, chartKey: "gpu:" + gd.id});
+                            if (gd.usage) items.push({label: label + " Usage", value: gd.usage, color: root.gpuColor, icon: root.gpuIcon, chartKey: "gpu:" + gd.id, chartMax: 100});
                             if (gd.vram)  items.push({label: label + " VRAM",  value: gd.vram,  color: root.baseTextColor, icon: root.gpuIcon});
-                            if (gd.temp)  items.push({label: label + " Temp",  value: gd.temp,  color: root.gpuTempColor, icon: [root.gpuIcon, root.tempIcon], chartKey: "gpuTemp:" + gd.id});
+                            if (gd.temp)  items.push({label: label + " Temp",  value: gd.temp,  color: root.gpuTempColor, icon: [root.gpuIcon, root.tempIcon], chartKey: "gpuTemp:" + gd.id, chartMax: 100});
                         }
                     } else {
                         var _gpuName = gpu.gpuDataList.length > 0 ? gpu.gpuDataList[0].name : "GPU";
                         if (gpu.hasGpuUsageData) items.push({
                             label: _gpuName + " Usage", value: gpu.gpuValue,
                             color: root.gpuColor, icon: root.gpuIcon,
-                            chartKey: gpu.gpuDataList.length > 0 ? "gpu:" + gpu.gpuDataList[0].id : ""
+                            chartKey: gpu.gpuDataList.length > 0 ? "gpu:" + gpu.gpuDataList[0].id : "", chartMax: 100
                         });
                         if (gpu.hasGpuVramData) items.push({
                             label: _gpuName + " VRAM", value: gpu.gpuRamValue,
@@ -597,13 +597,13 @@ PlasmoidItem {
                         if (gpu.hasGpuTempData) items.push({
                             label: _gpuName + " Temp", value: gpu.gpuTempValue,
                             color: root.gpuTempColor, icon: [root.gpuIcon, root.tempIcon],
-                            chartKey: gpu.gpuDataList.length > 0 ? "gpuTemp:" + gpu.gpuDataList[0].id : ""
+                            chartKey: gpu.gpuDataList.length > 0 ? "gpuTemp:" + gpu.gpuDataList[0].id : "", chartMax: 100
                         });
                     }
                 } else if (key === "bat" && root.showBattery && battery.batValue)
                     items.push({
                         label: "Battery", value: battery.batValue,
-                        color: root.batteryColor, icon: root.batteryIcon, chartKey: "bat"
+                        color: root.batteryColor, icon: root.batteryIcon, chartKey: "bat", chartMax: 100
                     });
                 else if (key === "pwr" && root.showPower && battery.powerValue)
                     items.push({
