@@ -6,14 +6,16 @@ import org.kde.kirigami as Kirigami
 ColumnLayout {
     id: fullView
     spacing: Kirigami.Units.smallSpacing
-    Layout.preferredWidth: Kirigami.Units.gridUnit * 18
-    Layout.preferredHeight: Kirigami.Units.gridUnit * 12
+    Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+    Layout.preferredHeight: Kirigami.Units.gridUnit * 14
 
     required property var metricsModel
     required property color baseTextColor
     required property color labelColor
     required property color iconColor
     required property bool fontBold
+    required property var chartHistory
+    required property int chartVersion
 
     PlasmaComponents.Label {
         text: "KVitals"
@@ -27,11 +29,19 @@ ColumnLayout {
         model: fullView.metricsModel
 
         delegate: RowLayout {
+            id: metricRow
             required property var modelData
 
             Layout.fillWidth: true
             Layout.leftMargin: Kirigami.Units.largeSpacing
             Layout.rightMargin: Kirigami.Units.largeSpacing
+
+            // chartVersion appears in the binding so it re-evaluates when the
+            // history arrays (mutated in place) receive new samples.
+            readonly property var _history: fullView.chartVersion >= 0
+                && modelData.chartKey && fullView.chartHistory[modelData.chartKey]
+                ? fullView.chartHistory[modelData.chartKey] : []
+            readonly property bool _hasChart: _history.length > 1
 
             Row {
                 visible: !!modelData.icon
@@ -58,7 +68,49 @@ ColumnLayout {
                 color: fullView.labelColor
                 opacity: 0.7
                 Layout.fillWidth: true
+                elide: Text.ElideRight
             }
+
+            // Sparkline: last maxChartPoints samples, right-aligned so the
+            // newest sample is always at the right edge, scaled to the
+            // window's own maximum.
+            Canvas {
+                visible: metricRow._hasChart
+                Layout.preferredWidth: 80
+                Layout.preferredHeight: 24
+                Layout.alignment: Qt.AlignVCenter
+                Layout.leftMargin: Kirigami.Units.smallSpacing
+
+                property int _trigger: fullView.chartVersion
+                on_TriggerChanged: requestPaint()
+
+                onPaint: {
+                    var ctx = getContext("2d");
+                    if (!ctx) return;
+                    ctx.reset();
+
+                    var data = metricRow._history;
+                    if (data.length < 2) return;
+
+                    var maxPts = 60;
+                    var maxVal = Math.max(Math.max.apply(null, data), 1);
+                    var step = width / (maxPts - 1);
+                    var offset = maxPts - data.length;
+                    var c = modelData.color;
+
+                    ctx.strokeStyle = Qt.rgba(c.r, c.g, c.b, 1);
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    for (var i = 0; i < data.length; i++) {
+                        var x = (offset + i) * step;
+                        var y = height - (data[i] / maxVal) * (height - 4) - 2;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                }
+            }
+
             PlasmaComponents.Label {
                 text: modelData.value
                 font.bold: fullView.fontBold

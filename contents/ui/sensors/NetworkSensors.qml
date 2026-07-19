@@ -126,6 +126,12 @@ Item {
     }
 
     // Traffic sensors
+
+    // Raw numeric rates (bytes/s) for chart history.
+    // Number() coerces the occasional undefined value to NaN.
+    readonly property real netDownRaw: netDownSensor.status === Sensors.Sensor.Ready ? Number(netDownSensor.value) : NaN
+    readonly property real netUpRaw:   netUpSensor.status   === Sensors.Sensor.Ready ? Number(netUpSensor.value)   : NaN
+
     readonly property string netDownValue: {
         if (netDownSensor.status !== Sensors.Sensor.Ready) return "...";
         return Utils.formatRate(netDownSensor.value, networkUnit);

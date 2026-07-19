@@ -175,6 +175,53 @@ PlasmoidItem {
     property var fans:    _sensorsReady ? sensorLoader.item.fans    : _nullFans
     property var uptime:  _sensorsReady ? sensorLoader.item.uptime  : _nullUptime
 
+    // --- Chart history (popup sparklines) ---
+    // Arrays are mutated in place; chartVersion bumps to signal repaints,
+    // since QML bindings can't observe array mutation. Per-GPU keys
+    // ("gpu:<id>", "gpuTemp:<id>") are created lazily as GPUs appear.
+    property var chartHistory: ({cpu: [], ram: [], temp: [], netDown: [], netUp: [], bat: []})
+    property int maxChartPoints: 60
+    property int chartVersion: 0
+
+    Timer {
+        id: chartTimer
+        interval: root.updateInterval
+        repeat: true
+        running: root._sensorsReady
+        onTriggered: {
+            var h = root.chartHistory;
+            var changed = false;
+
+            var push = function(arr, val) {
+                if (typeof val === "number" && !isNaN(val) && val >= 0) {
+                    arr.push(val);
+                    if (arr.length > root.maxChartPoints) arr.shift();
+                    return true;
+                }
+                return false;
+            };
+
+            if (push(h.cpu, root.cpu.cpuNumericValue)) changed = true;
+            if (push(h.ram, root.memory.ramPercentage)) changed = true;
+            if (push(h.temp, root.temp.tempNumericValue)) changed = true;
+            if (push(h.netDown, root.network.netDownRaw)) changed = true;
+            if (push(h.netUp, root.network.netUpRaw)) changed = true;
+            if (push(h.bat, root.battery.batNumericValue)) changed = true;
+
+            var gl = root.gpu.gpuDataList;
+            for (var i = 0; i < gl.length; i++) {
+                var uKey = "gpu:" + gl[i].id;
+                var tKey = "gpuTemp:" + gl[i].id;
+                if (!h[uKey]) h[uKey] = [];
+                if (!h[tKey]) h[tKey] = [];
+                if (push(h[uKey], gl[i].usageNumber)) changed = true;
+                if (push(h[tKey], gl[i].tempNumber)) changed = true;
+            }
+
+            if (changed) root.chartVersion++;
+        }
+    }
+
     // Safe defaults so bindings don't error before sensors load
     QtObject {
         id: _nullCpu
@@ -495,6 +542,8 @@ PlasmoidItem {
         labelColor: root.resolvedLabelColor
         iconColor: root.resolvedIconColor
         fontBold: root.fontBold
+        chartHistory: root.chartHistory
+        chartVersion: root.chartVersion
         metricsModel: {
             var items = [];
             for (var i = 0; i < root.orderedKeys.length; i++) {
@@ -502,7 +551,7 @@ PlasmoidItem {
                 if (key === "cpu" && root.showCpu)
                     items.push({
                         label: root.cpuLabel + " Usage", value: cpu.cpuValue,
-                        color: root.cpuColor, icon: root.cpuIcon
+                        color: root.cpuColor, icon: root.cpuIcon, chartKey: "cpu"
                     });
                 if (key === "cpu" && root.showCpu && root.showCpuFreq)
                     items.push({
@@ -511,29 +560,30 @@ PlasmoidItem {
                     });
                 else if (key === "ram" && root.showRam) {
                     if (memory.ramPercentValue !== "...")
-                        items.push({label: root.ramLabel, value: memory.ramPercentValue, color: root.ramColor, icon: root.ramIcon});
+                        items.push({label: root.ramLabel, value: memory.ramPercentValue, color: root.ramColor, icon: root.ramIcon, chartKey: "ram"});
                     if (memory.ramValue !== "...")
                         items.push({label: root.ramLabel, value: memory.ramValue, color: root.baseTextColor, icon: root.ramIcon});
                 }
                 else if (key === "temp" && root.showTemp && temp.tempValue !== "--")
                     items.push({
                         label: root.cpuLabel + " Temp", value: temp.tempValue,
-                        color: root.tempColor, icon: [root.cpuIcon, root.tempIcon]
+                        color: root.tempColor, icon: [root.cpuIcon, root.tempIcon], chartKey: "temp"
                     });
                 else if (key === "gpu" && root.showGpu) {
                     if (gpu.gpuDataList.length > 1) {
                         for (var g = 0; g < gpu.gpuDataList.length; g++) {
                             var gd = gpu.gpuDataList[g];
                             var label = gd.name || gd.id;
-                            if (gd.usage) items.push({label: label + " Usage", value: gd.usage, color: root.gpuColor, icon: root.gpuIcon});
+                            if (gd.usage) items.push({label: label + " Usage", value: gd.usage, color: root.gpuColor, icon: root.gpuIcon, chartKey: "gpu:" + gd.id});
                             if (gd.vram)  items.push({label: label + " VRAM",  value: gd.vram,  color: root.baseTextColor, icon: root.gpuIcon});
-                            if (gd.temp)  items.push({label: label + " Temp",  value: gd.temp,  color: root.gpuTempColor, icon: [root.gpuIcon, root.tempIcon]});
+                            if (gd.temp)  items.push({label: label + " Temp",  value: gd.temp,  color: root.gpuTempColor, icon: [root.gpuIcon, root.tempIcon], chartKey: "gpuTemp:" + gd.id});
                         }
                     } else {
                         var _gpuName = gpu.gpuDataList.length > 0 ? gpu.gpuDataList[0].name : "GPU";
                         if (gpu.hasGpuUsageData) items.push({
                             label: _gpuName + " Usage", value: gpu.gpuValue,
-                            color: root.gpuColor, icon: root.gpuIcon
+                            color: root.gpuColor, icon: root.gpuIcon,
+                            chartKey: gpu.gpuDataList.length > 0 ? "gpu:" + gpu.gpuDataList[0].id : ""
                         });
                         if (gpu.hasGpuVramData) items.push({
                             label: _gpuName + " VRAM", value: gpu.gpuRamValue,
@@ -541,13 +591,14 @@ PlasmoidItem {
                         });
                         if (gpu.hasGpuTempData) items.push({
                             label: _gpuName + " Temp", value: gpu.gpuTempValue,
-                            color: root.gpuTempColor, icon: [root.gpuIcon, root.tempIcon]
+                            color: root.gpuTempColor, icon: [root.gpuIcon, root.tempIcon],
+                            chartKey: gpu.gpuDataList.length > 0 ? "gpuTemp:" + gpu.gpuDataList[0].id : ""
                         });
                     }
                 } else if (key === "bat" && root.showBattery && battery.batValue)
                     items.push({
                         label: "Battery", value: battery.batValue,
-                        color: root.batteryColor, icon: root.batteryIcon
+                        color: root.batteryColor, icon: root.batteryIcon, chartKey: "bat"
                     });
                 else if (key === "pwr" && root.showPower && battery.powerValue)
                     items.push({
@@ -555,8 +606,8 @@ PlasmoidItem {
                         color: root.baseTextColor, icon: root.powerIcon
                     });
                 else if (key === "net" && root.showNetwork) {
-                    items.push({label: root.netLabel + " ↓", value: network.netDownValue, color: root.baseTextColor, icon: root.networkIcon});
-                    items.push({label: root.netLabel + " ↑", value: network.netUpValue, color: root.baseTextColor, icon: root.networkIcon});
+                    items.push({label: root.netLabel + " ↓", value: network.netDownValue, color: root.baseTextColor, icon: root.networkIcon, chartKey: "netDown"});
+                    items.push({label: root.netLabel + " ↑", value: network.netUpValue, color: root.baseTextColor, icon: root.networkIcon, chartKey: "netUp"});
                     if (root.showNetworkIp && network.netIpValue && network.netIpValue !== "..." && network.netIpValue !== "") {
                         items.push({label: "Local IP", value: network.netIpValue, color: root.baseTextColor, icon: root.networkIcon});
                     }
