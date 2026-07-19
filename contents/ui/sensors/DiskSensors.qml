@@ -6,6 +6,8 @@ Item {
     id: root
     property bool _dbg: { console.warn("[KVitals] DiskSensors: constructing..."); return true; }
 
+
+
     property int updateInterval: 2000
     property bool enabled: true
     property string tempUnit: "C"
@@ -145,6 +147,60 @@ Item {
             newList.push({ id: d.id, name: name, read: rStr, write: wStr });
         }
         _dataList = newList;
+    }
+
+    // ksystemstats' disk plugin does NOT remove sensors or emit rowsRemoved
+    // when a USB is unplugged — the sensor tree entries persist with 0 values
+    // indefinitely. We cross-reference against /proc/diskstats directly.
+    Timer {
+        id: procCheckTimer
+        interval: 5000
+        repeat: true
+        running: true
+        onTriggered: root._checkProcDisks()
+    }
+
+    function _checkProcDisks() {
+        console.warn("[KVitals] DiskSensors: _checkProcDisks running, _discovered:", JSON.stringify(root._discovered.map(function(d){return d.id;})));
+        var req = new XMLHttpRequest();
+        try {
+            req.open("GET", "file:///proc/diskstats");
+        } catch (e) {
+            console.warn("[KVitals] DiskSensors: XMLHttpRequest.open failed:", e);
+            return;
+        }
+        req.onreadystatechange = function() {
+            if (req.readyState !== XMLHttpRequest.DONE) return;
+            console.warn("[KVitals] DiskSensors: XHR done, status:", req.status, "text length:", (req.responseText || "").length);
+            var text = req.responseText;
+            if (!text) {
+                console.warn("[KVitals] DiskSensors: empty response from /proc/diskstats");
+                return;
+            }
+            var exists = {};
+            var lines = text.split("\n");
+            for (var i = 0; i < lines.length; i++) {
+                var parts = lines[i].trim().split(/\s+/);
+                if (parts.length >= 3 && /^(nvme\d+n\d+|sd[a-z]+)$/.test(parts[2]) && !/\d$/.test(parts[2]))
+                    exists[parts[2]] = true;
+            }
+            console.warn("[KVitals] DiskSensors: /proc/diskstats has devices:", JSON.stringify(Object.keys(exists).sort()));
+            var changed = false;
+            var filtered = [];
+            for (var i = 0; i < root._discovered.length; i++) {
+                if (exists[root._discovered[i].id])
+                    filtered.push(root._discovered[i]);
+                else {
+                    console.warn("[KVitals] DiskSensors: removing", root._discovered[i].id, "- not in /proc/diskstats");
+                    changed = true;
+                }
+            }
+            if (changed) {
+                root._discovered = filtered;
+                root.aggregatePerDisk();
+            }
+        };
+        req.send();
     }
 
     // --- Temperature (lmsensors) ---

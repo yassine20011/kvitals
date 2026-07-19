@@ -11,10 +11,10 @@ QtObject {
     }
 
     // unit: "bytes" (default, KB/MB) or "bits" (Kb/Mb)
-    // Always uses 3 significant figures for stable display width
+    // Always uses 3 significant figures, padded to 6 chars for stable display
     function formatRate(bytesPerSec, unit) {
         if (typeof bytesPerSec !== "number" || isNaN(bytesPerSec))
-            return "...";
+            return "...".padStart(6);
         var val, divisor, suffixes;
         if (unit === "bits") {
             val = Math.max(0, bytesPerSec * 8);
@@ -32,11 +32,14 @@ QtObject {
             scaled /= divisor;
             si++;
         }
+        var num;
         if (scaled < 10)
-            return scaled.toFixed(2) + suffixes[si];
-        if (scaled < 100)
-            return scaled.toFixed(1) + suffixes[si];
-        return Math.round(scaled) + suffixes[si];
+            num = scaled.toFixed(2);
+        else if (scaled < 100)
+            num = scaled.toFixed(1);
+        else
+            num = String(Math.round(scaled));
+        return (num + suffixes[si]).padStart(6);
     }
 
     // celsiusValue: raw °C number from sensor; unit: "C" or "F"
