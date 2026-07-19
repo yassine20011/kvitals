@@ -16,13 +16,24 @@ ColumnLayout {
     required property bool fontBold
     required property var chartHistory
     required property int chartVersion
+    required property bool pinned
+    signal togglePinned()
 
-    PlasmaComponents.Label {
-        text: "KVitals"
-        font.bold: true // intentional: title always bold for visual hierarchy
-        font.pixelSize: Kirigami.Theme.defaultFont.pixelSize * 1.2
-        Layout.alignment: Qt.AlignHCenter
+    RowLayout {
+        Layout.fillWidth: true
         Layout.bottomMargin: Kirigami.Units.smallSpacing
+        PlasmaComponents.Label {
+            text: "KVitals"
+            font.bold: true
+            font.pixelSize: Kirigami.Theme.defaultFont.pixelSize * 1.2
+            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
+        }
+        PlasmaComponents.ToolButton {
+            icon.name: fullView.pinned ? "window-unpin" : "window-pin"
+            onClicked: fullView.togglePinned()
+            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+        }
     }
 
     Repeater {

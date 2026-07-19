@@ -11,6 +11,9 @@ PlasmoidItem {
 
     preferredRepresentation: compactRepresentation
 
+    property bool pinned: false
+    hideOnWindowDeactivate: !pinned
+
     // --- Configuration properties ---
 
     property bool showCpu: Plasmoid.configuration.showCpu
@@ -544,6 +547,8 @@ PlasmoidItem {
         fontBold: root.fontBold
         chartHistory: root.chartHistory
         chartVersion: root.chartVersion
+        pinned: root.pinned
+        onTogglePinned: root.pinned = !root.pinned
         metricsModel: {
             var items = [];
             for (var i = 0; i < root.orderedKeys.length; i++) {
