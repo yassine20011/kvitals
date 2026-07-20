@@ -235,6 +235,7 @@ PlasmoidItem {
     QtObject {
         id: _nullMemory
         property string ramValue: ""
+        property string ramPercentValue: ""
         property real ramPercentage: NaN
     }
     QtObject {
