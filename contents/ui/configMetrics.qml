@@ -95,14 +95,7 @@ KCM.SimpleKCM {
         function onDataChanged()  { metricsPage._discoveryDirty = true; }
     }
 
-    readonly property var discoveredGpus: {
-        if (_liveDiscoveredGpus.length > 0) return _liveDiscoveredGpus;
-        if (!cfg_gpuDiscovered) return [];
-        return cfg_gpuDiscovered.split(",").filter(function(s){ return s.indexOf(":") >= 0; }).map(function(s){
-            var parts = s.split(":");
-            return { id: parts[0], name: parts.slice(1).join(":") };
-        });
-    }
+    readonly property var discoveredGpus: _liveDiscoveredGpus
 
     // --- Network interface discovery ---
     property var ifaceList: ["auto"]
