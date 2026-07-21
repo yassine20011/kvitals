@@ -422,6 +422,37 @@ KCM.SimpleKCM {
 
     readonly property var discoveredFans: _liveDiscoveredFans
 
+    // --- Fan max-RPM capability check ---
+    // The "Max RPM for percentage" fallback is dead config when every
+    // discovered fan already reports its own max — only show it when at
+    // least one fan doesn't. Defaults to true (shown) until we've actually
+    // checked, so it doesn't appear to silently vanish for people who need it.
+
+    property bool fanMaxFallbackNeeded: true
+
+    Sensors.SensorDataModel {
+        id: fanMaxCheck
+        sensors: metricsPage.discoveredFans.map(function(f){ return f.id; })
+        updateRateLimit: 2000
+        enabled: metricsPage.discoveredFans.length > 0
+
+        onDataChanged: metricsPage._recomputeFanMaxFallback()
+        onReadyChanged: { if (ready) metricsPage._recomputeFanMaxFallback(); }
+    }
+
+    function _recomputeFanMaxFallback() {
+        for (var i = 0; i < discoveredFans.length; i++) {
+            var col = fanMaxCheck.column(discoveredFans[i].id);
+            var idx = col >= 0 ? fanMaxCheck.index(0, col) : null;
+            var val = idx && idx.valid ? fanMaxCheck.data(idx, Sensors.SensorDataModel.Maximum) : undefined;
+            if (val === undefined || val === null || val <= 0) {
+                fanMaxFallbackNeeded = true;
+                return;
+            }
+        }
+        fanMaxFallbackNeeded = false;
+    }
+
     // --- Fan label helpers ---
 
     function parseFanLabels(str) {
@@ -938,6 +969,7 @@ KCM.SimpleKCM {
                             }
 
                             RowLayout {
+                                visible: metricsPage.fanMaxFallbackNeeded
                                 spacing: Kirigami.Units.smallSpacing
                                 Label { text: i18n("Max RPM for percentage:"); opacity: 0.8 }
                                 SpinBox {
@@ -948,6 +980,15 @@ KCM.SimpleKCM {
                                     onValueChanged: cfg_fanMaxRpm = value
                                     implicitWidth: Kirigami.Units.gridUnit * 6
                                 }
+                            }
+
+                            Label {
+                                visible: metricsPage.fanMaxFallbackNeeded
+                                text: i18n("Your fans don't report a max RPM: enter one manually (check your fan's specs online). Estimated values show \"~\".")
+                                opacity: 0.6
+                                font.italic: true
+                                wrapMode: Text.WordWrap
+                                Layout.maximumWidth: Kirigami.Units.gridUnit * 28
                             }
                         }
                     }

@@ -110,15 +110,19 @@ Item {
         return result;
     }
 
+    // Returns { str, estimated }. "estimated" is true when the hardware
+    // doesn't report its own max RPM and we fell back to the user-configured
+    // fanMaxRpm guess instead of a real measurement.
     function _fanValueStr(f) {
         var v = _modelValue(f.id);
-        if (isNaN(v) || v <= 0) return "";
+        if (isNaN(v) || v <= 0) return { str: "", estimated: false };
         if (fanUnit === "percent") {
             var max = _modelMax(f.id);
-            if (isNaN(max) || max <= 0) max = fanMaxRpm;
-            return Math.min(100, Math.round((v / max) * 100)) + "%";
+            var estimated = isNaN(max) || max <= 0;
+            if (estimated) max = fanMaxRpm;
+            return { str: Math.min(100, Math.round((v / max) * 100)) + "%", estimated: estimated };
         }
-        return Math.round(v) + " RPM";
+        return { str: Math.round(v) + " RPM", estimated: false };
     }
 
     function aggregate() {
@@ -127,13 +131,17 @@ Item {
         var parts = [];
         for (var i = 0; i < _discovered.length; i++) {
             var f = _discovered[i];
-            var str = _fanValueStr(f);
-            if (!str) continue;
+            var r = _fanValueStr(f);
+            if (!r.str) continue;
             var name = custom[f.id] || f.name;
             var v = _modelValue(f.id);
-            newList.push({ id: f.id, name: name, value: str, number: f.number,
-                           valueNumber: (!isNaN(v) && v > 0) ? v : NaN });
-            parts.push(str);
+            // rpmValue is always the raw RPM reading, independent of fanUnit —
+            // used by the popup, which shows RPM regardless of the compact
+            // panel's unit (percent only saves space, it isn't more accurate).
+            newList.push({ id: f.id, name: name, value: r.str, rpmValue: Math.round(v) + " RPM",
+                           number: f.number, valueNumber: (!isNaN(v) && v > 0) ? v : NaN,
+                           isEstimated: r.estimated });
+            parts.push(r.str);
         }
         _fanStr = parts.join(" ");
         _dataList = newList;

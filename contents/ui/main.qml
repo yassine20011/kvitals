@@ -490,6 +490,13 @@ PlasmoidItem {
 
     // === Compact model helper: build segments from sub-metrics ===
 
+    // Fan percentage readings fall back to the user-configured fanMaxRpm
+    // guess when the hardware doesn't report its own max RPM. Mark those
+    // as approximate so they're not mistaken for a real measurement.
+    function _fanDisplayValue(fd) {
+        return (fd.isEstimated ? "~" : "") + fd.value;
+    }
+
     function _compactSegments(key, subsList, colorMap) {
         var segs = [];
         for (var si = 0; si < subsList.length; si++) {
@@ -635,12 +642,15 @@ PlasmoidItem {
                         var fansegs = [];
                         for (var fci = 0; fci < fans.fanDataList.length; fci++) {
                             var fcd = fans.fanDataList[fci];
-                            fansegs.push({label: fcd.number + ":", value: fcd.value, color: root.baseTextColor});
+                            fansegs.push({label: fcd.number + ":", value: root._fanDisplayValue(fcd),
+                                color: root.baseTextColor});
                         }
                         if (fansegs.length > 0)
                             items.push({icon: root.fanIcon, label: root.fanLabel + ":", segments: fansegs, color: root.baseTextColor});
-                    } else {
-                        items.push({icon: root.fanIcon, label: root.fanLabel + ":", value: fans.fanValue, color: root.baseTextColor});
+                    } else if (fans.fanDataList.length > 0) {
+                        var fcd0 = fans.fanDataList[0];
+                        items.push({icon: root.fanIcon, label: root.fanLabel + ":", value: root._fanDisplayValue(fcd0),
+                            color: root.baseTextColor});
                     }
                 }
                 else if (key === "uptime")
@@ -769,14 +779,19 @@ PlasmoidItem {
                     }
                 }
                 else if (key === "fan" && root.fanEnabled && fans.hasFanData) {
+                    // Popup always shows RPM — it's the real sensor reading with
+                    // no ambiguity, unlike percentage which may be an estimate.
+                    // Percentage's only benefit (compactness) doesn't apply here.
                     if (fans.multiFan) {
                         for (var fn = 0; fn < fans.fanDataList.length; fn++) {
                             var fd = fans.fanDataList[fn];
-                            addMetric(fd.number + ": " + (fd.name || fd.id), fd.value, root.baseTextColor, root.fanIcon, "fan:" + fd.id);
+                            addMetric(fd.number + ": " + (fd.name || fd.id), fd.rpmValue,
+                                root.baseTextColor, root.fanIcon, "fan:" + fd.id);
                         }
-                    } else {
-                        addMetric(root.fanLabel, fans.fanValue, root.baseTextColor, root.fanIcon,
-                            fans.fanDataList.length > 0 ? "fan:" + fans.fanDataList[0].id : "");
+                    } else if (fans.fanDataList.length > 0) {
+                        var fd0 = fans.fanDataList[0];
+                        addMetric(root.fanLabel, fd0.rpmValue,
+                            root.baseTextColor, root.fanIcon, "fan:" + fd0.id);
                     }
                 }
                 else if (key === "uptime" && root.uptimeEnabled && uptime.uptimeValue)
