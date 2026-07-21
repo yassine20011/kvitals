@@ -35,7 +35,7 @@ KCM.SimpleKCM {
     property string cfg_gpuVisibility: "both"
 
     property bool cfg_batEnabled
-    property string cfg_batSubMetrics: "percentage"
+    property string cfg_batSubMetrics: "percentage,power"
     property string cfg_batVisibility: "both"
 
     property bool cfg_netEnabled
