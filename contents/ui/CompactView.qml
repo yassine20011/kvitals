@@ -50,12 +50,31 @@ RowLayout {
                     color: compactRow.baseTextColor
                     opacity: compactRow.separatorOpacity
                 }
+                // Optional per-segment sub-label (e.g. fan number): rendered in
+                // the label color so it's visually distinct from the value.
+                PlasmaComponents.Label {
+                    visible: !!modelData.label
+                    text: modelData.label || ""
+                    font.pixelSize: compactRow.effectiveFontSize
+                    font.family: compactRow.fontFamily
+                    font.bold: compactRow.fontBold
+                    color: compactRow.labelColor
+                    opacity: compactRow.labelOpacity
+                }
                 PlasmaComponents.Label {
                     text: modelData.value
                     font.pixelSize: compactRow.effectiveFontSize
                     font.family: compactRow.fontFamily
                     font.bold: compactRow.fontBold
                     color: modelData.color
+                    horizontalAlignment: Text.AlignRight
+                    // Row is a positioner, not a Layout: pad via plain `width`
+                    // (Layout.preferredWidth has no effect here). Width only
+                    // ever grows within the session to avoid reflow when a
+                    // fluctuating value crosses a digit-count boundary.
+                    property real _stickyWidth: 0
+                    onImplicitWidthChanged: if (implicitWidth > _stickyWidth) _stickyWidth = implicitWidth
+                    width: _stickyWidth
                 }
             }
         }
@@ -132,13 +151,21 @@ RowLayout {
             }
 
             PlasmaComponents.Label {
+                id: valueLabel
                 visible: !itemData.segments
                 text: itemData.value || ""
                 font.pixelSize: compactRow.effectiveFontSize
                 font.family: compactRow.fontFamily
                 font.bold: compactRow.fontBold
                 color: itemData.color || compactRow.baseTextColor
+                horizontalAlignment: Text.AlignRight
                 Layout.alignment: Qt.AlignVCenter
+                // Width only ever grows within the session: avoids the panel
+                // reflowing every time a fluctuating value (e.g. RPM) crosses
+                // a digit-count boundary.
+                property real _stickyWidth: 0
+                onImplicitWidthChanged: if (implicitWidth > _stickyWidth) _stickyWidth = implicitWidth
+                Layout.preferredWidth: _stickyWidth
             }
 
             SegmentsRow {
@@ -184,6 +211,12 @@ RowLayout {
                         font.bold: compactRow.fontBold
                         color: itemData.color || compactRow.baseTextColor
                         horizontalAlignment: Text.AlignHCenter
+                        // Width only ever grows within the session: avoids the panel
+                        // reflowing every time a fluctuating value (e.g. RPM) crosses
+                        // a digit-count boundary.
+                        property real _stickyWidth: 0
+                        onImplicitWidthChanged: if (implicitWidth > _stickyWidth) _stickyWidth = implicitWidth
+                        Layout.preferredWidth: _stickyWidth
                     }
 
                     SegmentsRow {

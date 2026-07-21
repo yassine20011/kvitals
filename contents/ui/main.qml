@@ -297,6 +297,13 @@ PlasmoidItem {
                 if (push(h[tKey], gl[i].tempNumber)) changed = true;
             }
 
+            var fl = root.fans.fanDataList;
+            for (var fi = 0; fi < fl.length; fi++) {
+                var fKey = "fan:" + fl[fi].id;
+                if (!h[fKey]) h[fKey] = [];
+                if (push(h[fKey], fl[fi].valueNumber)) changed = true;
+            }
+
             if (changed) root.chartVersion++;
         }
     }
@@ -615,8 +622,19 @@ PlasmoidItem {
                         segments: dsegs, color: root.baseTextColor
                     });
                 }
-                else if (key === "fan")
-                    items.push({icon: root.fanIcon, label: root.fanLabel + ":", value: fans.fanValue, color: root.baseTextColor});
+                else if (key === "fan") {
+                    if (fans.multiFan) {
+                        var fansegs = [];
+                        for (var fci = 0; fci < fans.fanDataList.length; fci++) {
+                            var fcd = fans.fanDataList[fci];
+                            fansegs.push({label: fcd.number + ":", value: fcd.value, color: root.baseTextColor});
+                        }
+                        if (fansegs.length > 0)
+                            items.push({icon: root.fanIcon, label: root.fanLabel + ":", segments: fansegs, color: root.baseTextColor});
+                    } else {
+                        items.push({icon: root.fanIcon, label: root.fanLabel + ":", value: fans.fanValue, color: root.baseTextColor});
+                    }
+                }
                 else if (key === "uptime")
                     items.push({icon: root.uptimeIcon, label: "UPTIME:", value: uptime.uptimeValue, color: root.baseTextColor});
             }
@@ -746,10 +764,11 @@ PlasmoidItem {
                     if (fans.multiFan) {
                         for (var fn = 0; fn < fans.fanDataList.length; fn++) {
                             var fd = fans.fanDataList[fn];
-                            addMetric(fd.name || fd.id, fd.value, root.baseTextColor, root.fanIcon);
+                            addMetric(fd.number + ": " + (fd.name || fd.id), fd.value, root.baseTextColor, root.fanIcon, "fan:" + fd.id);
                         }
                     } else {
-                        addMetric(root.fanLabel, fans.fanValue, root.baseTextColor, root.fanIcon);
+                        addMetric(root.fanLabel, fans.fanValue, root.baseTextColor, root.fanIcon,
+                            fans.fanDataList.length > 0 ? "fan:" + fans.fanDataList[0].id : "");
                     }
                 }
                 else if (key === "uptime" && root.uptimeEnabled && uptime.uptimeValue)

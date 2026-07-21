@@ -44,9 +44,12 @@ Item {
             // Match any sensor that contains /fan and doesn't end with a non-digit (typically fan1, fan2, etc)
             var match = sensorId.match(/^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i);
             if (!match) continue;
-            // Some names are like "cpu_fan", we can try to extract the last part or use the sensor Name
-            var name = flatSensors.data(idx, Qt.DisplayRole) || "Fan " + (found.length + 1);
-            found.push({ id: sensorId, name: name });
+            // KSysGuard's DisplayRole is often generic/duplicated across fans
+            // (e.g. the same "Fan Speed" label for every one), so it can't be
+            // used to tell them apart. Assign a stable numbered name instead,
+            // same as GpuSensors.qml does for multiple GPUs.
+            var number = found.length + 1;
+            found.push({ id: sensorId, name: "Fan " + number, number: number });
         }
 
         if (JSON.stringify(found) !== JSON.stringify(_discovered)) {
@@ -127,7 +130,9 @@ Item {
             var str = _fanValueStr(f);
             if (!str) continue;
             var name = custom[f.id] || f.name;
-            newList.push({ id: f.id, name: name, value: str });
+            var v = _modelValue(f.id);
+            newList.push({ id: f.id, name: name, value: str, number: f.number,
+                           valueNumber: (!isNaN(v) && v > 0) ? v : NaN });
             parts.push(str);
         }
         _fanStr = parts.join(" ");
