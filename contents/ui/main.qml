@@ -285,6 +285,7 @@ PlasmoidItem {
     QtObject {
         id: _nullTemp
         property string tempValue: "--"
+        property string cpuTempValue: "--"
         property real tempNumericValue: NaN
         property bool sysIsFallback: false
         property string ramTempValue: "--"
@@ -457,7 +458,7 @@ PlasmoidItem {
             case "cpu":
                 if (sub === "usage") return cpu.cpuValue;
                 if (sub === "freq")  return cpu.cpuFreqValue;
-                if (sub === "temp")  return temp.tempValue !== "--" ? temp.tempValue : null;
+                if (sub === "temp")  return temp.cpuTempValue !== "--" ? temp.cpuTempValue : null;
                 break;
             case "ram":
                 if (sub === "percentage") return memory.ramPercentValue;
@@ -627,8 +628,8 @@ PlasmoidItem {
                         addMetric(root.cpuLabel + " Usage", cpu.cpuValue, root.cpuColor, root.cpuIcon, "cpu", 100);
                     if (root.hasSub("cpu", "freq") && cpu.cpuFreqValue)
                         addMetric(root.cpuLabel + " Frequency", cpu.cpuFreqValue, root.baseTextColor, root.cpuIcon);
-                    if (root.hasSub("cpu", "temp") && temp.tempValue !== "--")
-                        addMetric(root.cpuLabel + " Temperature", temp.tempValue, root.tempColor, [root.cpuIcon, root.tempIcon], "temp", 100);
+                    if (root.hasSub("cpu", "temp") && temp.cpuTempValue !== "--")
+                        addMetric(root.cpuLabel + " Temperature", temp.cpuTempValue, root.tempColor, [root.cpuIcon, root.tempIcon], "temp", 100);
                 }
                 else if (key === "ram" && root.ramEnabled) {
                     if ((root.ramWidgetShowBoth || root.hasSub("ram", "percentage")) && memory.ramPercentValue !== "...")
@@ -724,8 +725,8 @@ PlasmoidItem {
 
             if (key === "cpu") {
                 var cpuLine = root.cpuLabel + ": " + cpu.cpuValue;
-                if (root.hasSub("cpu", "temp") && temp.tempValue && temp.tempValue !== "--")
-                    cpuLine += " " + temp.tempValue;
+                if (root.hasSub("cpu", "temp") && temp.cpuTempValue && temp.cpuTempValue !== "--")
+                    cpuLine += " " + temp.cpuTempValue;
                 parts.push(cpuLine);
             } else if (key === "ram") {
                 var ramLine = root.ramLabel + ": " + memory.ramValue;

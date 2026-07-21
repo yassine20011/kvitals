@@ -9,7 +9,9 @@ Item {
     property int updateInterval: 2000
     property string tempUnit: "C"
 
-    // System temperature: always uses cpu/all/averageTemperature
+    // System temperature: auto-detect chipset sensor, fallback to CPU average
+    property string _systemSensorId: ""
+
     readonly property real tempNumericValue: {
         if (sysSensor.status !== Sensors.Sensor.Ready) return NaN;
         return sysSensor.value;
@@ -20,11 +22,26 @@ Item {
         return Utils.formatTemp(tempNumericValue, tempUnit);
     }
 
-    readonly property bool sysIsFallback: false
+    // Fallback is active when no chipset sensor was found and we use CPU average
+    readonly property bool sysIsFallback: _systemSensorId.length === 0
+
+    // Dedicated CPU temperature — always reads the CPU average, independent of system temp
+    readonly property string cpuTempValue: {
+        if (cpuTempSensor.status !== Sensors.Sensor.Ready) return "--";
+        var v = cpuTempSensor.value;
+        if (isNaN(v)) return "--";
+        return Utils.formatTemp(v, tempUnit);
+    }
+
+    Sensors.Sensor {
+        id: cpuTempSensor
+        sensorId: "cpu/all/averageTemperature"
+        updateRateLimit: root.updateInterval
+    }
 
     Sensors.Sensor {
         id: sysSensor
-        sensorId: "cpu/all/averageTemperature"
+        sensorId: root._systemSensorId || "cpu/all/averageTemperature"
         updateRateLimit: root.updateInterval
     }
 
@@ -57,12 +74,16 @@ Item {
 
     function refreshDiscovered() {
         var ramCandidates = [];
+        var chipsetCandidates = [];
         var newRows = flatSensors.rowCount();
 
         for (var row = 0; row < newRows; row++) {
             var idx = flatSensors.index(row, 0);
             var sensorId = flatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
             if (!sensorId || sensorId.length === 0) continue;
+
+            // Skip CPU core temps and GPU temps
+            if (/^(cpu|gpu)\//.test(sensorId)) continue;
 
             var match = sensorId.match(/^lmsensors\/(.+)\/temp\d+$/);
             if (!match) continue;
@@ -71,6 +92,18 @@ Item {
 
             if (/^spd5118/i.test(adapter)) {
                 ramCandidates.push({ id: sensorId, adapter: adapter });
+                continue;
+            }
+
+            // Super I/O chips (real chipset sensors) live on the ISA/LPC bus
+            // and expose an adapter name containing "-isa-".
+            // CPU sensors (k10temp on AMD) are on PCI → "-pci-".
+            // GPU sensors (amdgpu, nvidia) are on PCI → "-pci-".
+            // Intel coretemp is an exception: it uses "-isa-" too,
+            // so we exclude it explicitly.
+            // This is hardware-agnostic: no blacklist of specific drivers.
+            if (/-isa-/.test(adapter) && !/^coretemp/i.test(adapter)) {
+                chipsetCandidates.push({ id: sensorId, adapter: adapter });
             }
         }
 
@@ -85,6 +118,22 @@ Item {
             var newRamId = ramCandidates[0].id;
             console.warn("[KVitals] TempSensors: ramSensorId selected: " + newRamId);
             _ramSensorId = newRamId;
+        }
+
+        // Chipset sensor discovery — prefer ISA/LPC bus (Super I/O).
+        // PCI candidates (k10temp, amdgpu, etc.) are deliberately ignored:
+        // they report CPU/GPU package temps, not chipset temps.
+        if (chipsetCandidates.length > 0) {
+            if (_systemSensorId !== chipsetCandidates[0].id) {
+                console.warn("[KVitals] TempSensors: chipset sensor selected: "
+                    + chipsetCandidates[0].id + " (" + chipsetCandidates[0].adapter + ")");
+                _systemSensorId = chipsetCandidates[0].id;
+            }
+        } else if (newRows > 0) {
+            if (_systemSensorId.length > 0) {
+                console.warn("[KVitals] TempSensors: chipset sensor lost, reverting to CPU fallback");
+            }
+            _systemSensorId = "";
         }
     }
 
