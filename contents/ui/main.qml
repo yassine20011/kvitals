@@ -35,6 +35,13 @@ PlasmoidItem {
     property string gpuSelection:  Plasmoid.configuration.gpuSelection  || ""
     property string gpuLabels:     Plasmoid.configuration.gpuLabels     || ""
 
+    // dGPU power-saving toggle (popup-only): dgpuActive is deliberately NOT
+    // persisted, same as `pinned` below, so it resets to power-saving on
+    // every plasmashell restart rather than silently staying "on".
+    property bool dgpuMonitoringEnabled: Plasmoid.configuration.dgpuMonitoringEnabled
+    property string dgpuSensorId:        Plasmoid.configuration.dgpuSensorId || ""
+    property bool dgpuActive: false
+
     property bool batEnabled:      Plasmoid.configuration.batEnabled
     property string batSubMetrics: Plasmoid.configuration.batSubMetrics || "percentage"
 
@@ -357,6 +364,9 @@ PlasmoidItem {
                 gpuSelection: root.gpuSelection
                 gpuLabels: root.gpuLabels
                 tempUnit: root.tempUnit
+                dgpuMonitoringEnabled: root.dgpuMonitoringEnabled
+                dgpuSensorId: root.dgpuSensorId
+                dgpuActive: root.dgpuActive
             }
 
             BatterySensors {
@@ -593,6 +603,10 @@ PlasmoidItem {
         chartVersion: root.chartVersion
         pinned: root.pinned
         onTogglePinned: root.pinned = !root.pinned
+        dgpuToggleVisible: root.dgpuMonitoringEnabled && root.dgpuSensorId !== ""
+        dgpuActive: root.dgpuActive
+        dgpuIcon: root.gpuIcon
+        onToggleDgpu: root.dgpuActive = !root.dgpuActive
         metricsModel: {
             var items = [];
             for (var i = 0; i < root.orderedKeys.length; i++) {

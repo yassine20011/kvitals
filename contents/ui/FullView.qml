@@ -18,6 +18,10 @@ ColumnLayout {
     required property int chartVersion
     required property bool pinned
     signal togglePinned()
+    required property bool dgpuToggleVisible
+    required property bool dgpuActive
+    required property string dgpuIcon
+    signal toggleDgpu()
 
     RowLayout {
         Layout.fillWidth: true
@@ -28,6 +32,20 @@ ColumnLayout {
             font.pixelSize: Kirigami.Theme.defaultFont.pixelSize * 1.2
             Layout.alignment: Qt.AlignHCenter
             Layout.fillWidth: true
+        }
+        PlasmaComponents.ToolButton {
+            visible: fullView.dgpuToggleVisible
+            icon.name: fullView.dgpuIcon
+            icon.color: Kirigami.Theme.textColor
+            checkable: true
+            checked: fullView.dgpuActive
+            opacity: checked ? 1.0 : 0.5
+            onToggled: fullView.toggleDgpu()
+            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+            PlasmaComponents.ToolTip.text: checked
+                ? i18n("Discrete GPU monitoring active (uses power)")
+                : i18n("Discrete GPU monitoring paused (power saving)")
+            PlasmaComponents.ToolTip.visible: hovered
         }
         PlasmaComponents.ToolButton {
             icon.name: fullView.pinned ? "window-unpin" : "window-pin"

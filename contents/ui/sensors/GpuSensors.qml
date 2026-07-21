@@ -11,6 +11,13 @@ Item {
     // Comma-separated selected GPU IDs e.g. "gpu0,gpu1". Empty = all discovered.
     property string gpuSelection: ""
 
+    // Power-saving toggle: when enabled and dgpuSensorId names a discovered
+    // GPU, that GPU's sensors are excluded from polling unless dgpuActive is
+    // true. Independent of gpuSelection (which is a persisted, manual choice).
+    property bool dgpuMonitoringEnabled: false
+    property string dgpuSensorId: ""
+    property bool dgpuActive: false
+
     // User-defined labels: "gpu0:My iGPU|gpu1:dGPU". Empty string = use default "GPU N" name.
     property string gpuLabels: ""
 
@@ -151,13 +158,20 @@ Item {
     // -------------------------------------------------------------------------
 
     readonly property var _activeIds: {
+        var ids;
         if (!gpuSelection || gpuSelection === "")
-            return _discovered.map(function(g){ return g.id; });
-        if (gpuSelection === "none")
-            return [];
-        return gpuSelection.split(",")
-            .map(function(s){ return s.trim(); })
-            .filter(function(s){ return s.length > 0; });
+            ids = _discovered.map(function(g){ return g.id; });
+        else if (gpuSelection === "none")
+            ids = [];
+        else
+            ids = gpuSelection.split(",")
+                .map(function(s){ return s.trim(); })
+                .filter(function(s){ return s.length > 0; });
+
+        if (dgpuMonitoringEnabled && dgpuSensorId && !dgpuActive)
+            ids = ids.filter(function(id){ return id !== dgpuSensorId; });
+
+        return ids;
     }
 
     readonly property var _activeSensorIds: {
@@ -204,7 +218,7 @@ Item {
     }
 
     function aggregate() {
-        var ids = _activeIds;
+        var ids = _activeIds || [];
         var customLabels = parseGpuLabels(gpuLabels);
         var mm = parseGpuMetrics(gpuMetrics);
         var newList = [];
@@ -267,4 +281,7 @@ Item {
     onGpuLabelsChanged:    aggregate()
     onGpuSelectionChanged: aggregate()
     onTempUnitChanged:     aggregate()
+    onDgpuActiveChanged:   aggregate()
+    onDgpuMonitoringEnabledChanged: aggregate()
+    onDgpuSensorIdChanged: aggregate()
 }

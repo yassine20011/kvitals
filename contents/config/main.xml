@@ -90,6 +90,15 @@
         <entry name="gpuLabels" type="String">
             <default></default>
         </entry>
+        <!-- dGPU power-saving toggle: shows an on/off button in the popup that
+             pauses/resumes live polling of the designated discrete GPU. Only
+             meaningful with 2+ GPUs discovered. -->
+        <entry name="dgpuMonitoringEnabled" type="Bool">
+            <default>false</default>
+        </entry>
+        <entry name="dgpuSensorId" type="String">
+            <default></default>
+        </entry>
 
         <!-- Display -->
         <entry name="displayMode" type="String">
