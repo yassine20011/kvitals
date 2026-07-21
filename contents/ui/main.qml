@@ -53,7 +53,7 @@ PlasmoidItem {
     property string gpuLabels:     Plasmoid.configuration.gpuLabels     || ""
 
     property bool batEnabled:      Plasmoid.configuration.batEnabled
-    property string batSubMetrics: Plasmoid.configuration.batSubMetrics || "percentage"
+    property string batSubMetrics: Plasmoid.configuration.batSubMetrics || "percentage,power"
 
     property bool netEnabled:      Plasmoid.configuration.netEnabled
     property string netSubMetrics: Plasmoid.configuration.netSubMetrics || "down,up"
@@ -182,6 +182,8 @@ PlasmoidItem {
     property int systemCriticalThreshold: Plasmoid.configuration.systemCriticalThreshold
     property int ramWarningThreshold: Plasmoid.configuration.ramWarningThreshold
     property int ramCriticalThreshold: Plasmoid.configuration.ramCriticalThreshold
+    property int ramTempWarningThreshold: Plasmoid.configuration.ramTempWarningThreshold
+    property int ramTempCriticalThreshold: Plasmoid.configuration.ramTempCriticalThreshold
     property int gpuWarningThreshold: Plasmoid.configuration.gpuWarningThreshold
     property int gpuCriticalThreshold: Plasmoid.configuration.gpuCriticalThreshold
     property int gpuTempWarningThreshold: Plasmoid.configuration.gpuTempWarningThreshold
@@ -202,6 +204,11 @@ PlasmoidItem {
 
     property color cpuTempColor: enableThresholdColors
         ? Utils.resolveColor(temp.cpuTempNumericValue, tempWarningThreshold, tempCriticalThreshold,
+            warningColor, criticalColor, baseTextColor, false)
+        : baseTextColor
+
+    property color ramTempColor: enableThresholdColors
+        ? Utils.resolveColor(temp.ramTempNumericValue, ramTempWarningThreshold, ramTempCriticalThreshold,
             warningColor, criticalColor, baseTextColor, false)
         : baseTextColor
 
@@ -564,7 +571,8 @@ PlasmoidItem {
                     else if (sm.length === 1 && sm[0] === "used")
                         items.push({icon: root.ramIcon, label: root.ramLabel + ":", value: memory.ramValue, color: root.baseTextColor});
                     else {
-                        var rsegs = root._compactSegments("ram", sm, colorMap);
+                        var ramMap = Object.assign({}, colorMap, {"temp": root.ramTempColor});
+                        var rsegs = root._compactSegments("ram", sm, ramMap);
                         if (rsegs) items.push({icon: root.ramIcon, label: root.ramLabel + ":", segments: rsegs, color: root.ramColor});
                     }
                 }
@@ -692,7 +700,7 @@ PlasmoidItem {
                     if ((root.ramWidgetShowBoth || root.hasSub("ram", "used")) && memory.ramValue !== "...")
                         addMetric(root.ramLabel + " Usage", memory.ramValue, root.baseTextColor, root.ramIcon);
                     if (root.hasSub("ram", "temp") && temp.ramTempValue !== "--")
-                        addMetric(root.ramLabel + " Temperature", temp.ramTempValue, root.tempColor, [root.ramIcon, root.tempIcon], "ramTemp", 100);
+                        addMetric(root.ramLabel + " Temperature", temp.ramTempValue, root.ramTempColor, [root.ramIcon, root.tempIcon], "ramTemp", 100);
                 }
                 else if (key === "temp" && root.tempEnabled && temp.tempValue !== "--")
                     addMetric(root.tempLabel, temp.tempValue, root.systemColor, root.tempIcon, "temp", 100);

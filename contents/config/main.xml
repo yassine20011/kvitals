@@ -50,7 +50,7 @@
             <default>true</default>
         </entry>
         <entry name="batSubMetrics" type="String">
-            <default>percentage</default>
+            <default>percentage,power</default>
         </entry>
         <entry name="batVisibility" type="String">
             <default>both</default>
@@ -227,6 +227,12 @@
         </entry>
         <entry name="ramCriticalThreshold" type="Int">
             <default>90</default>
+        </entry>
+        <entry name="ramTempWarningThreshold" type="Int">
+            <default>60</default>
+        </entry>
+        <entry name="ramTempCriticalThreshold" type="Int">
+            <default>85</default>
         </entry>
         <entry name="gpuWarningThreshold" type="Int">
             <default>70</default>
