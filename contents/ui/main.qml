@@ -16,82 +16,116 @@ PlasmoidItem {
 
     // --- Configuration properties ---
 
-    property bool showCpu: Plasmoid.configuration.showCpu
-    property bool showRam: Plasmoid.configuration.showRam
-    property bool showTemp: Plasmoid.configuration.showTemp
-    property bool showGpu: Plasmoid.configuration.showGpu
-    property bool showBattery: Plasmoid.configuration.showBattery
-    property bool showPower: Plasmoid.configuration.showPower
-    property bool showNetwork: Plasmoid.configuration.showNetwork
-    property bool showDisk: Plasmoid.configuration.showDisk
-    property bool showFan: Plasmoid.configuration.showFan
-    property bool showUptime: Plasmoid.configuration.showUptime
-    property bool compactShowCpu: Plasmoid.configuration.compactShowCpu
-    property bool compactShowRam: Plasmoid.configuration.compactShowRam
-    property bool compactShowTemp: Plasmoid.configuration.compactShowTemp
-    property bool compactShowGpu: Plasmoid.configuration.compactShowGpu
-    property bool compactShowBattery: Plasmoid.configuration.compactShowBattery
-    property bool compactShowPower: Plasmoid.configuration.compactShowPower
-    property bool compactShowNetwork: Plasmoid.configuration.compactShowNetwork
-    property bool compactShowDisk: Plasmoid.configuration.compactShowDisk
-    property bool compactShowFan: Plasmoid.configuration.compactShowFan
-    property bool compactShowUptime: Plasmoid.configuration.compactShowUptime
+    property bool cpuEnabled:  Plasmoid.configuration.cpuEnabled
+    property string cpuSubMetrics:  Plasmoid.configuration.cpuSubMetrics  || "usage,freq,temp"
+    property string cpuLabel:       Plasmoid.configuration.cpuLabel       || "CPU"
+
+    property bool ramEnabled:       Plasmoid.configuration.ramEnabled
+    property string ramSubMetrics:  Plasmoid.configuration.ramSubMetrics  || "percentage"
+    property string ramLabel:       Plasmoid.configuration.ramLabel       || "RAM"
+    // Popup-only override: show both Percentage and Used/Total in the widget
+    // window regardless of which one is toggled for the compact panel.
+    property bool ramWidgetShowBoth: Plasmoid.configuration.ramWidgetShowBoth
+
+    property bool tempEnabled:      Plasmoid.configuration.tempEnabled
+    property string tempLabel:      Plasmoid.configuration.tempLabel || "System"
+
+    property bool gpuEnabled:      Plasmoid.configuration.gpuEnabled
+    property string gpuSubMetrics: Plasmoid.configuration.gpuSubMetrics || "usage,vram,temp"
+    property string gpuSelection:  Plasmoid.configuration.gpuSelection  || ""
+    property string gpuLabels:     Plasmoid.configuration.gpuLabels     || ""
+
+    property bool batEnabled:      Plasmoid.configuration.batEnabled
+    property string batSubMetrics: Plasmoid.configuration.batSubMetrics || "percentage"
+
+    property bool netEnabled:      Plasmoid.configuration.netEnabled
+    property string netSubMetrics: Plasmoid.configuration.netSubMetrics || "down,up"
+    property string netLabel:       Plasmoid.configuration.netLabel     || "NET"
     property string networkInterface: Plasmoid.configuration.networkInterface
-    property bool showNetworkIp: Plasmoid.configuration.showNetworkIp
-    property string batteryDevice: Plasmoid.configuration.batteryDevice
-    property string gpuSelection: Plasmoid.configuration.gpuSelection
-    property string gpuLabels: Plasmoid.configuration.gpuLabels
-    property string diskLabels: Plasmoid.configuration.diskLabels
+    property bool showNetworkIp:   Plasmoid.configuration.showNetworkIp
+
+    property bool diskEnabled:     Plasmoid.configuration.diskEnabled
+    property string diskSubMetrics: Plasmoid.configuration.diskSubMetrics || "read,write"
+    property string diskLabel:      Plasmoid.configuration.diskLabel      || "DSK"
+    property string diskLabels:     Plasmoid.configuration.diskLabels     || ""
+
+    property bool fanEnabled:    Plasmoid.configuration.fanEnabled
+    property bool uptimeEnabled: Plasmoid.configuration.uptimeEnabled
+
+    property string batteryDevice: Plasmoid.configuration.batteryDevice || "auto"
+
     property string displayMode: Plasmoid.configuration.displayMode
-    property string layoutType: Plasmoid.configuration.layoutType
-    property bool mergeCpuTemp: Plasmoid.configuration.mergeCpuTemp
-    property bool mergeCpuFreq: Plasmoid.configuration.mergeCpuFreq
-    property string cpuLabel: Plasmoid.configuration.cpuLabel || "CPU"
-    property string ramLabel: Plasmoid.configuration.ramLabel || "RAM"
-    property string diskLabel: Plasmoid.configuration.diskLabel || "DSK"
-    property string netLabel: Plasmoid.configuration.netLabel || "NET"
-    property bool showCpuFreq: Plasmoid.configuration.showCpuFreq
-    property bool mergeBatPwr: Plasmoid.configuration.mergeBatPwr
-    property bool splitGpu: Plasmoid.configuration.splitGpu
-    property string gpuMetrics: Plasmoid.configuration.gpuMetrics
-    property int iconSize: Plasmoid.configuration.iconSize
-    property string cpuIcon: Plasmoid.configuration.cpuIcon
-    property string ramIcon: Plasmoid.configuration.ramIcon
-    property string tempIcon: Plasmoid.configuration.tempIcon
-    property string gpuIcon: Plasmoid.configuration.gpuIcon
+    property string layoutType:  Plasmoid.configuration.layoutType
+    property int iconSize:       Plasmoid.configuration.iconSize
+
+    property string cpuIcon:     Plasmoid.configuration.cpuIcon
+    property string ramIcon:     Plasmoid.configuration.ramIcon
+    property string tempIcon:    Plasmoid.configuration.tempIcon
+    property string gpuIcon:     Plasmoid.configuration.gpuIcon
     property string batteryIcon: Plasmoid.configuration.batteryIcon
-    property string powerIcon: Plasmoid.configuration.powerIcon
+    property string powerIcon:   Plasmoid.configuration.powerIcon
     property string networkIcon: Plasmoid.configuration.networkIcon
-    property string diskIcon: Plasmoid.configuration.diskIcon
-    property string fanIcon: Plasmoid.configuration.fanIcon
-    property string uptimeIcon: Plasmoid.configuration.uptimeIcon
+    property string diskIcon:    Plasmoid.configuration.diskIcon
+    property string fanIcon:     Plasmoid.configuration.fanIcon
+    property string uptimeIcon:  Plasmoid.configuration.uptimeIcon
+
     property string fontFamily: Plasmoid.configuration.fontFamily
-    property int fontSize: Plasmoid.configuration.fontSize
-    property bool fontBold: Plasmoid.configuration.fontBold
-    property real labelOpacity: Plasmoid.configuration.labelOpacity
+    property int fontSize:      Plasmoid.configuration.fontSize
+    property bool fontBold:     Plasmoid.configuration.fontBold
+    property real labelOpacity:    Plasmoid.configuration.labelOpacity
     property real separatorOpacity: Plasmoid.configuration.separatorOpacity
     property int effectiveFontSize: fontSize > 0 ? fontSize : Kirigami.Theme.smallFont.pixelSize
 
     property bool useIcons: displayMode === "icons" || displayMode === "icons+text"
-    property bool useText: displayMode === "text" || displayMode === "icons+text"
-    property bool useCustomLabelsInCompact: Plasmoid.configuration.useCustomLabelsInCompact !== false
+    property bool useText:  displayMode === "text"  || displayMode === "icons+text"
 
-    property string metricOrder: Plasmoid.configuration.metricOrder || "cpu,ram,temp,gpu,bat,pwr,net,disk,fan,uptime"
+    property string metricOrder: Plasmoid.configuration.metricOrder || "cpu,ram,temp,gpu,bat,net,disk,fan,uptime"
+    property var allKeys: ["cpu", "ram", "temp", "gpu", "bat", "net", "disk", "fan", "uptime"]
     property var orderedKeys: {
-        var keys = metricOrder.split(",").map(function (k) { return k.trim(); }).filter(function(k) { return k.length > 0; });
-        var allKeys = ["cpu", "ram", "temp", "gpu", "bat", "pwr", "net", "disk", "fan", "uptime"];
+        var keys = metricOrder.split(",").map(function (k) { return k.trim(); }).filter(function(k) { return k.length > 0 && allKeys.indexOf(k) >= 0; });
         for (var i = 0; i < allKeys.length; i++) {
-            if (keys.indexOf(allKeys[i]) === -1) {
-                keys.push(allKeys[i]);
-            }
+            if (keys.indexOf(allKeys[i]) === -1) keys.push(allKeys[i]);
         }
         return keys;
     }
 
     property int updateInterval: Plasmoid.configuration.updateInterval || 2000
-    property string tempUnit: Plasmoid.configuration.tempUnit || "C"
+    property string tempUnit:    Plasmoid.configuration.tempUnit    || "C"
     property string networkUnit: Plasmoid.configuration.networkUnit || "bytes"
-    property string fanUnit: Plasmoid.configuration.fanUnit || "rpm"
+    property string fanUnit:     Plasmoid.configuration.fanUnit     || "rpm"
+
+    // --- Helpers ---
+
+    function subs(key) {
+        switch (key) {
+            case "cpu":  return cpuSubMetrics;
+            case "ram":  return ramSubMetrics;
+            case "gpu":  return gpuSubMetrics;
+            case "bat":  return batSubMetrics;
+            case "net":  return netSubMetrics;
+            case "disk": return diskSubMetrics;
+            default:     return "";
+        }
+    }
+
+    function hasSub(key, sub) {
+        return subs(key).split(",").indexOf(sub) >= 0;
+    }
+
+    function isEnabled(key) {
+        switch (key) {
+            case "cpu":    return cpuEnabled   && cpu.cpuValue;
+            case "ram":    return ramEnabled   && memory.ramValue;
+            case "temp":   return tempEnabled && temp.tempValue && temp.tempValue !== "--";
+            case "gpu":    return gpuEnabled   && gpu.hasGpuData;
+            case "bat":    return batEnabled   && battery.batValue;
+            case "net":    return netEnabled;
+            case "disk":   return diskEnabled;
+            case "fan":    return fanEnabled   && fans.hasFanData;
+            case "uptime": return uptimeEnabled && uptime.uptimeValue;
+        }
+        return false;
+    }
 
     // --- Color configuration properties ---
 
@@ -120,11 +154,9 @@ PlasmoidItem {
     property int diskTempWarningThreshold: Plasmoid.configuration.diskTempWarningThreshold
     property int diskTempCriticalThreshold: Plasmoid.configuration.diskTempCriticalThreshold
 
-    // --- Computed base text color ---
-
     property color baseTextColor: (useCustomColors && fontColor !== "") ? fontColor : Kirigami.Theme.textColor
 
-    // --- Pre-resolved per-metric colors (reactive properties) ---
+    // --- Pre-resolved per-metric colors ---
 
     property color cpuColor: enableThresholdColors
         ? Utils.resolveColor(cpu.cpuNumericValue, cpuWarningThreshold, cpuCriticalThreshold,
@@ -162,10 +194,6 @@ PlasmoidItem {
         : baseTextColor
 
     // --- Deferred sensor loading ---
-    // Sensors are loaded AFTER the window attachment is complete to avoid
-    // triggering a SIGSEGV in KirigamiPlasmaStyle's PlasmaTheme::syncColors()
-    // during the recursive QQuickItemPrivate::refWindow() walk at boot.
-    // See: https://github.com/nicehash/KVitals/issues/42
 
     property bool _sensorsReady: sensorLoader.status === Loader.Ready
     property var cpu:     _sensorsReady ? sensorLoader.item.cpu     : _nullCpu
@@ -178,11 +206,9 @@ PlasmoidItem {
     property var fans:    _sensorsReady ? sensorLoader.item.fans    : _nullFans
     property var uptime:  _sensorsReady ? sensorLoader.item.uptime  : _nullUptime
 
-    // --- Chart history (popup sparklines) ---
-    // Arrays are mutated in place; chartVersion bumps to signal repaints,
-    // since QML bindings can't observe array mutation. Per-GPU keys
-    // ("gpu:<id>", "gpuTemp:<id>") are created lazily as GPUs appear.
-    property var chartHistory: ({cpu: [], ram: [], temp: [], netDown: [], netUp: [], bat: []})
+    // --- Chart history ---
+
+    property var chartHistory: ({cpu: [], ram: [], temp: [], ramTemp: [], diskTemp: [], netDown: [], netUp: [], bat: []})
     property int maxChartPoints: 60
     property int chartVersion: 0
 
@@ -207,6 +233,8 @@ PlasmoidItem {
             if (push(h.cpu, root.cpu.cpuNumericValue)) changed = true;
             if (push(h.ram, root.memory.ramPercentage)) changed = true;
             if (push(h.temp, root.temp.tempNumericValue)) changed = true;
+            if (push(h.ramTemp, root.temp.ramTempNumericValue)) changed = true;
+            if (push(h.diskTemp, root.disk.diskTempNumber)) changed = true;
             if (push(h.netDown, root.network.netDownRaw)) changed = true;
             if (push(h.netUp, root.network.netUpRaw)) changed = true;
             if (push(h.bat, root.battery.batNumericValue)) changed = true;
@@ -225,7 +253,7 @@ PlasmoidItem {
         }
     }
 
-    // Safe defaults so bindings don't error before sensors load
+    // Safe defaults
     QtObject {
         id: _nullCpu
         property string cpuValue: ""
@@ -235,13 +263,17 @@ PlasmoidItem {
     QtObject {
         id: _nullMemory
         property string ramValue: ""
-        property string ramPercentValue: ""
+        property string ramPercentValue: "..."
         property real ramPercentage: NaN
     }
     QtObject {
         id: _nullTemp
         property string tempValue: "--"
         property real tempNumericValue: NaN
+        property bool sysIsFallback: false
+        property string ramTempValue: "--"
+        property real ramTempNumericValue: NaN
+        property bool ramTempExists: false
     }
     QtObject {
         id: _nullGpu
@@ -268,6 +300,7 @@ PlasmoidItem {
         id: _nullNetwork
         property string netDownValue: "0"
         property string netUpValue: "0"
+        property string netIpValue: ""
     }
     QtObject {
         id: _nullDisk
@@ -275,6 +308,8 @@ PlasmoidItem {
         property string diskWriteValue: "0"
         property string diskTempValue: ""
         property real diskTempNumber: NaN
+        property bool multiDisk: false
+        property var diskDataList: []
     }
     QtObject {
         id: _nullFans
@@ -322,7 +357,6 @@ PlasmoidItem {
                 gpuSelection: root.gpuSelection
                 gpuLabels: root.gpuLabels
                 tempUnit: root.tempUnit
-                gpuMetrics: root.gpuMetrics
             }
 
             BatterySensors {
@@ -341,7 +375,7 @@ PlasmoidItem {
             DiskSensors {
                 id: _disk
                 updateInterval: root.updateInterval
-                enabled: root.showDisk
+                enabled: root.diskEnabled
                 tempUnit: root.tempUnit
                 networkUnit: root.networkUnit
                 diskLabels: root.diskLabels
@@ -360,10 +394,6 @@ PlasmoidItem {
         }
     }
 
-    // Activate the sensor loader after the initial refWindow() walk is complete.
-    // The SIGSEGV in PlasmaTheme::syncColors() happens synchronously during
-    // ShellCorona::load() → refWindow(), so deferring to the next event loop
-    // iteration (Timer interval: 0) guarantees we're past the dangerous window.
     Timer {
         id: sensorActivationTimer
         interval: 0
@@ -374,9 +404,72 @@ PlasmoidItem {
         }
     }
 
+    Binding {
+        target: Plasmoid.configuration
+        property: "_tempFallbackActive"
+        value: temp.sysIsFallback
+        when: _sensorsReady
+    }
+
+    Binding {
+        target: Plasmoid.configuration
+        property: "_ramTempDetected"
+        value: temp.ramTempExists
+        when: _sensorsReady
+    }
+
     Component.onCompleted: {
-        console.warn("[KVitals] main.qml: ready. config: showCpu=" + showCpu + " showGpu=" + showGpu + " showBattery=" + showBattery + " showNetwork=" + showNetwork + " showDisk=" + showDisk);
+        console.warn("[KVitals] main.qml: ready.");
         sensorActivationTimer.start();
+    }
+
+    // === Compact model helper: build segments from sub-metrics ===
+
+    function _compactSegments(key, subsList, colorMap) {
+        var segs = [];
+        for (var si = 0; si < subsList.length; si++) {
+            var s = subsList[si];
+            var val = _compactSubValue(key, s);
+            if (val === null) continue;
+            segs.push({value: val, color: colorMap[s] || root.baseTextColor});
+        }
+        return segs.length > 0 ? segs : null;
+    }
+
+    function _compactSubValue(key, sub) {
+        switch (key) {
+            case "cpu":
+                if (sub === "usage") return cpu.cpuValue;
+                if (sub === "freq")  return cpu.cpuFreqValue;
+                if (sub === "temp")  return temp.tempValue !== "--" ? temp.tempValue : null;
+                break;
+            case "ram":
+                if (sub === "percentage") return memory.ramPercentValue;
+                if (sub === "used") return memory.ramValue;
+                if (sub === "temp") return temp.ramTempValue;
+                break;
+            case "gpu":
+                if (sub === "usage") return gpu.gpuValue;
+                if (sub === "vram")  return gpu.gpuRamValue;
+                if (sub === "temp")  return gpu.gpuTempValue;
+                break;
+            case "bat":
+                if (sub === "percentage") return battery.batValue;
+                if (sub === "power")      return battery.powerValue;
+                break;
+            case "net":
+                if (sub === "down") return "↓" + network.netDownValue;
+                if (sub === "up")   return "↑" + network.netUpValue;
+                if (sub === "ip" && showNetworkIp && network.netIpValue && network.netIpValue !== "..." && network.netIpValue !== "")
+                    return network.netIpValue;
+                break;
+            case "disk":
+                if (sub === "read")  return "↓" + disk.diskReadValue;
+                if (sub === "write") return "↑" + disk.diskWriteValue;
+                if (sub === "temp" && disk.diskTempValue) return disk.diskTempValue;
+                break;
+        }
+        return null;
     }
 
     // --- Representations ---
@@ -386,143 +479,93 @@ PlasmoidItem {
             var items = [];
             for (var i = 0; i < root.orderedKeys.length; i++) {
                 var key = root.orderedKeys[i];
-                if (key === "cpu" && root.showCpu && root.compactShowCpu && cpu.cpuValue) {
-                    if (root.mergeCpuTemp && root.showTemp && root.compactShowTemp && temp.tempValue && temp.tempValue !== "--") {
-                        var segs = [{value: cpu.cpuValue, color: root.cpuColor},
-                                    {value: temp.tempValue, color: root.tempColor}];
-                        if (root.mergeCpuFreq && root.showCpuFreq)
-                            segs.push({value: cpu.cpuFreqValue, color: root.baseTextColor});
-                        items.push({icon: root.cpuIcon, label: root.useCustomLabelsInCompact ? (root.cpuLabel + ":") : "CPU:", color: root.cpuColor, segments: segs});
-                    } else if (root.mergeCpuFreq && root.showCpuFreq) {
-                        items.push({
-                            icon: root.cpuIcon, label: root.useCustomLabelsInCompact ? (root.cpuLabel + ":") : "CPU:", color: root.cpuColor,
-                            segments: [
-                                {value: cpu.cpuValue, color: root.cpuColor},
-                                {value: cpu.cpuFreqValue, color: root.baseTextColor}
-                            ]
-                        });
-                    } else {
-                        items.push({icon: root.cpuIcon, label: root.useCustomLabelsInCompact ? (root.cpuLabel + ":") : "CPU:", value: cpu.cpuValue, color: root.cpuColor});
+                if (!root.isEnabled(key)) continue;
+
+                var sm = root.subs(key).split(",").filter(function(s){ return s.length > 0; });
+                var colorMap = {
+                    "usage": root.cpuColor, "freq": root.baseTextColor,
+                    "temp": root.tempColor, "percentage": root.ramColor,
+                    "used": root.baseTextColor, "vram": root.baseTextColor,
+                    "power": root.baseTextColor, "down": root.baseTextColor,
+                    "up": root.baseTextColor, "ip": root.baseTextColor,
+                    "read": root.baseTextColor, "write": root.baseTextColor
+                };
+
+                if (key === "cpu") {
+                    var segs = root._compactSegments("cpu", sm, colorMap);
+                    if (segs) items.push({
+                        icon: root.cpuIcon, label: root.cpuLabel + ":",
+                        segments: segs, color: root.cpuColor
+                    });
+                }
+                else if (key === "ram") {
+                    if (sm.length === 1 && sm[0] === "percentage")
+                        items.push({icon: root.ramIcon, label: root.ramLabel + ":", value: memory.ramPercentValue, color: root.ramColor});
+                    else if (sm.length === 1 && sm[0] === "used")
+                        items.push({icon: root.ramIcon, label: root.ramLabel + ":", value: memory.ramValue, color: root.baseTextColor});
+                    else {
+                        var rsegs = root._compactSegments("ram", sm, colorMap);
+                        if (rsegs) items.push({icon: root.ramIcon, label: root.ramLabel + ":", segments: rsegs, color: root.ramColor});
                     }
-                } else if (key === "ram" && root.showRam && root.compactShowRam && memory.ramValue)
-                    items.push({
-                        icon: root.ramIcon, label: root.useCustomLabelsInCompact ? (root.ramLabel + ":") : "RAM:", value: memory.ramPercentValue,
-                        color: root.ramColor
-                    });
-                else if (key === "temp" && root.showTemp && root.compactShowTemp && temp.tempValue && temp.tempValue !== "--"
-                    && !(root.mergeCpuTemp && root.showCpu && root.compactShowCpu))
-                    items.push({
-                        icon: [root.cpuIcon, root.tempIcon], label: "TEMP:", value: temp.tempValue,
-                        color: root.tempColor
-                    });
-                else if (key === "gpu" && root.showGpu && root.compactShowGpu && gpu.hasGpuData) {
-                    var multiGpu = gpu.gpuDataList.length > 1;
-                    if (multiGpu) {
-                        // Show each GPU as a separate entry
+                }
+                else if (key === "temp") {
+                    if (temp.tempValue && temp.tempValue !== "--")
+                        items.push({icon: root.tempIcon, label: root.tempLabel + ":", value: temp.tempValue, color: root.tempColor});
+                }
+                else if (key === "gpu") {
+                    if (gpu.gpuDataList.length > 1) {
                         for (var g = 0; g < gpu.gpuDataList.length; g++) {
                             var gd = gpu.gpuDataList[g];
-                            var label = root.useCustomLabelsInCompact ? ((gd.name.length > 0 ? gd.name : gd.id) + ":") : ("GPU" + (g + 1) + ":");
-                            if (root.splitGpu) {
-                                if (gd.usage) items.push({icon: root.gpuIcon, label: label, value: gd.usage, color: root.gpuColor});
-                                if (gd.vram)  items.push({icon: root.gpuIcon, label: "VRAM:", value: gd.vram, color: root.baseTextColor});
-                                if (gd.temp)  items.push({icon: [root.gpuIcon, root.tempIcon], label: "GTEMP:", value: gd.temp, color: root.gpuTempColor});
-                            } else {
-                                var segs2 = [];
-                                if (gd.usage) segs2.push({value: gd.usage, color: root.gpuColor});
-                                if (gd.vram)  segs2.push({value: gd.vram,  color: root.baseTextColor});
-                                if (gd.temp)  segs2.push({value: gd.temp,  color: root.gpuTempColor});
-                                if (segs2.length > 0)
-                                    items.push({icon: root.gpuIcon, label: label, segments: segs2, color: root.gpuColor});
+                            var gsegs = [];
+                            for (var si = 0; si < sm.length; si++) {
+                                var val = sm[si] === "usage" ? gd.usage
+                                        : sm[si] === "vram"  ? gd.vram
+                                        : sm[si] === "temp"  ? gd.temp : null;
+                                if (!val) continue;
+                                gsegs.push({value: val, color: colorMap[sm[si]] || root.baseTextColor});
                             }
+                            if (gsegs.length > 0)
+                                items.push({icon: root.gpuIcon, label: (gd.name || gd.id) + ":", segments: gsegs, color: root.gpuColor});
                         }
                     } else {
-                        var _gpuLabel0 = root.useCustomLabelsInCompact ? (gpu.gpuDataList.length > 0 ? gpu.gpuDataList[0].name + ":" : "GPU:") : "GPU:";
-                        if (root.splitGpu) {
-                            if (gpu.hasGpuUsageData)
-                                items.push({icon: root.gpuIcon, label: _gpuLabel0, value: gpu.gpuValue, color: root.gpuColor});
-                            if (gpu.hasGpuVramData)
-                                items.push({
-                                    icon: root.gpuIcon,
-                                    label: "VRAM:",
-                                    value: gpu.gpuRamValue,
-                                    color: root.baseTextColor
-                                });
-                            if (gpu.hasGpuTempData)
-                                items.push({
-                                    icon: [root.gpuIcon, root.tempIcon],
-                                    label: "GTEMP:",
-                                    value: gpu.gpuTempValue,
-                                    color: root.gpuTempColor
-                                });
-                        } else {
-                            var gpuSegs = [];
-                            if (gpu.hasGpuUsageData)
-                                gpuSegs.push({value: gpu.gpuValue, color: root.gpuColor});
-                            if (gpu.hasGpuVramData)
-                                gpuSegs.push({value: gpu.gpuRamValue, color: root.baseTextColor});
-                            if (gpu.hasGpuTempData)
-                                gpuSegs.push({value: gpu.gpuTempValue, color: root.gpuTempColor});
-                            items.push({
-                                icon: root.gpuIcon, label: _gpuLabel0, segments: gpuSegs,
-                                color: root.gpuColor
-                            });
-                        }
+                        var gsegs2 = root._compactSegments("gpu", sm, colorMap);
+                        var gpuLabel = gpu.gpuDataList.length > 0 && gpu.gpuDataList[0].name
+                            ? gpu.gpuDataList[0].name + ":"
+                            : "GPU:";
+                        if (gsegs2) items.push({icon: root.gpuIcon, label: gpuLabel, segments: gsegs2, color: root.gpuColor});
                     }
-                } else if (key === "bat" && root.showBattery && root.compactShowBattery && battery.batValue) {
-                    if (root.mergeBatPwr && root.showPower && root.compactShowPower && battery.powerValue) {
-                        items.push({
-                            icon: root.batteryIcon, label: "BAT:",
-                            color: root.batteryColor,
-                            segments: [
-                                {value: battery.batValue, color: root.batteryColor},
-                                {value: battery.powerValue, color: root.baseTextColor}
-                            ]
-                        });
-                    } else {
-                        items.push({
-                            icon: root.batteryIcon, label: "BAT:", value: battery.batValue,
+                }
+                else if (key === "bat") {
+                    if (sm.length === 1 && sm[0] === "percentage")
+                        items.push({icon: root.batteryIcon, label: "BAT:", value: battery.batValue, color: root.batteryColor});
+                    else if (sm.length === 1 && sm[0] === "power")
+                        items.push({icon: root.powerIcon, label: "PWR:", value: battery.powerValue, color: root.baseTextColor});
+                    else {
+                        var bsegs = root._compactSegments("bat", sm, colorMap);
+                        if (bsegs) items.push({
+                            icon: root.batteryIcon, label: "BAT:", segments: bsegs,
                             color: root.batteryColor
                         });
                     }
-                } else if (key === "pwr" && root.showPower && root.compactShowPower && battery.powerValue
-                    && !(root.mergeBatPwr && root.showBattery && root.compactShowBattery))
-                    items.push({
-                        icon: root.powerIcon, label: "PWR:", value: battery.powerValue,
-                        color: root.baseTextColor
-                    });
-                else if (key === "net" && root.showNetwork && root.compactShowNetwork) {
-                    var netSegs = [
-                        {value: "↓" + network.netDownValue, color: root.baseTextColor},
-                        {value: "↑" + network.netUpValue, color: root.baseTextColor}
-                    ];
-                    if (root.showNetworkIp && network.netIpValue && network.netIpValue !== "..." && network.netIpValue !== "") {
-                        netSegs.push({value: network.netIpValue, color: root.baseTextColor});
-                    }
-                    items.push({
-                        icon: root.networkIcon, label: root.useCustomLabelsInCompact ? (root.netLabel + ":") : "NET:",
-                        segments: netSegs,
-                        color: root.baseTextColor
+                }
+                else if (key === "net") {
+                    var nsegs = root._compactSegments("net", sm, colorMap);
+                    if (nsegs) items.push({
+                        icon: root.networkIcon, label: root.netLabel + ":",
+                        segments: nsegs, color: root.baseTextColor
                     });
                 }
-                else if (key === "disk" && root.showDisk && root.compactShowDisk) {
-                    var diskSegs = [{value: "↓" + disk.diskReadValue, color: root.baseTextColor},
-                                    {value: "↑" + disk.diskWriteValue, color: root.baseTextColor}];
-                    if (disk.diskTempValue)
-                        diskSegs.push({value: disk.diskTempValue, color: root.diskTempColor});
-                    items.push({icon: root.diskIcon, label: root.useCustomLabelsInCompact ? (root.diskLabel + ":") : "DSK:", segments: diskSegs, color: root.baseTextColor});
-                }
-                else if (key === "fan" && root.showFan && root.compactShowFan && fans.hasFanData) {
-                    items.push({
-                        icon: root.fanIcon, label: "FAN:", value: fans.fanValue,
-                        color: root.baseTextColor
+                else if (key === "disk") {
+                    var dsegs = root._compactSegments("disk", sm, colorMap);
+                    if (dsegs) items.push({
+                        icon: root.diskIcon, label: root.diskLabel + ":",
+                        segments: dsegs, color: root.baseTextColor
                     });
                 }
-                else if (key === "uptime" && root.showUptime && root.compactShowUptime && uptime.uptimeValue) {
-                    items.push({
-                        icon: root.uptimeIcon, label: "UPTIME:", value: uptime.uptimeValue,
-                        color: root.baseTextColor
-                    });
-                }
+                else if (key === "fan")
+                    items.push({icon: root.fanIcon, label: "FAN:", value: fans.fanValue, color: root.baseTextColor});
+                else if (key === "uptime")
+                    items.push({icon: root.uptimeIcon, label: "UPTIME:", value: uptime.uptimeValue, color: root.baseTextColor});
             }
             return items;
         }
@@ -554,95 +597,101 @@ PlasmoidItem {
             var items = [];
             for (var i = 0; i < root.orderedKeys.length; i++) {
                 var key = root.orderedKeys[i];
-                if (key === "cpu" && root.showCpu)
+
+                var addMetric = function(label, value, color, icon, chartKey, chartMax) {
                     items.push({
-                        label: root.cpuLabel + " Usage", value: cpu.cpuValue,
-                        color: root.cpuColor, icon: root.cpuIcon, chartKey: "cpu", chartMax: 100
+                        label: label, value: value, color: color,
+                        icon: icon || "", chartKey: chartKey || "",
+                        chartMax: chartMax || 0
                     });
-                if (key === "cpu" && root.showCpu && root.showCpuFreq)
-                    items.push({
-                        label: root.cpuLabel + " Frequency", value: cpu.cpuFreqValue,
-                        color: root.baseTextColor, icon: root.cpuIcon
-                    });
-                else if (key === "ram" && root.showRam) {
-                    if (memory.ramPercentValue !== "...")
-                        items.push({label: root.ramLabel, value: memory.ramPercentValue, color: root.ramColor, icon: root.ramIcon, chartKey: "ram", chartMax: 100});
-                    if (memory.ramValue !== "...")
-                        items.push({label: root.ramLabel, value: memory.ramValue, color: root.baseTextColor, icon: root.ramIcon});
+                };
+
+                if (key === "cpu" && root.cpuEnabled && cpu.cpuValue) {
+                    if (root.hasSub("cpu", "usage"))
+                        addMetric(root.cpuLabel + " Usage", cpu.cpuValue, root.cpuColor, root.cpuIcon, "cpu", 100);
+                    if (root.hasSub("cpu", "freq") && cpu.cpuFreqValue)
+                        addMetric(root.cpuLabel + " Frequency", cpu.cpuFreqValue, root.baseTextColor, root.cpuIcon);
+                    if (root.hasSub("cpu", "temp") && temp.tempValue !== "--")
+                        addMetric(root.cpuLabel + " Temperature", temp.tempValue, root.tempColor, [root.cpuIcon, root.tempIcon], "temp", 100);
                 }
-                else if (key === "temp" && root.showTemp && temp.tempValue !== "--")
-                    items.push({
-                        label: root.cpuLabel + " Temp", value: temp.tempValue,
-                        color: root.tempColor, icon: [root.cpuIcon, root.tempIcon], chartKey: "temp", chartMax: 100
-                    });
-                else if (key === "gpu" && root.showGpu) {
+                else if (key === "ram" && root.ramEnabled) {
+                    if ((root.ramWidgetShowBoth || root.hasSub("ram", "percentage")) && memory.ramPercentValue !== "...")
+                        addMetric(root.ramLabel, memory.ramPercentValue, root.ramColor, root.ramIcon, "ram", 100);
+                    if ((root.ramWidgetShowBoth || root.hasSub("ram", "used")) && memory.ramValue !== "...")
+                        addMetric(root.ramLabel + " Usage", memory.ramValue, root.baseTextColor, root.ramIcon);
+                    if (root.hasSub("ram", "temp") && temp.ramTempValue !== "--")
+                        addMetric(root.ramLabel + " Temperature", temp.ramTempValue, root.tempColor, [root.ramIcon, root.tempIcon], "ramTemp", 100);
+                }
+                else if (key === "temp" && root.tempEnabled && temp.tempValue !== "--")
+                    addMetric(root.tempLabel, temp.tempValue, root.tempColor, root.tempIcon, "temp", 100);
+                else if (key === "gpu" && root.gpuEnabled) {
                     if (gpu.gpuDataList.length > 1) {
                         for (var g = 0; g < gpu.gpuDataList.length; g++) {
                             var gd = gpu.gpuDataList[g];
                             var label = gd.name || gd.id;
-                            if (gd.usage) items.push({label: label + " Usage", value: gd.usage, color: root.gpuColor, icon: root.gpuIcon, chartKey: "gpu:" + gd.id, chartMax: 100});
-                            if (gd.vram)  items.push({label: label + " VRAM",  value: gd.vram,  color: root.baseTextColor, icon: root.gpuIcon});
-                            if (gd.temp)  items.push({label: label + " Temp",  value: gd.temp,  color: root.gpuTempColor, icon: [root.gpuIcon, root.tempIcon], chartKey: "gpuTemp:" + gd.id, chartMax: 100});
+                            if (root.hasSub("gpu", "usage") && gd.usage)
+                                addMetric(label + " Usage", gd.usage, root.gpuColor, root.gpuIcon, "gpu:" + gd.id, 100);
+                            if (root.hasSub("gpu", "vram") && gd.vram)
+                                addMetric(label + " VRAM", gd.vram, root.baseTextColor, root.gpuIcon);
+                            if (root.hasSub("gpu", "temp") && gd.temp)
+                                addMetric(label + " Temperature", gd.temp, root.gpuTempColor, [root.gpuIcon, root.tempIcon], "gpuTemp:" + gd.id, 100);
                         }
                     } else {
                         var _gpuName = gpu.gpuDataList.length > 0 ? gpu.gpuDataList[0].name : "GPU";
-                        if (gpu.hasGpuUsageData) items.push({
-                            label: _gpuName + " Usage", value: gpu.gpuValue,
-                            color: root.gpuColor, icon: root.gpuIcon,
-                            chartKey: gpu.gpuDataList.length > 0 ? "gpu:" + gpu.gpuDataList[0].id : "", chartMax: 100
-                        });
-                        if (gpu.hasGpuVramData) items.push({
-                            label: _gpuName + " VRAM", value: gpu.gpuRamValue,
-                            color: root.baseTextColor, icon: root.gpuIcon
-                        });
-                        if (gpu.hasGpuTempData) items.push({
-                            label: _gpuName + " Temp", value: gpu.gpuTempValue,
-                            color: root.gpuTempColor, icon: [root.gpuIcon, root.tempIcon],
-                            chartKey: gpu.gpuDataList.length > 0 ? "gpuTemp:" + gpu.gpuDataList[0].id : "", chartMax: 100
-                        });
-                    }
-                } else if (key === "bat" && root.showBattery && battery.batValue)
-                    items.push({
-                        label: "Battery", value: battery.batValue,
-                        color: root.batteryColor, icon: root.batteryIcon, chartKey: "bat", chartMax: 100
-                    });
-                else if (key === "pwr" && root.showPower && battery.powerValue)
-                    items.push({
-                        label: "Power", value: battery.powerValue,
-                        color: root.baseTextColor, icon: root.powerIcon
-                    });
-                else if (key === "net" && root.showNetwork) {
-                    items.push({label: root.netLabel + " ↓", value: network.netDownValue, color: root.baseTextColor, icon: root.networkIcon, chartKey: "netDown"});
-                    items.push({label: root.netLabel + " ↑", value: network.netUpValue, color: root.baseTextColor, icon: root.networkIcon, chartKey: "netUp"});
-                    if (root.showNetworkIp && network.netIpValue && network.netIpValue !== "..." && network.netIpValue !== "") {
-                        items.push({label: "Local IP", value: network.netIpValue, color: root.baseTextColor, icon: root.networkIcon});
+                        if (root.hasSub("gpu", "usage") && gpu.hasGpuUsageData)
+                            addMetric(_gpuName + " Usage", gpu.gpuValue, root.gpuColor, root.gpuIcon,
+                                gpu.gpuDataList.length > 0 ? "gpu:" + gpu.gpuDataList[0].id : "", 100);
+                        if (root.hasSub("gpu", "vram") && gpu.hasGpuVramData)
+                            addMetric(_gpuName + " VRAM", gpu.gpuRamValue, root.baseTextColor, root.gpuIcon);
+                        if (root.hasSub("gpu", "temp") && gpu.hasGpuTempData)
+                            addMetric(_gpuName + " Temperature", gpu.gpuTempValue, root.gpuTempColor,
+                                [root.gpuIcon, root.tempIcon],
+                                gpu.gpuDataList.length > 0 ? "gpuTemp:" + gpu.gpuDataList[0].id : "", 100);
                     }
                 }
-                else if (key === "disk" && root.showDisk) {
+                else if (key === "bat" && root.batEnabled && battery.batValue) {
+                    if (root.hasSub("bat", "percentage"))
+                        addMetric("Battery", battery.batValue, root.batteryColor, root.batteryIcon, "bat", 100);
+                    if (root.hasSub("bat", "power") && battery.powerValue)
+                        addMetric("Power", battery.powerValue, root.baseTextColor, root.powerIcon);
+                }
+                else if (key === "net" && root.netEnabled) {
+                    if (root.hasSub("net", "down"))
+                        addMetric(root.netLabel + " ↓", network.netDownValue, root.baseTextColor, root.networkIcon, "netDown");
+                    if (root.hasSub("net", "up"))
+                        addMetric(root.netLabel + " ↑", network.netUpValue, root.baseTextColor, root.networkIcon, "netUp");
+                    if (root.hasSub("net", "ip") && root.showNetworkIp && network.netIpValue && network.netIpValue !== "..." && network.netIpValue !== "")
+                        addMetric("Local IP", network.netIpValue, root.baseTextColor, root.networkIcon);
+                }
+                else if (key === "disk" && root.diskEnabled) {
                     if (disk.multiDisk) {
                         for (var dk = 0; dk < disk.diskDataList.length; dk++) {
                             var dd = disk.diskDataList[dk];
                             var dkLabel = dd.name || dd.id;
-                            var dkVals = [];
-                            if (dd.read)  dkVals.push("↓" + dd.read);
-                            if (dd.write) dkVals.push("↑" + dd.write);
-                            if (dkVals.length > 0)
-                                items.push({label: dkLabel, value: dkVals.join(" "), color: root.baseTextColor, icon: root.diskIcon});
+                            if (root.hasSub("disk", "read") && root.hasSub("disk", "write"))
+                                addMetric(dkLabel, "↓" + dd.read + " ↑" + dd.write, root.baseTextColor, root.diskIcon);
+                            else if (root.hasSub("disk", "read"))
+                                addMetric(dkLabel + " ↓", dd.read, root.baseTextColor, root.diskIcon);
+                            else if (root.hasSub("disk", "write"))
+                                addMetric(dkLabel + " ↑", dd.write, root.baseTextColor, root.diskIcon);
                         }
-                        if (disk.diskTempValue)
-                            items.push({label: "Disk Temp", value: disk.diskTempValue, color: root.diskTempColor, icon: [root.diskIcon, root.tempIcon]});
+                        if (root.hasSub("disk", "temp") && disk.diskTempValue)
+                            addMetric("Disk Temperature", disk.diskTempValue, root.diskTempColor, [root.diskIcon, root.tempIcon], "diskTemp", 100);
                     } else {
-                        items.push({label: root.diskLabel, value: "↓" + disk.diskReadValue + " ↑" + disk.diskWriteValue, color: root.baseTextColor, icon: root.diskIcon});
-                        if (disk.diskTempValue)
-                            items.push({label: root.diskLabel + " Temp", value: disk.diskTempValue, color: root.diskTempColor, icon: [root.diskIcon, root.tempIcon]});
+                        if (root.hasSub("disk", "read") && root.hasSub("disk", "write"))
+                            addMetric(root.diskLabel, "↓" + disk.diskReadValue + " ↑" + disk.diskWriteValue, root.baseTextColor, root.diskIcon);
+                        else if (root.hasSub("disk", "read"))
+                            addMetric(root.diskLabel + " ↓", disk.diskReadValue, root.baseTextColor, root.diskIcon);
+                        else if (root.hasSub("disk", "write"))
+                            addMetric(root.diskLabel + " ↑", disk.diskWriteValue, root.baseTextColor, root.diskIcon);
+                        if (root.hasSub("disk", "temp") && disk.diskTempValue)
+                            addMetric(root.diskLabel + " Temperature", disk.diskTempValue, root.diskTempColor, [root.diskIcon, root.tempIcon], "diskTemp", 100);
                     }
                 }
-                else if (key === "fan" && root.showFan && fans.hasFanData) {
-                    items.push({label: "Fans", value: fans.fanValue, color: root.baseTextColor, icon: root.fanIcon});
-                }
-                else if (key === "uptime" && root.showUptime && uptime.uptimeValue) {
-                    items.push({label: "System Uptime", value: uptime.uptimeValue, color: root.baseTextColor, icon: root.uptimeIcon});
-                }
+                else if (key === "fan" && root.fanEnabled && fans.hasFanData)
+                    addMetric("Fans", fans.fanValue, root.baseTextColor, root.fanIcon);
+                else if (key === "uptime" && root.uptimeEnabled && uptime.uptimeValue)
+                    addMetric("System Uptime", uptime.uptimeValue, root.baseTextColor, root.uptimeIcon);
             }
             return items;
         }
@@ -655,50 +704,58 @@ PlasmoidItem {
         var parts = [];
         for (var i = 0; i < root.orderedKeys.length; i++) {
             var key = root.orderedKeys[i];
-            if (key === "cpu" && root.showCpu && cpu.cpuValue) {
+            if (!root.isEnabled(key)) continue;
+
+            if (key === "cpu") {
                 var cpuLine = root.cpuLabel + ": " + cpu.cpuValue;
-                if (root.showTemp && temp.tempValue && temp.tempValue !== "--")
+                if (root.hasSub("cpu", "temp") && temp.tempValue && temp.tempValue !== "--")
                     cpuLine += " " + temp.tempValue;
                 parts.push(cpuLine);
-            } else if (key === "temp" && root.showTemp && !root.showCpu && temp.tempValue && temp.tempValue !== "--")
-                parts.push("CPUTEMP: " + temp.tempValue);
-            else if (key === "ram" && root.showRam && memory.ramValue)
-                parts.push(root.ramLabel + ": " + memory.ramValue);
-            else if (key === "gpu" && root.showGpu && gpu.hasGpuData) {
+            } else if (key === "ram") {
+                var ramLine = root.ramLabel + ": " + memory.ramValue;
+                if (root.hasSub("ram", "temp"))
+                    ramLine += " " + temp.ramTempValue;
+                parts.push(ramLine);
+            }
+            else if (key === "temp" && !root.hasSub("cpu", "temp"))
+                parts.push(root.tempLabel + ": " + temp.tempValue);
+            else if (key === "gpu") {
                 if (gpu.gpuDataList.length > 1) {
                     for (var g = 0; g < gpu.gpuDataList.length; g++) {
                         var gd = gpu.gpuDataList[g];
                         var label = gd.name || gd.id;
-                        var vals = [gd.usage, gd.vram, gd.temp].filter(function(v) { return v; });
+                        var vals = [];
+                        if (root.hasSub("gpu", "usage") && gd.usage) vals.push(gd.usage);
+                        if (root.hasSub("gpu", "vram")  && gd.vram)  vals.push(gd.vram);
+                        if (root.hasSub("gpu", "temp")  && gd.temp)  vals.push(gd.temp);
                         if (vals.length > 0) parts.push(label + ": " + vals.join(" "));
                     }
                 } else {
                     var _gpuName = gpu.gpuDataList.length > 0 ? gpu.gpuDataList[0].name : "GPU";
                     var gpuParts = [];
-                    if (gpu.hasGpuUsageData) gpuParts.push(gpu.gpuValue);
-                    if (gpu.hasGpuVramData)  gpuParts.push(gpu.gpuRamValue);
-                    if (gpu.hasGpuTempData)  gpuParts.push(gpu.gpuTempValue);
+                    if (root.hasSub("gpu", "usage") && gpu.hasGpuUsageData) gpuParts.push(gpu.gpuValue);
+                    if (root.hasSub("gpu", "vram")  && gpu.hasGpuVramData)  gpuParts.push(gpu.gpuRamValue);
+                    if (root.hasSub("gpu", "temp")  && gpu.hasGpuTempData)  gpuParts.push(gpu.gpuTempValue);
                     if (gpuParts.length > 0) parts.push(_gpuName + ": " + gpuParts.join(" "));
                 }
-            } else if (key === "bat" && root.showBattery && battery.batValue)
-                parts.push("BAT: " + battery.batValue);
-            else if (key === "pwr" && root.showPower && battery.powerValue)
-                parts.push("PWR: " + battery.powerValue);
-            else if (key === "net" && root.showNetwork) {
-                var ipStr = (root.showNetworkIp && network.netIpValue && network.netIpValue !== "..." && network.netIpValue !== "") ? " " + network.netIpValue : "";
+            } else if (key === "bat") {
+                if (root.hasSub("bat", "power") && battery.powerValue)
+                    parts.push("BAT: " + battery.batValue + " " + battery.powerValue);
+                else
+                    parts.push("BAT: " + battery.batValue);
+            } else if (key === "net") {
+                var ipStr = (root.hasSub("net", "ip") && showNetworkIp && network.netIpValue && network.netIpValue !== "..." && network.netIpValue !== "") ? " " + network.netIpValue : "";
                 parts.push(root.netLabel + ": ↓" + network.netDownValue + " ↑" + network.netUpValue + ipStr);
-            }
-            else if (key === "disk" && root.showDisk) {
-                var dParts = ["↓" + disk.diskReadValue, "↑" + disk.diskWriteValue];
-                if (disk.diskTempValue) dParts.push(disk.diskTempValue);
-                parts.push(root.diskLabel + ": " + dParts.join(" "));
-            }
-            else if (key === "fan" && root.showFan && fans.hasFanData) {
+            } else if (key === "disk") {
+                var dParts = [];
+                if (root.hasSub("disk", "read"))  dParts.push("↓" + disk.diskReadValue);
+                if (root.hasSub("disk", "write")) dParts.push("↑" + disk.diskWriteValue);
+                if (root.hasSub("disk", "temp") && disk.diskTempValue) dParts.push(disk.diskTempValue);
+                if (dParts.length > 0) parts.push(root.diskLabel + ": " + dParts.join(" "));
+            } else if (key === "fan")
                 parts.push("FAN: " + fans.fanValue);
-            }
-            else if (key === "uptime" && root.showUptime && uptime.uptimeValue) {
+            else if (key === "uptime")
                 parts.push("UPTIME: " + uptime.uptimeValue);
-            }
         }
         return parts.join("\n");
     }
