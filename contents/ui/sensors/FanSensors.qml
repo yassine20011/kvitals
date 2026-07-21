@@ -36,7 +36,7 @@ Item {
     }
 
     function refreshDiscovered() {
-        var found = [];
+        var ids = [];
         for (var row = 0; row < flatSensors.rowCount(); row++) {
             var idx = flatSensors.index(row, 0);
             var sensorId = flatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
@@ -44,13 +44,20 @@ Item {
             // Match any sensor that contains /fan and doesn't end with a non-digit (typically fan1, fan2, etc)
             var match = sensorId.match(/^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i);
             if (!match) continue;
-            // KSysGuard's DisplayRole is often generic/duplicated across fans
-            // (e.g. the same "Fan Speed" label for every one), so it can't be
-            // used to tell them apart. Assign a stable numbered name instead,
-            // same as GpuSensors.qml does for multiple GPUs.
-            var number = found.length + 1;
-            found.push({ id: sensorId, name: "Fan " + number, number: number });
+            ids.push(sensorId);
         }
+        // Sort by sensor id before numbering: the sensor tree's traversal
+        // order isn't guaranteed stable across sessions, and renumbering
+        // fans on every restart would make "Fan 1"/"Fan 2" (and any custom
+        // labels keyed off them) refer to different physical fans over time.
+        ids.sort();
+        // KSysGuard's DisplayRole is often generic/duplicated across fans
+        // (e.g. the same "Fan Speed" label for every one), so it can't be
+        // used to tell them apart. Assign a stable numbered name instead,
+        // same as GpuSensors.qml does for multiple GPUs.
+        var found = ids.map(function(id, i) {
+            return { id: id, name: "Fan " + (i + 1), number: i + 1 };
+        });
 
         if (JSON.stringify(found) !== JSON.stringify(_discovered)) {
             _discovered = found;

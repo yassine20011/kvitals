@@ -503,7 +503,7 @@ PlasmoidItem {
             var s = subsList[si];
             var val = _compactSubValue(key, s);
             if (val === null) continue;
-            segs.push({value: val, color: colorMap[s] || root.baseTextColor});
+            segs.push({value: val, color: colorMap[s] || root.baseTextColor, key: s});
         }
         return segs.length > 0 ? segs : null;
     }
@@ -569,23 +569,23 @@ PlasmoidItem {
                     var segs = root._compactSegments("cpu", sm, cpuMap);
                     if (segs) items.push({
                         icon: root.cpuIcon, label: root.cpuLabel + ":",
-                        segments: segs, color: root.cpuColor
+                        segments: segs, color: root.cpuColor, key: "cpu"
                     });
                 }
                 else if (key === "ram") {
                     if (sm.length === 1 && sm[0] === "percentage")
-                        items.push({icon: root.ramIcon, label: root.ramLabel + ":", value: memory.ramPercentValue, color: root.ramColor});
+                        items.push({icon: root.ramIcon, label: root.ramLabel + ":", value: memory.ramPercentValue, color: root.ramColor, key: "ram"});
                     else if (sm.length === 1 && sm[0] === "used")
-                        items.push({icon: root.ramIcon, label: root.ramLabel + ":", value: memory.ramValue, color: root.baseTextColor});
+                        items.push({icon: root.ramIcon, label: root.ramLabel + ":", value: memory.ramValue, color: root.baseTextColor, key: "ram"});
                     else {
                         var ramMap = Object.assign({}, colorMap, {"temp": root.ramTempColor});
                         var rsegs = root._compactSegments("ram", sm, ramMap);
-                        if (rsegs) items.push({icon: root.ramIcon, label: root.ramLabel + ":", segments: rsegs, color: root.ramColor});
+                        if (rsegs) items.push({icon: root.ramIcon, label: root.ramLabel + ":", segments: rsegs, color: root.ramColor, key: "ram"});
                     }
                 }
                 else if (key === "temp") {
                     if (temp.tempValue && temp.tempValue !== "--")
-                        items.push({icon: root.tempIcon, label: root.tempLabel + ":", value: temp.tempValue, color: root.systemColor});
+                        items.push({icon: root.tempIcon, label: root.tempLabel + ":", value: temp.tempValue, color: root.systemColor, key: "temp"});
                 }
                 else if (key === "gpu") {
                     if (gpu.gpuDataList.length > 1) {
@@ -597,29 +597,29 @@ PlasmoidItem {
                                         : sm[si] === "vram"  ? gd.vram
                                         : sm[si] === "temp"  ? gd.temp : null;
                                 if (!val) continue;
-                                gsegs.push({value: val, color: colorMap[sm[si]] || root.baseTextColor});
+                                gsegs.push({value: val, color: colorMap[sm[si]] || root.baseTextColor, key: sm[si]});
                             }
                             if (gsegs.length > 0)
-                                items.push({icon: root.gpuIcon, label: (gd.name || gd.id) + ":", segments: gsegs, color: root.gpuColor});
+                                items.push({icon: root.gpuIcon, label: (gd.name || gd.id) + ":", segments: gsegs, color: root.gpuColor, key: "gpu:" + gd.id});
                         }
                     } else {
                         var gsegs2 = root._compactSegments("gpu", sm, colorMap);
                         var gpuLabel = gpu.gpuDataList.length > 0 && gpu.gpuDataList[0].name
                             ? gpu.gpuDataList[0].name + ":"
                             : "GPU:";
-                        if (gsegs2) items.push({icon: root.gpuIcon, label: gpuLabel, segments: gsegs2, color: root.gpuColor});
+                        if (gsegs2) items.push({icon: root.gpuIcon, label: gpuLabel, segments: gsegs2, color: root.gpuColor, key: "gpu"});
                     }
                 }
                 else if (key === "bat") {
                     if (sm.length === 1 && sm[0] === "percentage")
-                        items.push({icon: root.batteryIcon, label: "BAT:", value: battery.batValue, color: root.batteryColor});
+                        items.push({icon: root.batteryIcon, label: "BAT:", value: battery.batValue, color: root.batteryColor, key: "bat:percentage"});
                     else if (sm.length === 1 && sm[0] === "power")
-                        items.push({icon: root.powerIcon, label: "PWR:", value: battery.powerValue, color: root.baseTextColor});
+                        items.push({icon: root.powerIcon, label: "PWR:", value: battery.powerValue, color: root.baseTextColor, key: "bat:power"});
                     else {
                         var bsegs = root._compactSegments("bat", sm, colorMap);
                         if (bsegs) items.push({
                             icon: root.batteryIcon, label: "BAT:", segments: bsegs,
-                            color: root.batteryColor
+                            color: root.batteryColor, key: "bat"
                         });
                     }
                 }
@@ -627,14 +627,14 @@ PlasmoidItem {
                     var nsegs = root._compactSegments("net", sm, colorMap);
                     if (nsegs) items.push({
                         icon: root.networkIcon, label: root.netLabel + ":",
-                        segments: nsegs, color: root.baseTextColor
+                        segments: nsegs, color: root.baseTextColor, key: "net"
                     });
                 }
                 else if (key === "disk") {
                     var dsegs = root._compactSegments("disk", sm, colorMap);
                     if (dsegs) items.push({
                         icon: root.diskIcon, label: root.diskLabel + ":",
-                        segments: dsegs, color: root.baseTextColor
+                        segments: dsegs, color: root.baseTextColor, key: "disk"
                     });
                 }
                 else if (key === "fan") {
@@ -643,18 +643,18 @@ PlasmoidItem {
                         for (var fci = 0; fci < fans.fanDataList.length; fci++) {
                             var fcd = fans.fanDataList[fci];
                             fansegs.push({label: fcd.number + ":", value: root._fanDisplayValue(fcd),
-                                color: root.baseTextColor});
+                                color: root.baseTextColor, key: fcd.id});
                         }
                         if (fansegs.length > 0)
-                            items.push({icon: root.fanIcon, label: root.fanLabel + ":", segments: fansegs, color: root.baseTextColor});
+                            items.push({icon: root.fanIcon, label: root.fanLabel + ":", segments: fansegs, color: root.baseTextColor, key: "fan"});
                     } else if (fans.fanDataList.length > 0) {
                         var fcd0 = fans.fanDataList[0];
                         items.push({icon: root.fanIcon, label: root.fanLabel + ":", value: root._fanDisplayValue(fcd0),
-                            color: root.baseTextColor});
+                            color: root.baseTextColor, key: "fan"});
                     }
                 }
                 else if (key === "uptime")
-                    items.push({icon: root.uptimeIcon, label: "UPTIME:", value: uptime.uptimeValue, color: root.baseTextColor});
+                    items.push({icon: root.uptimeIcon, label: "UPTIME:", value: uptime.uptimeValue, color: root.baseTextColor, key: "uptime"});
             }
             return items;
         }

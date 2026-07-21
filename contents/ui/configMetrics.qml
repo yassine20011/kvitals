@@ -385,16 +385,20 @@ KCM.SimpleKCM {
         interval: 100
         repeat: false
         onTriggered: {
-            var found = [];
+            var ids = [];
             for (var row = 0; row < cfgFlatSensors.rowCount(); row++) {
                 var idx = cfgFlatSensors.index(row, 0);
                 var sensorId = cfgFlatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
                 if (!sensorId) continue;
                 var match = sensorId.match(/^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i);
                 if (!match) continue;
-                if (found.some(function(f){ return f.id === sensorId; })) continue;
-                found.push({ id: sensorId, name: "Fan " + (found.length + 1) });
+                if (ids.indexOf(sensorId) < 0) ids.push(sensorId);
             }
+            // Same stable-numbering rationale as FanSensors.qml: sort by id
+            // so the config page's "Fan N" numbering matches the panel's and
+            // stays consistent across sessions.
+            ids.sort();
+            var found = ids.map(function(id, i) { return { id: id, name: "Fan " + (i + 1) }; });
             if (JSON.stringify(found) !== JSON.stringify(_liveDiscoveredFans))
                 _liveDiscoveredFans = found;
         }
@@ -467,7 +471,10 @@ KCM.SimpleKCM {
 
     function saveFanLabel(fanId, label) {
         var labels = parseFanLabels(cfg_fanLabels);
-        var trimmed = (label || "").trim();
+        // "|" is the record separator in the stored string — strip it from
+        // user input so a label containing it can't corrupt the mapping
+        // (colons are fine: parseFanLabels only splits on the first one).
+        var trimmed = (label || "").replace(/\|/g, "").trim();
         if (trimmed.length > 0) labels[fanId] = trimmed;
         else delete labels[fanId];
         var parts = [];
@@ -521,6 +528,14 @@ KCM.SimpleKCM {
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
             Kirigami.FormData.label: i18n("Metrics Configuration")
+        }
+
+        Label {
+            text: i18n("Upgrading from an older version may reset your visibility and sub-metric choices below to defaults.")
+            opacity: 0.6
+            font.italic: true
+            wrapMode: Text.WordWrap
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 28
         }
 
         ColumnLayout {
