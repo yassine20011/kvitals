@@ -74,7 +74,6 @@ PlasmoidItem {
     property string displayMode: Plasmoid.configuration.displayMode
     property string layoutType:  Plasmoid.configuration.layoutType
     property int iconSize:       Plasmoid.configuration.iconSize
-
     property string cpuIcon:     resolveIcon(Plasmoid.configuration.cpuIcon)
     property string ramIcon:     resolveIcon(Plasmoid.configuration.ramIcon)
     property string tempIcon:    Plasmoid.configuration.tempIcon
