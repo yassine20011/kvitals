@@ -8,6 +8,22 @@ import org.kde.iconthemes as KIconThemes
 KCM.SimpleKCM {
     id: iconsPage
 
+    // Mirrors main.qml's resolveIcon(): these names only exist in third-party
+    // icon themes (e.g. Win11/Win11-dark), so fall back to the bundled SVG
+    // for the preview instead of showing a blank icon on Breeze etc.
+    function resolveIcon(name) {
+        switch (name) {
+        case "am-cpu-symbolic":
+        case "nvidia-ram-symbolic":
+        case "am-disk-utility-symbolic":
+        case "am-fan-symbolic":
+        case "gpu-symbolic":
+            return Qt.resolvedUrl("../icons/" + name + ".svg");
+        default:
+            return name;
+        }
+    }
+
     property string cfg_cpuIcon: "am-cpu-symbolic"
     property string cfg_ramIcon: "nvidia-ram-symbolic"
     property string cfg_tempIcon: "temperature-normal"
@@ -65,13 +81,13 @@ KCM.SimpleKCM {
 
         RowLayout {
             Kirigami.FormData.label: i18n("CPU:")
-            Kirigami.Icon { source: cfg_cpuIcon; isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
+            Kirigami.Icon { source: resolveIcon(cfg_cpuIcon); isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
             Button { text: i18n("Change..."); onClicked: cpuIconDialog.open(); icon.name: "document-edit" }
         }
 
         RowLayout {
             Kirigami.FormData.label: i18n("RAM:")
-            Kirigami.Icon { source: cfg_ramIcon; isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
+            Kirigami.Icon { source: resolveIcon(cfg_ramIcon); isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
             Button { text: i18n("Change..."); onClicked: ramIconDialog.open(); icon.name: "document-edit" }
         }
 
@@ -83,7 +99,7 @@ KCM.SimpleKCM {
 
         RowLayout {
             Kirigami.FormData.label: i18n("GPU:")
-            Kirigami.Icon { source: cfg_gpuIcon; isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
+            Kirigami.Icon { source: resolveIcon(cfg_gpuIcon); isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
             Button { text: i18n("Change..."); onClicked: gpuIconDialog.open(); icon.name: "document-edit" }
         }
 
@@ -107,13 +123,13 @@ KCM.SimpleKCM {
 
         RowLayout {
             Kirigami.FormData.label: i18n("Disk:")
-            Kirigami.Icon { source: cfg_diskIcon; isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
+            Kirigami.Icon { source: resolveIcon(cfg_diskIcon); isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
             Button { text: i18n("Change..."); onClicked: diskIconDialog.open(); icon.name: "document-edit" }
         }
 
         RowLayout {
             Kirigami.FormData.label: i18n("Fan:")
-            Kirigami.Icon { source: cfg_fanIcon; isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
+            Kirigami.Icon { source: resolveIcon(cfg_fanIcon); isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
             Button { text: i18n("Change..."); onClicked: fanIconDialog.open(); icon.name: "document-edit" }
         }
 

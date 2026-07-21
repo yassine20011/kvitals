@@ -14,6 +14,23 @@ PlasmoidItem {
     property bool pinned: false
     hideOnWindowDeactivate: !pinned
 
+    // These names only exist in third-party icon themes (e.g. Win11/Win11-dark)
+    // some users have installed; on Breeze or any other theme they resolve to
+    // nothing and the icon silently disappears. Fall back to the package's own
+    // bundled copy so the default look never depends on the active icon theme.
+    function resolveIcon(name) {
+        switch (name) {
+        case "am-cpu-symbolic":
+        case "nvidia-ram-symbolic":
+        case "am-disk-utility-symbolic":
+        case "am-fan-symbolic":
+        case "gpu-symbolic":
+            return Qt.resolvedUrl("../icons/" + name + ".svg");
+        default:
+            return name;
+        }
+    }
+
     // --- Configuration properties ---
 
     property bool cpuEnabled:  Plasmoid.configuration.cpuEnabled
@@ -65,15 +82,15 @@ PlasmoidItem {
     property string layoutType:  Plasmoid.configuration.layoutType
     property int iconSize:       Plasmoid.configuration.iconSize
 
-    property string cpuIcon:     Plasmoid.configuration.cpuIcon
-    property string ramIcon:     Plasmoid.configuration.ramIcon
+    property string cpuIcon:     resolveIcon(Plasmoid.configuration.cpuIcon)
+    property string ramIcon:     resolveIcon(Plasmoid.configuration.ramIcon)
     property string tempIcon:    Plasmoid.configuration.tempIcon
-    property string gpuIcon:     Plasmoid.configuration.gpuIcon
+    property string gpuIcon:     resolveIcon(Plasmoid.configuration.gpuIcon)
     property string batteryIcon: Plasmoid.configuration.batteryIcon
     property string powerIcon:   Plasmoid.configuration.powerIcon
     property string networkIcon: Plasmoid.configuration.networkIcon
-    property string diskIcon:    Plasmoid.configuration.diskIcon
-    property string fanIcon:     Plasmoid.configuration.fanIcon
+    property string diskIcon:    resolveIcon(Plasmoid.configuration.diskIcon)
+    property string fanIcon:     resolveIcon(Plasmoid.configuration.fanIcon)
     property string uptimeIcon:  Plasmoid.configuration.uptimeIcon
 
     property string fontFamily: Plasmoid.configuration.fontFamily
