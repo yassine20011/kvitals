@@ -11,6 +11,9 @@
         <entry name="cpuSubMetrics" type="String">
             <default>usage,freq,temp</default>
         </entry>
+        <entry name="cpuVisibility" type="String">
+            <default>both</default>
+        </entry>
         <entry name="ramEnabled" type="Bool">
             <default>true</default>
         </entry>
@@ -22,11 +25,17 @@
         <entry name="ramWidgetShowBoth" type="Bool">
             <default>false</default>
         </entry>
+        <entry name="ramVisibility" type="String">
+            <default>both</default>
+        </entry>
         <entry name="tempEnabled" type="Bool">
             <default>true</default>
         </entry>
         <entry name="tempLabel" type="String">
             <default>System</default>
+        </entry>
+        <entry name="tempVisibility" type="String">
+            <default>both</default>
         </entry>
         <entry name="gpuEnabled" type="Bool">
             <default>true</default>
@@ -34,11 +43,17 @@
         <entry name="gpuSubMetrics" type="String">
             <default>usage,vram,temp</default>
         </entry>
+        <entry name="gpuVisibility" type="String">
+            <default>both</default>
+        </entry>
         <entry name="batEnabled" type="Bool">
             <default>true</default>
         </entry>
         <entry name="batSubMetrics" type="String">
             <default>percentage</default>
+        </entry>
+        <entry name="batVisibility" type="String">
+            <default>both</default>
         </entry>
         <entry name="netEnabled" type="Bool">
             <default>true</default>
@@ -46,17 +61,29 @@
         <entry name="netSubMetrics" type="String">
             <default>down,up</default>
         </entry>
+        <entry name="netVisibility" type="String">
+            <default>both</default>
+        </entry>
         <entry name="diskEnabled" type="Bool">
             <default>false</default>
         </entry>
         <entry name="diskSubMetrics" type="String">
             <default>read,write</default>
         </entry>
+        <entry name="diskVisibility" type="String">
+            <default>both</default>
+        </entry>
         <entry name="fanEnabled" type="Bool">
             <default>false</default>
         </entry>
+        <entry name="fanVisibility" type="String">
+            <default>both</default>
+        </entry>
         <entry name="uptimeEnabled" type="Bool">
             <default>false</default>
+        </entry>
+        <entry name="uptimeVisibility" type="String">
+            <default>both</default>
         </entry>
 
         <!-- Labels -->

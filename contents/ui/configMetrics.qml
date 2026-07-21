@@ -16,36 +16,48 @@ KCM.SimpleKCM {
     property bool cfg_cpuEnabled
     property string cfg_cpuSubMetrics: "usage,freq,temp"
     property string cfg_cpuLabel: "CPU"
+    property string cfg_cpuVisibility: "both"
 
     property bool cfg_ramEnabled
     property string cfg_ramSubMetrics: "percentage"
     property string cfg_ramLabel: "RAM"
     property bool cfg_ramWidgetShowBoth: false
+    property string cfg_ramVisibility: "both"
 
     property bool cfg_tempEnabled
     property string cfg_tempLabel: "System"
+    property string cfg_tempVisibility: "both"
 
     property bool cfg_gpuEnabled
     property string cfg_gpuSubMetrics: "usage,vram,temp"
     property string cfg_gpuSelection: ""
     property string cfg_gpuLabels: ""
+    property string cfg_gpuVisibility: "both"
 
     property bool cfg_batEnabled
     property string cfg_batSubMetrics: "percentage"
+    property string cfg_batVisibility: "both"
 
     property bool cfg_netEnabled
     property string cfg_netSubMetrics: "down,up"
     property string cfg_netLabel: "NET"
     property string cfg_networkInterface: "auto"
     property bool cfg_showNetworkIp: false
+    property string cfg_netVisibility: "both"
 
     property bool cfg_diskEnabled
     property string cfg_diskSubMetrics: "read,write"
     property string cfg_diskLabel: "DSK"
     property string cfg_diskLabels: ""
+    property string cfg_diskVisibility: "both"
 
     property bool cfg_fanEnabled
+    property string cfg_fanLabel: "FAN"
+    property string cfg_fanLabels: ""
+    property int cfg_fanMaxRpm: 2000
+    property string cfg_fanVisibility: "both"
     property bool cfg_uptimeEnabled
+    property string cfg_uptimeVisibility: "both"
 
     property string cfg_metricOrder: "cpu,ram,temp,gpu,bat,net,disk,fan,uptime"
     property string cfg_batteryDevice
@@ -159,6 +171,35 @@ KCM.SimpleKCM {
             case "disk":   cfg_diskEnabled   = val; break;
             case "fan":    cfg_fanEnabled    = val; break;
             case "uptime": cfg_uptimeEnabled = val; break;
+        }
+    }
+
+    function visibilityFor(key) {
+        switch (key) {
+            case "cpu":    return cfg_cpuVisibility;
+            case "ram":    return cfg_ramVisibility;
+            case "temp":   return cfg_tempVisibility;
+            case "gpu":    return cfg_gpuVisibility;
+            case "bat":    return cfg_batVisibility;
+            case "net":    return cfg_netVisibility;
+            case "disk":   return cfg_diskVisibility;
+            case "fan":    return cfg_fanVisibility;
+            case "uptime": return cfg_uptimeVisibility;
+        }
+        return "both";
+    }
+
+    function setVisibility(key, val) {
+        switch (key) {
+            case "cpu":    cfg_cpuVisibility    = val; break;
+            case "ram":    cfg_ramVisibility    = val; break;
+            case "temp":   cfg_tempVisibility   = val; break;
+            case "gpu":    cfg_gpuVisibility    = val; break;
+            case "bat":    cfg_batVisibility    = val; break;
+            case "net":    cfg_netVisibility    = val; break;
+            case "disk":   cfg_diskVisibility   = val; break;
+            case "fan":    cfg_fanVisibility    = val; break;
+            case "uptime": cfg_uptimeVisibility = val; break;
         }
     }
 
@@ -423,6 +464,25 @@ KCM.SimpleKCM {
                             checked: catDelegate.catEnabled
                             onToggled: metricsPage.setEnabled(key, checked)
                             Layout.fillWidth: true
+                        }
+
+                        ComboBox {
+                            id: visibilityCombo
+                            model: [i18n("All"), i18n("Popup"), i18n("Compact")]
+                            currentIndex: {
+                                var v = metricsPage.visibilityFor(catDelegate.key);
+                                if (v === "widget") return 1;
+                                if (v === "compact") return 2;
+                                return 0;
+                            }
+                            onActivated: {
+                                var vals = ["both", "widget", "compact"];
+                                metricsPage.setVisibility(catDelegate.key, vals[index]);
+                            }
+                            implicitWidth: Kirigami.Units.gridUnit * 8
+                            ToolTip.text: i18n("All=widget+compact, Popup=full view only, Compact=panel only")
+                            ToolTip.visible: hovered
+                            ToolTip.delay: Kirigami.Units.toolTipDelay
                         }
 
                         Item { Layout.fillWidth: true }

@@ -110,6 +110,23 @@ PlasmoidItem {
     property string networkUnit: Plasmoid.configuration.networkUnit || "bytes"
     property string fanUnit:     Plasmoid.configuration.fanUnit     || "rpm"
 
+    // --- Per-metric visibility ---
+
+    property string cpuVisibility:    Plasmoid.configuration.cpuVisibility    || "both"
+    property string ramVisibility:    Plasmoid.configuration.ramVisibility    || "both"
+    property string tempVisibility:   Plasmoid.configuration.tempVisibility   || "both"
+    property string gpuVisibility:    Plasmoid.configuration.gpuVisibility    || "both"
+    property string batVisibility:    Plasmoid.configuration.batVisibility    || "both"
+    property string netVisibility:    Plasmoid.configuration.netVisibility    || "both"
+    property string diskVisibility:   Plasmoid.configuration.diskVisibility   || "both"
+    property string fanVisibility:    Plasmoid.configuration.fanVisibility    || "both"
+    property string uptimeVisibility: Plasmoid.configuration.uptimeVisibility || "both"
+
+    function isShownIn(key, view) {
+        var v = this[key + "Visibility"] || "both";
+        return v === "both" || v === view;
+    }
+
     // --- Helpers ---
 
     function subs(key) {
@@ -497,6 +514,7 @@ PlasmoidItem {
             for (var i = 0; i < root.orderedKeys.length; i++) {
                 var key = root.orderedKeys[i];
                 if (!root.isEnabled(key)) continue;
+                if (!root.isShownIn(key, "compact")) continue;
 
                 var sm = root.subs(key).split(",").filter(function(s){ return s.length > 0; });
                 var colorMap = {
@@ -614,6 +632,7 @@ PlasmoidItem {
             var items = [];
             for (var i = 0; i < root.orderedKeys.length; i++) {
                 var key = root.orderedKeys[i];
+                if (!root.isShownIn(key, "widget")) continue;
 
                 var addMetric = function(label, value, color, icon, chartKey, chartMax) {
                     items.push({
@@ -722,6 +741,7 @@ PlasmoidItem {
         for (var i = 0; i < root.orderedKeys.length; i++) {
             var key = root.orderedKeys[i];
             if (!root.isEnabled(key)) continue;
+            if (!root.isShownIn(key, "compact")) continue;
 
             if (key === "cpu") {
                 var cpuLine = root.cpuLabel + ": " + cpu.cpuValue;
