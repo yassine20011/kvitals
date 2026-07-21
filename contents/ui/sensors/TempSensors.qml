@@ -106,7 +106,8 @@ Item {
             // so we exclude it explicitly.
             // This is hardware-agnostic: no blacklist of specific drivers.
             if (/-isa-/.test(adapter) && !/^coretemp/i.test(adapter)) {
-                chipsetCandidates.push({ id: sensorId, adapter: adapter });
+                var label = flatSensors.data(idx, Qt.DisplayRole) || "";
+                chipsetCandidates.push({ id: sensorId, adapter: adapter, label: label });
             }
         }
 
@@ -126,11 +127,23 @@ Item {
         // Chipset sensor discovery — prefer ISA/LPC bus (Super I/O).
         // PCI candidates (k10temp, amdgpu, etc.) are deliberately ignored:
         // they report CPU/GPU package temps, not chipset temps.
+        // When multiple ISA channels exist on the same adapter (typical for
+        // nct6775-family: SYSTIN=temp1, CPUTIN=temp2, AUXTIN*=temp3+),
+        // prefer candidates whose label doesn't indicate a CPU-adjacent or
+        // auxiliary sensor. The Qt::DisplayRole exposes the lm-sensors label.
         if (chipsetCandidates.length > 0) {
-            if (_systemSensorId !== chipsetCandidates[0].id) {
+            var best = chipsetCandidates[0];
+            if (chipsetCandidates.length > 1) {
+                var nonSystemLabels = /^(cputin|auxtin|peci|smbusmaster)/i;
+                var filtered = chipsetCandidates.filter(function(c) {
+                    return !nonSystemLabels.test(c.label);
+                });
+                if (filtered.length > 0) best = filtered[0];
+            }
+            if (_systemSensorId !== best.id) {
                 console.warn("[KVitals] TempSensors: chipset sensor selected: "
-                    + chipsetCandidates[0].id + " (" + chipsetCandidates[0].adapter + ")");
-                _systemSensorId = chipsetCandidates[0].id;
+                    + best.id + " (" + best.adapter + ") label=" + best.label);
+                _systemSensorId = best.id;
             }
         } else if (newRows > 0) {
             if (_systemSensorId.length > 0) {

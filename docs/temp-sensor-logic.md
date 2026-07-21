@@ -37,7 +37,11 @@ then iterates rows, reading `SensorId` via
    - `spd5118` → DDR5 RAM (separate sensor)
    - `-isa-` in adapter name AND not `coretemp` → Super I/O chipset candidate
    - Everything else (PCI bus: k10temp, amdgpu, nvme, etc.) → deliberately ignored
-5. Pick the first ISA candidate as `_systemSensorId`
+5. Read `Qt::DisplayRole` (lm-sensors label, e.g. `SYSTIN`, `CPUTIN`, `AUXTIN0`)
+6. When multiple ISA channels exist, exclude candidates whose label matches
+   `/^(cputin|auxtin|peci|smbusmaster)/i` — these are CPU-adjacent or auxiliary
+   sensors, not chipset board temperature
+7. Pick the first remaining candidate as `_systemSensorId`
 
 #### Why ISA bus?
 
