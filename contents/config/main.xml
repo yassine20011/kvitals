@@ -216,6 +216,12 @@
         <entry name="tempCriticalThreshold" type="Int">
             <default>85</default>
         </entry>
+        <entry name="systemWarningThreshold" type="Int">
+            <default>60</default>
+        </entry>
+        <entry name="systemCriticalThreshold" type="Int">
+            <default>85</default>
+        </entry>
         <entry name="ramWarningThreshold" type="Int">
             <default>70</default>
         </entry>

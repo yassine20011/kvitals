@@ -26,11 +26,14 @@ Item {
     readonly property bool sysIsFallback: _systemSensorId.length === 0
 
     // Dedicated CPU temperature — always reads the CPU average, independent of system temp
+    readonly property real cpuTempNumericValue: {
+        if (cpuTempSensor.status !== Sensors.Sensor.Ready) return NaN;
+        return cpuTempSensor.value;
+    }
+
     readonly property string cpuTempValue: {
-        if (cpuTempSensor.status !== Sensors.Sensor.Ready) return "--";
-        var v = cpuTempSensor.value;
-        if (isNaN(v)) return "--";
-        return Utils.formatTemp(v, tempUnit);
+        if (isNaN(cpuTempNumericValue)) return "--";
+        return Utils.formatTemp(cpuTempNumericValue, tempUnit);
     }
 
     Sensors.Sensor {

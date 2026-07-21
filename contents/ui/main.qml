@@ -175,6 +175,8 @@ PlasmoidItem {
     property int cpuCriticalThreshold: Plasmoid.configuration.cpuCriticalThreshold
     property int tempWarningThreshold: Plasmoid.configuration.tempWarningThreshold
     property int tempCriticalThreshold: Plasmoid.configuration.tempCriticalThreshold
+    property int systemWarningThreshold: Plasmoid.configuration.systemWarningThreshold
+    property int systemCriticalThreshold: Plasmoid.configuration.systemCriticalThreshold
     property int ramWarningThreshold: Plasmoid.configuration.ramWarningThreshold
     property int ramCriticalThreshold: Plasmoid.configuration.ramCriticalThreshold
     property int gpuWarningThreshold: Plasmoid.configuration.gpuWarningThreshold
@@ -192,6 +194,16 @@ PlasmoidItem {
 
     property color cpuColor: enableThresholdColors
         ? Utils.resolveColor(cpu.cpuNumericValue, cpuWarningThreshold, cpuCriticalThreshold,
+            warningColor, criticalColor, baseTextColor, false)
+        : baseTextColor
+
+    property color cpuTempColor: enableThresholdColors
+        ? Utils.resolveColor(temp.cpuTempNumericValue, tempWarningThreshold, tempCriticalThreshold,
+            warningColor, criticalColor, baseTextColor, false)
+        : baseTextColor
+
+    property color systemColor: enableThresholdColors
+        ? Utils.resolveColor(temp.tempNumericValue, systemWarningThreshold, systemCriticalThreshold,
             warningColor, criticalColor, baseTextColor, false)
         : baseTextColor
 
@@ -240,7 +252,7 @@ PlasmoidItem {
 
     // --- Chart history ---
 
-    property var chartHistory: ({cpu: [], ram: [], temp: [], ramTemp: [], diskTemp: [], netDown: [], netUp: [], bat: []})
+    property var chartHistory: ({cpu: [], ram: [], temp: [], cpuTemp: [], ramTemp: [], diskTemp: [], netDown: [], netUp: [], bat: []})
     property int maxChartPoints: 60
     property int chartVersion: 0
 
@@ -265,6 +277,7 @@ PlasmoidItem {
             if (push(h.cpu, root.cpu.cpuNumericValue)) changed = true;
             if (push(h.ram, root.memory.ramPercentage)) changed = true;
             if (push(h.temp, root.temp.tempNumericValue)) changed = true;
+            if (push(h.cpuTemp, root.temp.cpuTempNumericValue)) changed = true;
             if (push(h.ramTemp, root.temp.ramTempNumericValue)) changed = true;
             if (push(h.diskTemp, root.disk.diskTempNumber)) changed = true;
             if (push(h.netDown, root.network.netDownRaw)) changed = true;
@@ -526,7 +539,8 @@ PlasmoidItem {
                 };
 
                 if (key === "cpu") {
-                    var segs = root._compactSegments("cpu", sm, colorMap);
+                    var cpuMap = Object.assign({}, colorMap, {"temp": root.cpuTempColor});
+                    var segs = root._compactSegments("cpu", sm, cpuMap);
                     if (segs) items.push({
                         icon: root.cpuIcon, label: root.cpuLabel + ":",
                         segments: segs, color: root.cpuColor
@@ -544,7 +558,7 @@ PlasmoidItem {
                 }
                 else if (key === "temp") {
                     if (temp.tempValue && temp.tempValue !== "--")
-                        items.push({icon: root.tempIcon, label: root.tempLabel + ":", value: temp.tempValue, color: root.tempColor});
+                        items.push({icon: root.tempIcon, label: root.tempLabel + ":", value: temp.tempValue, color: root.systemColor});
                 }
                 else if (key === "gpu") {
                     if (gpu.gpuDataList.length > 1) {
@@ -647,7 +661,7 @@ PlasmoidItem {
                     if (root.hasSub("cpu", "freq") && cpu.cpuFreqValue)
                         addMetric(root.cpuLabel + " Frequency", cpu.cpuFreqValue, root.baseTextColor, root.cpuIcon);
                     if (root.hasSub("cpu", "temp") && temp.cpuTempValue !== "--")
-                        addMetric(root.cpuLabel + " Temperature", temp.cpuTempValue, root.tempColor, [root.cpuIcon, root.tempIcon], "temp", 100);
+                        addMetric(root.cpuLabel + " Temperature", temp.cpuTempValue, root.cpuTempColor, [root.cpuIcon, root.tempIcon], "cpuTemp", 100);
                 }
                 else if (key === "ram" && root.ramEnabled) {
                     if ((root.ramWidgetShowBoth || root.hasSub("ram", "percentage")) && memory.ramPercentValue !== "...")
@@ -658,7 +672,7 @@ PlasmoidItem {
                         addMetric(root.ramLabel + " Temperature", temp.ramTempValue, root.tempColor, [root.ramIcon, root.tempIcon], "ramTemp", 100);
                 }
                 else if (key === "temp" && root.tempEnabled && temp.tempValue !== "--")
-                    addMetric(root.tempLabel, temp.tempValue, root.tempColor, root.tempIcon, "temp", 100);
+                    addMetric(root.tempLabel, temp.tempValue, root.systemColor, root.tempIcon, "temp", 100);
                 else if (key === "gpu" && root.gpuEnabled) {
                     if (gpu.gpuDataList.length > 1) {
                         for (var g = 0; g < gpu.gpuDataList.length; g++) {
