@@ -10,12 +10,12 @@ TMP_DIR=$(mktemp -d)
 cleanup() { rm -rf "$TMP_DIR"; }
 trap cleanup EXIT
 
-echo "⚡ Installing KVitals..."
+echo "[STATUS] Installing KVitals..."
 
 # Download and extract
 # Clone repository
 if ! command -v git &>/dev/null; then
-    echo "❌ Error: git is required"
+    echo "[ERR] git is required"
     exit 1
 fi
 
@@ -41,7 +41,7 @@ ln -s "$DEST_DIR" "$KPACKAGE_DIR"
 
 
 echo ""
-echo "✅ KVitals installed to: $DEST_DIR"
+echo "[OK] KVitals installed to: $DEST_DIR"
 echo ""
 echo "Next steps:"
 echo "  1. Restart Plasma:  plasmashell --replace &"

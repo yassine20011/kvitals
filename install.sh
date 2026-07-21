@@ -26,7 +26,7 @@ ln -s "$DEST_DIR" "$KPACKAGE_DIR"
 
 
 echo ""
-echo "✅ Installed to: $DEST_DIR"
+echo "[OK] Installed to: $DEST_DIR"
 echo ""
 echo "Next steps:"
 echo "  1. Right-click on your KDE top panel"

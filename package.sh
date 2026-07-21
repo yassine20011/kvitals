@@ -5,7 +5,7 @@ PLASMOID_NAME="org.kde.plasma.kvitals"
 VERSION=$(grep '"Version"' metadata.json | cut -d '"' -f 4)
 FILENAME="${PLASMOID_NAME}-v${VERSION}.plasmoid"
 
-echo "📦 Packaging $PLASMOID_NAME version $VERSION..."
+echo "[STATUS] Packaging $PLASMOID_NAME version $VERSION..."
 
 # A .plasmoid file is just a ZIP archive containing the package files
 # We exclude the git directory, install scripts, and screenshots
@@ -21,4 +21,4 @@ zip -r "$FILENAME" \
     -x "*.DS_Store"
 
 
-echo "✅ Created package: $FILENAME"
+echo "[OK] Created package: $FILENAME"
