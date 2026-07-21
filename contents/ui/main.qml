@@ -108,6 +108,9 @@ PlasmoidItem {
     property string tempUnit:    Plasmoid.configuration.tempUnit    || "C"
     property string networkUnit: Plasmoid.configuration.networkUnit || "bytes"
     property string fanUnit:     Plasmoid.configuration.fanUnit     || "rpm"
+    property string fanLabel:    Plasmoid.configuration.fanLabel    || "FAN"
+    property string fanLabels:   Plasmoid.configuration.fanLabels   || ""
+    property int fanMaxRpm:      Plasmoid.configuration.fanMaxRpm   || 2000
 
     // --- Per-metric visibility ---
 
@@ -431,6 +434,8 @@ PlasmoidItem {
                 id: _fans
                 updateInterval: root.updateInterval
                 fanUnit: root.fanUnit
+                fanLabels: root.fanLabels
+                fanMaxRpm: root.fanMaxRpm
             }
 
             UptimeSensors {
@@ -611,7 +616,7 @@ PlasmoidItem {
                     });
                 }
                 else if (key === "fan")
-                    items.push({icon: root.fanIcon, label: "FAN:", value: fans.fanValue, color: root.baseTextColor});
+                    items.push({icon: root.fanIcon, label: root.fanLabel + ":", value: fans.fanValue, color: root.baseTextColor});
                 else if (key === "uptime")
                     items.push({icon: root.uptimeIcon, label: "UPTIME:", value: uptime.uptimeValue, color: root.baseTextColor});
             }
@@ -737,8 +742,16 @@ PlasmoidItem {
                             addMetric(root.diskLabel + " Temperature", disk.diskTempValue, root.diskTempColor, [root.diskIcon, root.tempIcon], "diskTemp", 100);
                     }
                 }
-                else if (key === "fan" && root.fanEnabled && fans.hasFanData)
-                    addMetric("Fans", fans.fanValue, root.baseTextColor, root.fanIcon);
+                else if (key === "fan" && root.fanEnabled && fans.hasFanData) {
+                    if (fans.multiFan) {
+                        for (var fn = 0; fn < fans.fanDataList.length; fn++) {
+                            var fd = fans.fanDataList[fn];
+                            addMetric(fd.name || fd.id, fd.value, root.baseTextColor, root.fanIcon);
+                        }
+                    } else {
+                        addMetric(root.fanLabel, fans.fanValue, root.baseTextColor, root.fanIcon);
+                    }
+                }
                 else if (key === "uptime" && root.uptimeEnabled && uptime.uptimeValue)
                     addMetric("System Uptime", uptime.uptimeValue, root.baseTextColor, root.uptimeIcon);
             }
@@ -803,7 +816,7 @@ PlasmoidItem {
                 if (root.hasSub("disk", "temp") && disk.diskTempValue) dParts.push(disk.diskTempValue);
                 if (dParts.length > 0) parts.push(root.diskLabel + ": " + dParts.join(" "));
             } else if (key === "fan")
-                parts.push("FAN: " + fans.fanValue);
+                parts.push(root.fanLabel + ": " + fans.fanValue);
             else if (key === "uptime")
                 parts.push("UPTIME: " + uptime.uptimeValue);
         }

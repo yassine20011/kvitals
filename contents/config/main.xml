@@ -268,8 +268,17 @@
         <entry name="networkUnit" type="String">
             <default>bytes</default>
         </entry>
+        <entry name="fanLabel" type="String">
+            <default>FAN</default>
+        </entry>
+        <entry name="fanLabels" type="String">
+            <default></default>
+        </entry>
         <entry name="fanUnit" type="String">
             <default>rpm</default>
+        </entry>
+        <entry name="fanMaxRpm" type="Int">
+            <default>2000</default>
         </entry>
 
         <!-- Opacity -->

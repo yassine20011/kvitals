@@ -376,7 +376,75 @@ KCM.SimpleKCM {
         cfg_diskLabels = parts.join("|");
     }
 
-    // Network interface discovery
+    // --- Fan discovery ---
+
+    property var _liveDiscoveredFans: []
+
+    Timer {
+        id: fanRefreshDebounce
+        interval: 100
+        repeat: false
+        onTriggered: {
+            var found = [];
+            for (var row = 0; row < cfgFlatSensors.rowCount(); row++) {
+                var idx = cfgFlatSensors.index(row, 0);
+                var sensorId = cfgFlatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
+                if (!sensorId) continue;
+                var match = sensorId.match(/^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i);
+                if (!match) continue;
+                if (found.some(function(f){ return f.id === sensorId; })) continue;
+                found.push({ id: sensorId, name: "Fan " + (found.length + 1) });
+            }
+            if (JSON.stringify(found) !== JSON.stringify(_liveDiscoveredFans))
+                _liveDiscoveredFans = found;
+        }
+    }
+
+    function refreshConfigFans() { fanRefreshDebounce.restart(); }
+
+    property var _discoveryDirtyFan: false
+
+    Timer {
+        id: fanDiscoveryTimer
+        interval: 500
+        repeat: false
+        running: _discoveryDirtyFan
+        onTriggered: { _discoveryDirtyFan = false; metricsPage.refreshConfigFans(); }
+    }
+
+    Connections {
+        target: cfgFlatSensors
+        function onRowsInserted() { metricsPage._discoveryDirtyFan = true; }
+        function onRowsRemoved()  { metricsPage._discoveryDirtyFan = true; }
+        function onModelReset()   { metricsPage._discoveryDirtyFan = true; }
+        function onDataChanged()  { metricsPage._discoveryDirtyFan = true; }
+    }
+
+    readonly property var discoveredFans: _liveDiscoveredFans
+
+    // --- Fan label helpers ---
+
+    function parseFanLabels(str) {
+        var result = {};
+        if (!str) return result;
+        str.split("|").forEach(function(pair) {
+            var sep = pair.indexOf(":");
+            if (sep > 0) result[pair.substring(0, sep)] = pair.substring(sep + 1);
+        });
+        return result;
+    }
+
+    function saveFanLabel(fanId, label) {
+        var labels = parseFanLabels(cfg_fanLabels);
+        var trimmed = (label || "").trim();
+        if (trimmed.length > 0) labels[fanId] = trimmed;
+        else delete labels[fanId];
+        var parts = [];
+        for (var id in labels) parts.push(id + ":" + labels[id]);
+        cfg_fanLabels = parts.join("|");
+    }
+
+    // --- Network interface discovery ---
     property var ifaceList: ["auto"]
 
     Plasma5Support.DataSource {
@@ -813,6 +881,73 @@ KCM.SimpleKCM {
                                 font.italic: true
                                 wrapMode: Text.WordWrap
                                 Layout.maximumWidth: Kirigami.Units.gridUnit * 28
+                            }
+                        }
+                    }
+
+                    // Fan settings
+                    Loader {
+                        active: modelData === "fan" && metricDelegate.metricEnabled
+                        visible: active
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.gridUnit * 2 + Kirigami.Units.smallSpacing
+                        Layout.topMargin: Kirigami.Units.smallSpacing
+                        Layout.bottomMargin: Kirigami.Units.smallSpacing
+
+                        sourceComponent: ColumnLayout {
+                            spacing: Kirigami.Units.smallSpacing
+
+                            RowLayout {
+                                spacing: Kirigami.Units.smallSpacing
+                                Label { text: i18n("Label:"); opacity: 0.8 }
+                                TextField {
+                                    implicitWidth: Kirigami.Units.gridUnit * 12
+                                    text: cfg_fanLabel
+                                    placeholderText: i18n("FAN")
+                                    onTextEdited: cfg_fanLabel = text.trim() || "FAN"
+                                }
+                            }
+
+                            // Per-fan naming
+                            ColumnLayout {
+                                spacing: Kirigami.Units.smallSpacing
+                                Layout.fillWidth: true
+
+                                Repeater {
+                                    model: metricsPage.discoveredFans
+
+                                    delegate: RowLayout {
+                                        required property var modelData
+                                        visible: metricsPage.discoveredFans.length > 0
+                                        spacing: Kirigami.Units.smallSpacing
+                                        Layout.leftMargin: Kirigami.Units.smallSpacing
+
+                                        Label {
+                                            text: modelData.name + ":"
+                                            opacity: 0.8
+                                            Layout.minimumWidth: Kirigami.Units.gridUnit * 3
+                                        }
+                                        TextField {
+                                            implicitWidth: Kirigami.Units.gridUnit * 12
+                                            text: metricsPage.parseFanLabels(cfg_fanLabels)[modelData.id] || ""
+                                            placeholderText: modelData.name
+                                            onTextEdited: metricsPage.saveFanLabel(modelData.id, text)
+                                        }
+                                    }
+                                }
+                            }
+
+                            RowLayout {
+                                spacing: Kirigami.Units.smallSpacing
+                                Label { text: i18n("Max RPM for percentage:"); opacity: 0.8 }
+                                SpinBox {
+                                    from: 500
+                                    to: 9999
+                                    stepSize: 100
+                                    value: cfg_fanMaxRpm
+                                    onValueChanged: cfg_fanMaxRpm = value
+                                    implicitWidth: Kirigami.Units.gridUnit * 6
+                                }
                             }
                         }
                     }

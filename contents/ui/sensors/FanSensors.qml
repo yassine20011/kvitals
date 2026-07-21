@@ -7,6 +7,8 @@ Item {
 
     property int updateInterval: 2000
     property string fanUnit: "rpm" // "rpm" or "percent"
+    property string fanLabels: ""
+    property int fanMaxRpm: 2000
 
     readonly property var discoveredFans: _discovered
     property var _discovered: []
@@ -14,6 +16,11 @@ Item {
     readonly property string fanValue: _fanStr
     readonly property bool hasFanData: _fanStr.length > 0
     property string _fanStr: ""
+
+    readonly property var fanDataList: _dataList
+    property var _dataList: []
+
+    readonly property bool multiFan: _discovered.length > 1
 
     // -------------------------------------------------------------------------
     // Step 1: Discover available Fans via SensorTreeModel
@@ -90,28 +97,44 @@ Item {
         return (val === undefined || val === null) ? NaN : val;
     }
 
+    function parseFanLabels(str) {
+        var result = {};
+        if (!str) return result;
+        str.split("|").forEach(function(pair) {
+            var sep = pair.indexOf(":");
+            if (sep > 0) result[pair.substring(0, sep)] = pair.substring(sep + 1);
+        });
+        return result;
+    }
+
+    function _fanValueStr(f) {
+        var v = _modelValue(f.id);
+        if (isNaN(v) || v <= 0) return "";
+        if (fanUnit === "percent") {
+            var max = _modelMax(f.id);
+            if (isNaN(max) || max <= 0) max = fanMaxRpm;
+            return Math.min(100, Math.round((v / max) * 100)) + "%";
+        }
+        return Math.round(v) + " RPM";
+    }
+
     function aggregate() {
+        var custom = parseFanLabels(fanLabels);
+        var newList = [];
         var parts = [];
         for (var i = 0; i < _discovered.length; i++) {
             var f = _discovered[i];
-            var v = _modelValue(f.id);
-            if (isNaN(v) || v <= 0) continue; // Ignore 0 RPM or disconnected fans
-
-            var str = "";
-            if (fanUnit === "percent") {
-                var max = _modelMax(f.id);
-                if (isNaN(max) || max <= 0) {
-                    max = 6000;
-                }
-                var pct = Math.min(100, Math.round((v / max) * 100));
-                str = pct + "%";
-            } else {
-                str = Math.round(v) + " RPM";
-            }
+            var str = _fanValueStr(f);
+            if (!str) continue;
+            var name = custom[f.id] || f.name;
+            newList.push({ id: f.id, name: name, value: str });
             parts.push(str);
         }
         _fanStr = parts.join(" ");
+        _dataList = newList;
     }
 
     onFanUnitChanged: aggregate()
+    onFanLabelsChanged: aggregate()
+    onFanMaxRpmChanged: aggregate()
 }
