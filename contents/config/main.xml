@@ -4,71 +4,64 @@
       xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
     <kcfgfile name=""/>
     <group name="General">
-        <entry name="showCpu" type="Bool">
+        <!-- Category toggles -->
+        <entry name="cpuEnabled" type="Bool">
             <default>true</default>
         </entry>
+        <entry name="cpuSubMetrics" type="String">
+            <default>usage,freq,temp</default>
+        </entry>
+        <entry name="ramEnabled" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="ramSubMetrics" type="String">
+            <default>percentage</default>
+        </entry>
+        <!-- Popup-only: force both Percentage and Used/Total to show in the
+             widget window without changing the compact panel's sub-metrics -->
+        <entry name="ramWidgetShowBoth" type="Bool">
+            <default>false</default>
+        </entry>
+        <entry name="tempEnabled" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="tempLabel" type="String">
+            <default>System</default>
+        </entry>
+        <entry name="gpuEnabled" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="gpuSubMetrics" type="String">
+            <default>usage,vram,temp</default>
+        </entry>
+        <entry name="batEnabled" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="batSubMetrics" type="String">
+            <default>percentage</default>
+        </entry>
+        <entry name="netEnabled" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="netSubMetrics" type="String">
+            <default>down,up</default>
+        </entry>
+        <entry name="diskEnabled" type="Bool">
+            <default>false</default>
+        </entry>
+        <entry name="diskSubMetrics" type="String">
+            <default>read,write</default>
+        </entry>
+        <entry name="fanEnabled" type="Bool">
+            <default>false</default>
+        </entry>
+        <entry name="uptimeEnabled" type="Bool">
+            <default>false</default>
+        </entry>
+
+        <!-- Labels -->
         <entry name="cpuLabel" type="String">
             <default>CPU</default>
-        </entry>
-        <entry name="showCpuFreq" type="Bool">
-            <default>false</default>
-        </entry>
-        <entry name="showRam" type="Bool">
-            <default>true</default>
-        </entry>
-        <entry name="showTemp" type="Bool">
-            <default>true</default>
-        </entry>
-        <entry name="showGpu" type="Bool">
-            <default>true</default>
-        </entry>
-        <entry name="showBattery" type="Bool">
-            <default>true</default>
-        </entry>
-        <entry name="showPower" type="Bool">
-            <default>true</default>
-        </entry>
-        <entry name="showNetwork" type="Bool">
-            <default>true</default>
-        </entry>
-        <entry name="showDisk" type="Bool">
-            <default>false</default>
-        </entry>
-        <entry name="showFan" type="Bool">
-            <default>false</default>
-        </entry>
-        <entry name="showUptime" type="Bool">
-            <default>false</default>
-        </entry>
-        <entry name="compactShowCpu" type="Bool">
-            <default>true</default>
-        </entry>
-        <entry name="compactShowRam" type="Bool">
-            <default>true</default>
-        </entry>
-        <entry name="compactShowTemp" type="Bool">
-            <default>true</default>
-        </entry>
-        <entry name="compactShowGpu" type="Bool">
-            <default>true</default>
-        </entry>
-        <entry name="compactShowBattery" type="Bool">
-            <default>true</default>
-        </entry>
-        <entry name="compactShowPower" type="Bool">
-            <default>true</default>
-        </entry>
-        <entry name="compactShowNetwork" type="Bool">
-            <default>true</default>
-        </entry>
-        <entry name="compactShowDisk" type="Bool">
-            <default>false</default>
-        </entry>
-        <entry name="compactShowFan" type="Bool">
-            <default>false</default>
-        </entry>
-        <entry name="compactShowUptime" type="Bool">
-            <default>false</default>
         </entry>
         <entry name="ramLabel" type="String">
             <default>RAM</default>
@@ -97,30 +90,19 @@
         <entry name="gpuLabels" type="String">
             <default></default>
         </entry>
+
+        <!-- Display -->
         <entry name="displayMode" type="String">
             <default>text</default>
         </entry>
         <entry name="layoutType" type="String">
             <default>horizontal</default>
         </entry>
-        <entry name="mergeCpuTemp" type="Bool">
-            <default>false</default>
-        </entry>
-        <entry name="mergeCpuFreq" type="Bool">
-            <default>false</default>
-        </entry>
-        <entry name="mergeBatPwr" type="Bool">
-            <default>false</default>
-        </entry>
-        <entry name="splitGpu" type="Bool">
-            <default>false</default>
-        </entry>
-        <entry name="gpuMetrics" type="String">
-            <default></default>
-        </entry>
         <entry name="iconSize" type="Int">
             <default>12</default>
         </entry>
+
+        <!-- Icons -->
         <entry name="cpuIcon" type="String">
             <default>am-cpu-symbolic</default>
         </entry>
@@ -151,6 +133,8 @@
         <entry name="uptimeIcon" type="String">
             <default>clock</default>
         </entry>
+
+        <!-- Font -->
         <entry name="fontFamily" type="String">
             <default>monospace</default>
         </entry>
@@ -160,12 +144,18 @@
         <entry name="fontBold" type="Bool">
             <default>false</default>
         </entry>
+
+        <!-- Order -->
         <entry name="metricOrder" type="String">
-            <default>cpu,ram,temp,gpu,bat,pwr,net,disk,fan,uptime</default>
+            <default>cpu,ram,temp,gpu,bat,net,disk,fan,uptime</default>
         </entry>
+
+        <!-- Timing -->
         <entry name="updateInterval" type="Int">
             <default>2000</default>
         </entry>
+
+        <!-- Colors -->
         <entry name="useCustomColors" type="Bool">
             <default>false</default>
         </entry>
@@ -229,6 +219,16 @@
         <entry name="diskTempCriticalThreshold" type="Int">
             <default>60</default>
         </entry>
+
+        <!-- Units -->
+        <!-- Hidden: set at runtime when temperature falls back to CPU -->
+        <entry name="_tempFallbackActive" type="Bool">
+            <default>false</default>
+        </entry>
+        <!-- Hidden: set at runtime when a DDR5 RAM temp sensor (SPD5118) is found -->
+        <entry name="_ramTempDetected" type="Bool">
+            <default>false</default>
+        </entry>
         <entry name="tempUnit" type="String">
             <default>C</default>
         </entry>
@@ -238,14 +238,13 @@
         <entry name="fanUnit" type="String">
             <default>rpm</default>
         </entry>
+
+        <!-- Opacity -->
         <entry name="labelOpacity" type="Double">
             <default>0.65</default>
         </entry>
         <entry name="separatorOpacity" type="Double">
             <default>0.4</default>
-        </entry>
-        <entry name="useCustomLabelsInCompact" type="Bool">
-            <default>true</default>
         </entry>
     </group>
 </kcfg>

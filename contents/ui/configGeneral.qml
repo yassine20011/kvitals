@@ -13,7 +13,6 @@ KCM.SimpleKCM {
     property alias cfg_fontBold: fontBoldCheck.checked
     property alias cfg_labelOpacity: labelOpacitySlider.value
     property alias cfg_separatorOpacity: separatorOpacitySlider.value
-    property alias cfg_useCustomLabelsInCompact: customLabelsCheck.checked
     property string cfg_displayMode: "text"
     property string cfg_fontFamily: "monospace"
     property string cfg_layoutType: "horizontal"
@@ -41,13 +40,6 @@ KCM.SimpleKCM {
             onActivated: {
                 cfg_displayMode = configPage.displayModes[currentIndex];
             }
-        }
-
-        CheckBox {
-            id: customLabelsCheck
-            Kirigami.FormData.label: i18n("Custom labels in panel:")
-            text: i18n("Off = default short names in panel and custom names in popup")
-            onToggled: cfg_useCustomLabelsInCompact = checked
         }
 
         ComboBox {
