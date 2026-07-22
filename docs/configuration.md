@@ -105,3 +105,6 @@ Click **Reset to defaults** to restore the default icon assignments. If an icon 
 | **Critical color** | Color when a critical threshold is met | `#da4453` |
 
 Threshold sliders are available for CPU usage, CPU temperature, System temperature, RAM usage, RAM temperature, GPU usage, GPU temperature, and battery level.
+
+!!! note "Battery Thresholds"
+    Battery thresholds are inverted: warning and critical states trigger when the battery level falls _below_ the configured values.
