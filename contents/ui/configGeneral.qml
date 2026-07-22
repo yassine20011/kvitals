@@ -133,13 +133,6 @@ KCM.SimpleKCM {
                 text: cfg_fontFamily
                 placeholderText: i18n("Type to search fonts...")
 
-                onActiveFocusChanged: {
-                    if (activeFocus) {
-                        fontRow.populateList("");
-                        fontPopup.open();
-                    }
-                }
-
                 onTextEdited: {
                     fontRow.populateList(text);
                     fontPopup.open();
@@ -208,6 +201,7 @@ KCM.SimpleKCM {
                 }
             }
         }
+
 
 
         Label {
