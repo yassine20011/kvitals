@@ -40,8 +40,8 @@
         <entry name="gpuEnabled" type="Bool">
             <default>true</default>
         </entry>
-        <entry name="gpuSubMetrics" type="String">
-            <default>usage,vram,temp</default>
+        <entry name="gpuMetrics" type="String">
+            <default></default>
         </entry>
         <entry name="gpuVisibility" type="String">
             <default>both</default>

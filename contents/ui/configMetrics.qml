@@ -29,7 +29,7 @@ KCM.SimpleKCM {
     property string cfg_tempVisibility: "both"
 
     property bool cfg_gpuEnabled
-    property string cfg_gpuSubMetrics: "usage,vram,temp"
+    property string cfg_gpuMetrics: ""
     property string cfg_gpuSelection: ""
     property string cfg_gpuLabels: ""
     property string cfg_gpuVisibility: "both"
@@ -106,11 +106,7 @@ KCM.SimpleKCM {
             {key: "temp",       label: i18n("Temperature (DDR5)")}
         ]},
         "temp": { label: i18n("Temperature"),      subs: []},
-        "gpu":  { label: i18n("GPU"),              subs: [
-            {key: "usage", label: i18n("Usage")},
-            {key: "vram",  label: i18n("VRAM")},
-            {key: "temp",  label: i18n("Temperature")}
-        ]},
+        "gpu":  { label: i18n("GPU"),              subs: []},
         "bat":  { label: i18n("Battery"),          subs: [
             {key: "percentage", label: i18n("Percentage")},
             {key: "power",      label: i18n("Power consumption")}
@@ -136,7 +132,7 @@ KCM.SimpleKCM {
         switch (key) {
             case "cpu":  str = cfg_cpuSubMetrics;  break;
             case "ram":  str = cfg_ramSubMetrics;  break;
-            case "gpu":  str = cfg_gpuSubMetrics;  break;
+
             case "bat":  str = cfg_batSubMetrics;  break;
             case "net":  str = cfg_netSubMetrics;  break;
             case "disk": str = cfg_diskSubMetrics; break;
@@ -217,7 +213,7 @@ KCM.SimpleKCM {
         switch (key) {
             case "cpu":  cfg_cpuSubMetrics  = str; break;
             case "ram":  cfg_ramSubMetrics  = str; break;
-            case "gpu":  cfg_gpuSubMetrics  = str; break;
+
             case "bat":  cfg_batSubMetrics  = str; break;
             case "net":  cfg_netSubMetrics  = str; break;
             case "disk": cfg_diskSubMetrics = str; break;
@@ -288,6 +284,36 @@ KCM.SimpleKCM {
     }
 
     readonly property var discoveredGpus: _liveDiscoveredGpus
+
+    function parseGpuMetrics(str) {
+        var result = {};
+        if (!str) return result;
+        str.split("|").forEach(function(pair) {
+            var sep = pair.indexOf(":");
+            if (sep > 0) {
+                var id = pair.substring(0, sep);
+                var mstr = pair.substring(sep + 1);
+                result[id] = mstr.length > 0 ? mstr.split(",") : [];
+            }
+        });
+        return result;
+    }
+
+    function saveGpuMetric(gpuId, metric, enable) {
+        var mm = parseGpuMetrics(cfg_gpuMetrics);
+        var current = mm[gpuId] || ["usage", "vram", "temp"];
+        if (enable) {
+            if (current.indexOf(metric) < 0) current.push(metric);
+        } else {
+            current = current.filter(function(m){ return m !== metric; });
+        }
+        var canonical = ["usage", "vram", "temp"];
+        current.sort(function(a, b){ return canonical.indexOf(a) - canonical.indexOf(b); });
+        mm[gpuId] = current;
+        var parts = [];
+        for (var id in mm) parts.push(id + ":" + mm[id].join(","));
+        cfg_gpuMetrics = parts.join("|");
+    }
 
     // GPU label helpers
     function parseGpuLabels(str) {
@@ -593,7 +619,7 @@ KCM.SimpleKCM {
                             // (that choice still governs the compact panel on its own).
                             Button {
                                 visible: catDelegate.key === "ram"
-                                text: i18n("Show both in popup window")
+                                text: i18n("Show both % and Used in popup")
                                 checkable: true
                                 checked: cfg_ramWidgetShowBoth
                                 // Greyed out only when both are already individually
@@ -726,6 +752,28 @@ KCM.SimpleKCM {
                                                     text: metricsPage.parseGpuLabels(cfg_gpuLabels)[gpuDelegate.modelData.id] || ""
                                                     placeholderText: gpuDelegate.modelData.name
                                                     onTextEdited: metricsPage.saveGpuLabel(gpuDelegate.modelData.id, text)
+                                                }
+                                            }
+                                            Flow {
+                                                spacing: Kirigami.Units.largeSpacing
+                                                Layout.fillWidth: true
+                                                Layout.topMargin: Kirigami.Units.smallSpacing
+                                                Repeater {
+                                                    model: [
+                                                        {key: "usage", label: i18n("Usage")},
+                                                        {key: "vram",  label: i18n("VRAM")},
+                                                        {key: "temp",  label: i18n("Temperature")}
+                                                    ]
+                                                    delegate: CheckBox {
+                                                        required property var modelData
+                                                        text: modelData.label
+                                                        checked: {
+                                                            var mm = metricsPage.parseGpuMetrics(cfg_gpuMetrics);
+                                                            var mList = mm[gpuDelegate.modelData.id] || ["usage", "vram", "temp"];
+                                                            return mList.indexOf(modelData.key) >= 0;
+                                                        }
+                                                        onToggled: metricsPage.saveGpuMetric(gpuDelegate.modelData.id, modelData.key, checked)
+                                                    }
                                                 }
                                             }
                                         }
