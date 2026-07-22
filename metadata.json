@@ -13,7 +13,7 @@
     ],
     "Website": "https://github.com/yassine20011/kvitals",
     "BugReportUrl": "https://github.com/yassine20011/kvitals/issues",
-    "Version": "2.12.0",
+    "Version": "2.13.0",
     "License": "GPL-3.0"
   },
   "KPackageStructure": "Plasma/Applet",

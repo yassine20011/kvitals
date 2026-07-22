@@ -2,6 +2,32 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [2.13.0] - 2026-07-23
+
+### Added
+
+- **Sparkline Charts**: The expanded popup view now includes 60-sample real-time history charts for CPU, RAM, Temperature, GPU, Network, Battery, Disk, and Fan metrics. Percentage and temperature charts use a fixed 0-100 scale to show headroom toward system limits.
+- **Fan Monitoring Improvements**: Added per-fan custom labels, stable fan numbering (`Fan 1`, `Fan 2`), per-fan RPM sparkline charts in the popup view, and grouped fan rendering in the panel. Added a `~` prefix for percentage values calculated from estimated max RPM.
+- **Per-Metric Visibility Controls**: Added visibility options (`All`, `Compact`, `Popup`, `None`) for each metric, replacing simple enable toggles.
+- **Icon Color Customization**: Added an `Icon Color` picker in the Colors settings page. Unset icon colors fall back to the label color setting.
+- **Custom Metrics Labels**: Added custom label options for RAM (`ramLabel`), Disk (`diskLabel`), Network (`netLabel`), and individual disk drives (`diskLabels`), along with a toggle to keep default short names in the compact panel.
+- **Popup Pin Toggle**: Added a pin button to the popup title bar so the panel stays open when clicking other windows.
+- **Bundled Icon Fallbacks**: Added fallback logic for bundled Win11-dark SVG icons (`am-cpu-symbolic`, `nvidia-ram-symbolic`, `gpu-symbolic`, `am-disk-utility-symbolic`, `am-fan-symbolic`), maintaining default icons regardless of the system icon theme.
+
+### Changed
+
+- **Font Search Interface**: Replaced the editable font drop-down menu in General settings with a text field and popup search list, resolving auto-complete freezes when selecting fonts.
+- **Per-Disk Read and Write Rates**: The expanded popup view now displays individual read and write rates for each disk on multi-drive systems.
+- **Compact Panel Width Stability**: Padded percentage values and network rate strings to fixed lengths, preventing the panel from shifting as values change size.
+- **Solid Hotplug Storage Detection**: Replaced file-based `/proc/diskstats` checks with Solid dataengine event signals (`sourceAdded`/`sourceRemoved`) for USB drive connections and removals.
+
+### Fixed
+
+- **Decoupled Temperature Metrics**: Separated CPU temperature and System (chipset) temperature chart histories, threshold sliders, and color rules (`systemColor` vs `cpuTempColor`).
+- **Chipset Sensor Detection**: Hardened lm-sensors discovery logic to exclude PCI bus sensors (like `k10temp` and `amdgpu`) and Intel `coretemp` from being picked as the system motherboard temperature.
+- **RAM Temperature Thresholds**: Added separate warning and critical threshold sliders for RAM temperature (`ramTempWarningThreshold`, `ramTempCriticalThreshold`).
+- **Boot Crash Prevention**: Removed programmatic configuration writes during widget startup to prevent `plasmashell` crashes on boot.
+
 ## [2.12.0] - 2026-07-18
 
 ### Added

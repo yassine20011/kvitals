@@ -29,19 +29,22 @@ CPU: 26% · 3.2GHz  |  RAM: 8.8/39.0G  |  TEMP: 58°C  |  🔋BAT: 78% · 20W  |
 
 Here is what you can track and customize:
 
-- **CPU**: Track usage percentage and frequency in a single panel entry. You can also customize the "CPU" label.
-- **RAM**: View used and total memory in gigabytes.
-- **CPU temperature**: Automatic detection across thermal zones, hwmon, and lm-sensors.
-- **GPU**: Monitor usage, VRAM, and temperature. You can toggle multiple GPUs independently and set custom labels like iGPU or dGPU. On single-GPU systems, the label is also customizable and dynamically discovered.
-- **Battery and power**: Automatically detects BAT0, BATT, CMB0, macsmc-battery, or other common interfaces, with an option to display current power draw in watts.
-- **Network**: Download and upload speeds on your active interface, detected automatically.
-- **Disk I/O and temperature**: Read and write rates, plus the highest drive temperature among your NVMe and SATA drives.
+- **CPU**: Track usage percentage and frequency in a single panel entry with customizable CPU labels.
+- **RAM**: View used and total memory, with support for custom RAM labels.
+- **Temperature**: Automatic detection of CPU, system motherboard, and RAM temperatures with separate thresholds.
+- **GPU**: Monitor usage, VRAM, and temperature. Toggle multiple GPUs independently with custom labels like iGPU or dGPU.
+- **Fan speed**: Monitor fan RPM and percentage with stable numbering and individual sparklines.
+- **Battery and power**: Automatically detects battery interfaces with an option to display power draw in watts.
+- **Network**: Track download and upload speeds, active IP address, and interface auto-detection.
+- **Disk I/O and temperature**: Per-drive read/write rates and temperature monitoring with hotplug drive detection.
+- **Sparkline charts**: Expanded popup panel displays 60-sample history graphs for all active metrics.
+- **Visibility controls**: Choose where each metric appears (panel and popup, panel only, popup only, or disabled).
+- **Popup pin mode**: Pin the expanded popup view open while working in other windows.
 - **Display modes**: Choose between text, icons, or icons and text, with horizontal or vertical panel layouts.
-- **Color customization**: Override base font, label, and icon colors, plus configure custom warning and critical colors using visual sliders.
-- **Panel filters**: Keep the panel bar clean by moving secondary metrics to the compact popup view only.
+- **Color customization**: Set font, label, and icon colors, with threshold sliders for warning and critical states.
 - **Custom ordering**: Drag and drop metrics to rearrange them.
-- **Appearance**: Use any system font or pick icons from your active desktop theme.
-- **Resource efficiency**: Disabling a sensor stops all subscriptions, meaning zero background overhead.
+- **Appearance**: Search system fonts and select icons from your installed theme or bundled fallback icons.
+- **Resource efficiency**: Disabling a sensor stops all subscriptions, adding zero background overhead.
 
 ## Requirements
 
