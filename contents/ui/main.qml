@@ -417,7 +417,7 @@ PlasmoidItem {
             GpuSensors {
                 id: _gpu
                 updateInterval: root.updateInterval
-                gpuMetrics: root.gpuMetrics
+                gpuSubMetrics: root.gpuSubMetrics
                 gpuSelection: root.gpuSelection
                 gpuLabels: root.gpuLabels
                 tempUnit: root.tempUnit

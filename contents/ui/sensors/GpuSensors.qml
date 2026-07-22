@@ -17,8 +17,10 @@ Item {
     // Temperature unit: "C" (default) or "F"
     property string tempUnit: "C"
 
-    // Per-GPU sub-metric visibility: "gpu0:usage,vram|gpu1:usage,temp"
-    // Empty string (default) = all three sub-metrics enabled for every GPU.
+    // Global GPU sub-metric visibility e.g. "usage,vram,temp" or "usage,temp"
+    property string gpuSubMetrics: "usage,vram,temp"
+
+    // Legacy per-GPU sub-metric visibility (fallback compatibility)
     property string gpuMetrics: ""
 
     // List of { id: "gpu0", name: "GPU 1" } derived from SensorTreeModel (no polling)
@@ -74,28 +76,26 @@ Item {
         return result;
     }
 
-    // Parse "gpu0:usage,vram|gpu1:usage,temp" → { gpu0: ["usage","vram"], gpu1: ["usage","temp"] }
-    // Missing GPU or empty string → default all three enabled.
-    function parseGpuMetrics(str) {
-        var result = {};
-        if (!str) return result;
-        var pairs = str.split("|");
-        for (var i = 0; i < pairs.length; i++) {
-            var sep = pairs[i].indexOf(":");
-            if (sep <= 0) continue;
-            var id = pairs[i].substring(0, sep);
-            var metrics = pairs[i].substring(sep + 1).split(",")
-                .filter(function(m){ return m === "usage" || m === "vram" || m === "temp"; });
-            if (metrics.length > 0) result[id] = metrics;
+    // Parse sub-metrics string e.g. "usage,vram,temp" or legacy "gpu0:usage,vram|..."
+    function parseGpuSubMetrics(str) {
+        if (!str || str.length === 0) return ["usage", "vram", "temp"];
+        if (str.indexOf(":") >= 0) {
+            var res = [];
+            str.split("|").forEach(function(pair) {
+                var sep = pair.indexOf(":");
+                if (sep > 0) {
+                    pair.substring(sep + 1).split(",").forEach(function(m) {
+                        if ((m === "usage" || m === "vram" || m === "temp") && res.indexOf(m) < 0)
+                            res.push(m);
+                    });
+                }
+            });
+            return res.length > 0 ? res : ["usage", "vram", "temp"];
         }
-        return result;
-    }
-
-    // Return enabled sub-metric list for a specific GPU (["usage","vram","temp"] if unconfigured)
-    function gpuMetricsFor(gpuId, metricsMap) {
-        return (metricsMap[gpuId] && metricsMap[gpuId].length > 0)
-            ? metricsMap[gpuId]
-            : ["usage", "vram", "temp"];
+        var list = str.split(",").map(function(s){ return s.trim(); }).filter(function(m){
+            return m === "usage" || m === "vram" || m === "temp";
+        });
+        return list.length > 0 ? list : ["usage", "vram", "temp"];
     }
 
     function refreshDiscovered() {
@@ -159,10 +159,9 @@ Item {
 
     readonly property var _activeSensorIds: {
         var ids = [];
-        var mm = parseGpuMetrics(gpuMetrics);
+        var m = parseGpuSubMetrics(gpuSubMetrics || gpuMetrics);
         for (var i = 0; i < _activeIds.length; i++) {
             var g = _activeIds[i];
-            var m = gpuMetricsFor(g, mm);
             if (m.indexOf("usage") >= 0) ids.push("gpu/" + g + "/usage");
             if (m.indexOf("vram")  >= 0) {
                 ids.push("gpu/" + g + "/usedVram");
@@ -203,7 +202,7 @@ Item {
     function aggregate() {
         var ids = _activeIds;
         var customLabels = parseGpuLabels(gpuLabels);
-        var mm = parseGpuMetrics(gpuMetrics);
+        var m = parseGpuSubMetrics(gpuSubMetrics || gpuMetrics);
         var newList = [];
         var totalUsage = 0, usageCount = 0;
         var totalVramUsed = 0, totalVramTotal = 0, hasVram = false;
@@ -211,7 +210,6 @@ Item {
 
         for (var i = 0; i < ids.length; i++) {
             var g = ids[i];
-            var m = gpuMetricsFor(g, mm);
             var showU = m.indexOf("usage") >= 0;
             var showV = m.indexOf("vram")  >= 0;
             var showT = m.indexOf("temp")  >= 0;
@@ -259,9 +257,10 @@ Item {
         _tempStr  = !isNaN(maxTemp) ? Utils.formatTemp(maxTemp, tempUnit) : "";
     }
 
-    // Re-aggregate when gpuMetrics, labels, selection, or unit change
-    onGpuMetricsChanged:   aggregate()
-    onGpuLabelsChanged:    aggregate()
-    onGpuSelectionChanged: aggregate()
-    onTempUnitChanged:     aggregate()
+    // Re-aggregate when sub-metrics, labels, selection, or unit change
+    onGpuSubMetricsChanged: aggregate()
+    onGpuMetricsChanged:    aggregate()
+    onGpuLabelsChanged:     aggregate()
+    onGpuSelectionChanged:  aggregate()
+    onTempUnitChanged:      aggregate()
 }
