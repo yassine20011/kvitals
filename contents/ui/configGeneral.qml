@@ -76,18 +76,40 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: i18n("Font:")
 
             property var allFonts: []
-            property var defaultFonts: [
+            property var installedDefaults: []
+
+            readonly property var candidateFonts: [
                 "monospace", "Sans Serif", "Hack", "Fira Code",
                 "JetBrains Mono", "Noto Sans", "Roboto", "Inter",
                 "DejaVu Sans Mono", "Liberation Mono"
             ]
 
-            function filterFonts(query) {
+            function ensureFontsLoaded() {
                 if (allFonts.length === 0) {
                     allFonts = Qt.fontFamilies();
+                    var installed = [];
+                    for (var i = 0; i < candidateFonts.length; i++) {
+                        if (allFonts.indexOf(candidateFonts[i]) !== -1) {
+                            installed.push(candidateFonts[i]);
+                        }
+                    }
+                    installedDefaults = installed;
                 }
+            }
+
+            function buildInitialList() {
+                ensureFontsLoaded();
+                var list = installedDefaults.slice();
+                if (cfg_fontFamily && list.indexOf(cfg_fontFamily) === -1) {
+                    list.unshift(cfg_fontFamily);
+                }
+                return list;
+            }
+
+            function filterFonts(query) {
+                ensureFontsLoaded();
                 var q = query.trim().toLowerCase();
-                if (q === "") return defaultFonts.slice();
+                if (q === "") return buildInitialList();
                 var results = [];
                 for (var i = 0; i < allFonts.length && results.length < 50; i++) {
                     if (allFonts[i].toLowerCase().indexOf(q) !== -1) {
@@ -97,38 +119,55 @@ KCM.SimpleKCM {
                 return results;
             }
 
+            function populateList(query) {
+                fontSuggestionsModel.clear();
+                var filtered = filterFonts(query);
+                for (var i = 0; i < filtered.length; i++) {
+                    fontSuggestionsModel.append({ name: filtered[i] });
+                }
+            }
+
             TextField {
                 id: fontInput
                 Layout.preferredWidth: 200
                 text: cfg_fontFamily
                 placeholderText: i18n("Type to search fonts...")
 
-                onTextEdited: {
-                    fontSuggestionsModel.clear();
-                    var filtered = fontRow.filterFonts(text);
-                    for (var i = 0; i < filtered.length; i++) {
-                        fontSuggestionsModel.append({ name: filtered[i] });
+                onActiveFocusChanged: {
+                    if (activeFocus) {
+                        fontRow.populateList("");
+                        fontPopup.open();
                     }
+                }
+
+                onTextEdited: {
+                    fontRow.populateList(text);
                     fontPopup.open();
                 }
 
                 onEditingFinished: {
                     cfg_fontFamily = text;
-                    fontPopup.close();
+                    if (!fontSuggestionsList.activeFocus) {
+                        fontPopup.close();
+                    }
                 }
 
-                Keys.onEscapePressed: fontPopup.close()
+                Keys.onEscapePressed: {
+                    fontPopup.close();
+                }
                 Keys.onDownPressed: {
+                    fontRow.populateList(text);
                     fontPopup.open();
+                    fontSuggestionsList.currentIndex = -1;
                     fontSuggestionsList.forceActiveFocus();
-                    fontSuggestionsList.currentIndex = 0;
                 }
             }
 
             Popup {
                 id: fontPopup
-                x: fontInput.x
-                y: fontInput.y + fontInput.height
+                parent: fontInput
+                x: 0
+                y: fontInput.height
                 width: fontInput.width
                 height: Math.min(fontSuggestionsList.contentHeight, 250)
                 padding: 0
@@ -148,6 +187,7 @@ KCM.SimpleKCM {
                             cfg_fontFamily = model.name;
                             fontInput.text = model.name;
                             fontPopup.close();
+                            fontInput.forceActiveFocus();
                         }
                     }
 
@@ -167,14 +207,8 @@ KCM.SimpleKCM {
                     }
                 }
             }
-
-            Component.onCompleted: {
-                var defaults = fontRow.defaultFonts;
-                for (var i = 0; i < defaults.length; i++) {
-                    fontSuggestionsModel.append({ name: defaults[i] });
-                }
-            }
         }
+
 
         Label {
             text: i18n("Type to search, ↓ to browse, Enter or click to select")
