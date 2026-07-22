@@ -108,7 +108,7 @@ Item {
     }
 
     function parseFanLabels(str) {
-        var result = {};
+        var result = Object.create(null);
         if (!str) return result;
         str.split("|").forEach(function(pair) {
             var sep = pair.indexOf(":");
@@ -126,7 +126,8 @@ Item {
         if (fanUnit === "percent") {
             var max = _modelMax(f.id);
             var estimated = isNaN(max) || max <= 0;
-            if (estimated) max = fanMaxRpm;
+            if (estimated) max = (fanMaxRpm > 0 ? fanMaxRpm : 2000);
+            if (max <= 0) max = 2000;
             return { str: Math.min(100, Math.round((v / max) * 100)) + "%", estimated: estimated };
         }
         return { str: Math.round(v) + " RPM", estimated: false };

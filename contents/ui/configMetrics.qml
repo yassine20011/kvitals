@@ -289,6 +289,7 @@ KCM.SimpleKCM {
 
     readonly property var discoveredGpus: _liveDiscoveredGpus
 
+
     // GPU label helpers
     function parseGpuLabels(str) {
         var result = {};
@@ -460,7 +461,7 @@ KCM.SimpleKCM {
     // --- Fan label helpers ---
 
     function parseFanLabels(str) {
-        var result = {};
+        var result = Object.create(null);
         if (!str) return result;
         str.split("|").forEach(function(pair) {
             var sep = pair.indexOf(":");
@@ -484,7 +485,6 @@ KCM.SimpleKCM {
 
     // --- Network interface discovery ---
     property var ifaceList: ["auto"]
-
     Plasma5Support.DataSource {
         id: ifaceSource
         engine: "executable"
@@ -537,7 +537,6 @@ KCM.SimpleKCM {
             wrapMode: Text.WordWrap
             Layout.maximumWidth: Kirigami.Units.gridUnit * 28
         }
-
         ColumnLayout {
             spacing: 0
             Layout.fillWidth: true
@@ -842,6 +841,7 @@ KCM.SimpleKCM {
                                                     onTextEdited: metricsPage.saveGpuLabel(gpuDelegate.modelData.id, text)
                                                 }
                                             }
+
                                         }
                                     }
                                 }
@@ -933,7 +933,7 @@ KCM.SimpleKCM {
 
                     // Fan settings
                     Loader {
-                        active: modelData === "fan" && metricDelegate.metricEnabled
+                        active: catDelegate.key === "fan" && catDelegate.catEnabled
                         visible: active
                         Layout.fillWidth: true
                         Layout.leftMargin: Kirigami.Units.gridUnit * 2 + Kirigami.Units.smallSpacing
@@ -1007,7 +1007,6 @@ KCM.SimpleKCM {
                             }
                         }
                     }
-
                     // ── Divider ────────────────────────────────────────────
                     Rectangle {
                         visible: index < metricsPage.currentOrder.length - 1

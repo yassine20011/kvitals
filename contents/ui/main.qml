@@ -417,6 +417,7 @@ PlasmoidItem {
             GpuSensors {
                 id: _gpu
                 updateInterval: root.updateInterval
+                gpuMetrics: root.gpuMetrics
                 gpuSelection: root.gpuSelection
                 gpuLabels: root.gpuLabels
                 tempUnit: root.tempUnit
@@ -490,9 +491,6 @@ PlasmoidItem {
 
     // === Compact model helper: build segments from sub-metrics ===
 
-    // Fan percentage readings fall back to the user-configured fanMaxRpm
-    // guess when the hardware doesn't report its own max RPM. Mark those
-    // as approximate so they're not mistaken for a real measurement.
     function _fanDisplayValue(fd) {
         return (fd.isEstimated ? "~" : "") + fd.value;
     }

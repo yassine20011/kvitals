@@ -11,14 +11,14 @@ category/object/property
 
 Examples:
 
-| Sensor ID | Category | Object | Property |
-|---|---|---|---|
-| `cpu/all/averageTemperature` | cpu | all | averageTemperature |
-| `cpu/cpu3/temperature` | cpu | cpu3 | temperature |
-| `gpu/gpu0/temperature` | gpu | gpu0 | temperature |
-| `lmsensors/nct6799-isa-0290/temp1` | lmsensors | nct6799-isa-0290 | temp1 |
-| `lmsensors/spd5118-i2c-3-51/temp1` | lmsensors | spd5118-i2c-3-51 | temp1 |
-| `lmsensors/nvme-pci-0200/temp1` | lmsensors | nvme-pci-0200 | temp1 |
+| Sensor ID                          | Category  | Object           | Property           |
+| ---------------------------------- | --------- | ---------------- | ------------------ |
+| `cpu/all/averageTemperature`       | cpu       | all              | averageTemperature |
+| `cpu/cpu3/temperature`             | cpu       | cpu3             | temperature        |
+| `gpu/gpu0/temperature`             | gpu       | gpu0             | temperature        |
+| `lmsensors/nct6799-isa-0290/temp1` | lmsensors | nct6799-isa-0290 | temp1              |
+| `lmsensors/spd5118-i2c-3-51/temp1` | lmsensors | spd5118-i2c-3-51 | temp1              |
+| `lmsensors/nvme-pci-0200/temp1`    | lmsensors | nvme-pci-0200    | temp1              |
 
 Categories: `cpu`, `gpu`, `lmsensors`, `memory`, `disk`, `network`, `os`, etc.
 
@@ -50,10 +50,12 @@ Super I/O chips (Nuvoton nct6799, ITE it87*, Winbond w83627*, Fintek f71869*)
 LPC/ISA bus, so their lm-sensors adapter name contains `-isa-`.
 
 CPU temperature drivers live on PCI:
+
 - AMD: `k10temp-pci-*`, `zenpower-pci-*`
 - Intel: `coretemp-isa-*` (exception — uses ISA bus but is a CPU sensor)
 
 GPU drivers also live on PCI:
+
 - AMD: `amdgpu-pci-*`
 - NVIDIA: `nvidia-pci-*`
 
@@ -85,11 +87,11 @@ switches to a chipset sensor.
 
 ## Three Independent Sensors
 
-| Display | QML Property | Sensor ID | Source |
-|---|---|---|---|
-| System Temperature | `temp.tempValue` | chipset auto-detect or `cpu/all/averageTemperature` | `sysSensor` |
-| CPU Temperature | `temp.cpuTempValue` | `cpu/all/averageTemperature` | `cpuTempSensor` |
-| DDR5 RAM Temperature | `temp.ramTempValue` | `lmsensors/spd5118-*/temp1` | `ramSensor` |
+| Display              | QML Property        | Sensor ID                                           | Source          |
+| -------------------- | ------------------- | --------------------------------------------------- | --------------- |
+| System Temperature   | `temp.tempValue`    | chipset auto-detect or `cpu/all/averageTemperature` | `sysSensor`     |
+| CPU Temperature      | `temp.cpuTempValue` | `cpu/all/averageTemperature`                        | `cpuTempSensor` |
+| DDR5 RAM Temperature | `temp.ramTempValue` | `lmsensors/spd5118-*/temp1`                         | `ramSensor`     |
 
 - `sysIsFallback = true` when System Temperature falls back to CPU
 - The "No chipset temp sensor detected" label in settings is controlled by
