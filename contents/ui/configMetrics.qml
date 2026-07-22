@@ -106,7 +106,11 @@ KCM.SimpleKCM {
             {key: "temp",       label: i18n("Temperature (DDR5)")}
         ]},
         "temp": { label: i18n("Temperature"),      subs: []},
-        "gpu":  { label: i18n("GPU"),              subs: []},
+        "gpu":  { label: i18n("GPU"),              subs: [
+            {key: "usage", label: i18n("Usage")},
+            {key: "vram",  label: i18n("VRAM")},
+            {key: "temp",  label: i18n("Temperature")}
+        ]},
         "bat":  { label: i18n("Battery"),          subs: [
             {key: "percentage", label: i18n("Percentage")},
             {key: "power",      label: i18n("Power consumption")}
@@ -132,7 +136,6 @@ KCM.SimpleKCM {
         switch (key) {
             case "cpu":  str = cfg_cpuSubMetrics;  break;
             case "ram":  str = cfg_ramSubMetrics;  break;
-
             case "bat":  str = cfg_batSubMetrics;  break;
             case "net":  str = cfg_netSubMetrics;  break;
             case "disk": str = cfg_diskSubMetrics; break;
@@ -213,7 +216,6 @@ KCM.SimpleKCM {
         switch (key) {
             case "cpu":  cfg_cpuSubMetrics  = str; break;
             case "ram":  cfg_ramSubMetrics  = str; break;
-
             case "bat":  cfg_batSubMetrics  = str; break;
             case "net":  cfg_netSubMetrics  = str; break;
             case "disk": cfg_diskSubMetrics = str; break;
@@ -581,8 +583,9 @@ KCM.SimpleKCM {
                                 }
                             }
 
-                            // Sub-metric checkboxes
+                            // Sub-metric checkboxes (hidden for GPU — handled per-device below)
                             Flow {
+                                visible: catDelegate.key !== "gpu"
                                 spacing: Kirigami.Units.largeSpacing
                                 Layout.fillWidth: true
 
