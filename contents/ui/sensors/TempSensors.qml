@@ -132,18 +132,24 @@ Item {
         // prefer candidates whose label doesn't indicate a CPU-adjacent or
         // auxiliary sensor. The Qt::DisplayRole exposes the lm-sensors label.
         if (chipsetCandidates.length > 0) {
-            var best = chipsetCandidates[0];
-            if (chipsetCandidates.length > 1) {
-                var nonSystemLabels = /^(cputin|auxtin|peci|smbusmaster)/i;
-                var filtered = chipsetCandidates.filter(function(c) {
-                    return !nonSystemLabels.test(c.label);
-                });
-                if (filtered.length > 0) best = filtered[0];
-            }
-            if (_systemSensorId !== best.id) {
-                console.warn("[KVitals] TempSensors: chipset sensor selected: "
-                    + best.id + " (" + best.adapter + ") label=" + best.label);
-                _systemSensorId = best.id;
+            var nonSystemLabels = /^(cputin|auxtin|peci|smbusmaster)/i;
+            var filtered = chipsetCandidates.filter(function(c) {
+                return !nonSystemLabels.test(c.label);
+            });
+            if (filtered.length > 0) {
+                var best = filtered[0];
+                if (_systemSensorId !== best.id) {
+                    console.warn("[KVitals] TempSensors: chipset sensor selected: "
+                        + best.id + " (" + best.adapter + ") label=" + best.label);
+                    _systemSensorId = best.id;
+                }
+            } else {
+                // Every ISA channel was a CPU-adjacent sensor — clear so sysSensor
+                // falls back to cpu/all/averageTemperature
+                if (_systemSensorId.length > 0) {
+                    console.warn("[KVitals] TempSensors: all ISA channels rejected, reverting to CPU fallback");
+                }
+                _systemSensorId = "";
             }
         } else if (newRows > 0) {
             if (_systemSensorId.length > 0) {
