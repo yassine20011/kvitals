@@ -774,7 +774,7 @@ PlasmoidItem {
                     ramLine += " " + temp.ramTempValue;
                 parts.push(ramLine);
             }
-            else if (key === "temp" && !(root.cpuEnabled && root.hasSub("cpu", "temp")))
+            else if (key === "temp")
                 parts.push(root.tempLabel + ": " + temp.tempValue);
             else if (key === "gpu") {
                 if (gpu.gpuDataList.length > 1) {
