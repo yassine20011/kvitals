@@ -139,8 +139,8 @@ KCM.SimpleKCM {
                 }
 
                 onEditingFinished: {
-                    cfg_fontFamily = text;
                     if (!fontSuggestionsList.activeFocus) {
+                        cfg_fontFamily = text;
                         fontPopup.close();
                     }
                 }
