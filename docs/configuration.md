@@ -65,6 +65,29 @@ Each metric features a four-way visibility selector:
 - **Split GPU Metrics**: Separates GPU usage, VRAM, and GPU temperature into individual compact items.
 - **Custom Labels**: Custom text fields are available for CPU, RAM, Disk, Network, and Fan entries. Unchecking **Use Custom Labels in Panel** forces standard short labels in the panel while keeping custom names in the popup.
 
+### Network Interface
+
+When set to `auto`, the widget aggregates traffic across all active network connections using KDE's `network/all` sensor. This handles VPN routing and switching networks automatically.
+
+You can manually select a specific interface (e.g., `wlan0`, `enp3s0`) from the drop-down list if you only want to monitor a single network interface.
+
+!!! note
+    The manual interface list is populated dynamically from `/sys/class/net/`.
+
+### GPU Selection
+
+When **GPU Metrics** is enabled, a **GPU Selection** section lists every GPU detected on your system. GPUs are discovered dynamically via the KDE sensor tree without requiring polling during discovery.
+
+| Control | Description |
+|---|---|
+| **Checkbox** | Enable or disable monitoring for each individual GPU |
+| **Label field** | Override the display name for a GPU. Leave empty to use the name reported by ksystemstats |
+
+**Label resolution order**: custom label → ksystemstats-provided name (e.g. `GPU 1`) → `GPU N` fallback.
+
+!!! tip "Hybrid GPU Laptops (Intel/AMD + NVIDIA)"
+    On hybrid laptops using tools like `supergfxctl` or `asusctl`, KVitals only polls GPUs whose checkboxes are selected. Unchecking the discrete GPU stops all polling for it, allowing it to enter its suspended power-saving state when idle.
+
 ### Expanded Popup Panel
 
 Clicking the panel widget opens an expanded view with detailed readings and real-time sparkline charts:
@@ -105,6 +128,3 @@ Click **Reset to defaults** to restore the default icon assignments. If an icon 
 | **Critical color** | Color when a critical threshold is met | `#da4453` |
 
 Threshold sliders are available for CPU usage, CPU temperature, System temperature, RAM usage, RAM temperature, GPU usage, GPU temperature, and battery level.
-
-!!! note "Battery Thresholds"
-    Battery thresholds are inverted: warning and critical states trigger when the battery level falls _below_ the configured values.
