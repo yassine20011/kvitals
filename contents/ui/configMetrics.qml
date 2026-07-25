@@ -79,19 +79,34 @@ KCM.SimpleKCM {
 
     readonly property var allKeys: ["cpu", "ram", "temp", "gpu", "bat", "net", "disk", "fan", "uptime"]
 
-    function iconFor(key) {
-        switch (key) {
-            case "cpu":    return cfg_cpuIcon;
-            case "ram":    return cfg_ramIcon;
-            case "temp":   return cfg_tempIcon;
-            case "gpu":    return cfg_gpuIcon;
-            case "bat":    return cfg_batteryIcon;
-            case "net":    return cfg_networkIcon;
-            case "disk":   return cfg_diskIcon;
-            case "fan":    return cfg_fanIcon;
-            case "uptime": return cfg_uptimeIcon;
+    function resolveIcon(name) {
+        switch (name) {
+        case "am-cpu-symbolic":
+        case "nvidia-ram-symbolic":
+        case "am-disk-utility-symbolic":
+        case "am-fan-symbolic":
+        case "gpu-symbolic":
+            return Qt.resolvedUrl("../icons/" + name + ".svg");
+        default:
+            return name;
         }
-        return "help-about";
+    }
+
+    function iconFor(key) {
+        var name;
+        switch (key) {
+            case "cpu":    name = cfg_cpuIcon; break;
+            case "ram":    name = cfg_ramIcon; break;
+            case "temp":   name = cfg_tempIcon; break;
+            case "gpu":    name = cfg_gpuIcon; break;
+            case "bat":    name = cfg_batteryIcon; break;
+            case "net":    name = cfg_networkIcon; break;
+            case "disk":   name = cfg_diskIcon; break;
+            case "fan":    name = cfg_fanIcon; break;
+            case "uptime": name = cfg_uptimeIcon; break;
+            default: return "help-about";
+        }
+        return resolveIcon(name);
     }
 
     readonly property var metricMeta: ({

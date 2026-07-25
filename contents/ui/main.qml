@@ -89,7 +89,8 @@ PlasmoidItem {
     property bool fontBold:     Plasmoid.configuration.fontBold
     property real labelOpacity:    Plasmoid.configuration.labelOpacity
     property real separatorOpacity: Plasmoid.configuration.separatorOpacity
-    property int effectiveFontSize: fontSize > 0 ? fontSize : Kirigami.Theme.smallFont.pixelSize
+    // -1 means "let the panel's inherited font apply" (no pixelSize override)
+    property int effectiveFontSize: fontSize > 0 ? fontSize : -1
 
     property bool useIcons: displayMode === "icons" || displayMode === "icons+text"
     property bool useText:  displayMode === "text"  || displayMode === "icons+text"

@@ -22,19 +22,30 @@ RowLayout {
     required property real separatorOpacity
 
     readonly property bool isVertical: layoutType === "vertical"
+    readonly property bool customFont: effectiveFontSize > 0
 
     signal toggleExpanded()
 
-    // Sticky-width state, keyed by a stable per-item/per-segment string
-    // (see itemData.key / segment.key in main.qml). Must live here rather
-    // than on the value Label itself: metricsModel is a plain JS array
-    // rebuilt on every sensor poll, so the Repeater's delegates (and any
-    // property on them) are destroyed and recreated every cycle. Keeping
-    // the map on this long-lived item is what lets a width persist.
+    // Sticky width cache
     property var _stickyWidths: ({})
+
+    function resetStickyWidths() {
+        _stickyWidths = ({});
+    }
+
+    onEffectiveFontSizeChanged: resetStickyWidths()
+    onFontFamilyChanged: resetStickyWidths()
+    onIconSizeChanged: resetStickyWidths()
+    onLayoutTypeChanged: resetStickyWidths()
+    onUseIconsChanged: resetStickyWidths()
+    onUseTextChanged: resetStickyWidths()
+
     function _stickyWidth(key, w) {
         var cur = _stickyWidths[key] || 0;
-        if (w > cur) { _stickyWidths[key] = w; cur = w; }
+        if (w > cur || w < cur * 0.75) {
+            _stickyWidths[key] = w;
+            cur = w;
+        }
         return cur;
     }
 
@@ -59,8 +70,8 @@ RowLayout {
                 PlasmaComponents.Label {
                     visible: index > 0
                     text: "·"
-                    font.pixelSize: compactRow.effectiveFontSize
-                    font.family: compactRow.fontFamily
+                    font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
+                    font.family: compactRow.customFont ? compactRow.fontFamily : font.family
                     font.bold: compactRow.fontBold
                     color: compactRow.baseTextColor
                     opacity: compactRow.separatorOpacity
@@ -70,16 +81,16 @@ RowLayout {
                 PlasmaComponents.Label {
                     visible: !!modelData.label
                     text: modelData.label || ""
-                    font.pixelSize: compactRow.effectiveFontSize
-                    font.family: compactRow.fontFamily
+                    font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
+                    font.family: compactRow.customFont ? compactRow.fontFamily : font.family
                     font.bold: compactRow.fontBold
                     color: compactRow.labelColor
                     opacity: compactRow.labelOpacity
                 }
                 PlasmaComponents.Label {
                     text: modelData.value
-                    font.pixelSize: compactRow.effectiveFontSize
-                    font.family: compactRow.fontFamily
+                    font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
+                    font.family: compactRow.customFont ? compactRow.fontFamily : font.family
                     font.bold: compactRow.fontBold
                     color: modelData.color
                     horizontalAlignment: Text.AlignRight
@@ -116,7 +127,7 @@ RowLayout {
         }
     }
 
-    // ── Horizontal delegate (unchanged behaviour) ──────────────────────────
+    // ── Horizontal delegate ────────────────────────────────────────────────
 
     Component {
         id: horizontalDelegate
@@ -128,8 +139,8 @@ RowLayout {
             PlasmaComponents.Label {
                 visible: itemIndex > 0 && !itemData.hideSeparator
                 text: "|"
-                font.pixelSize: compactRow.effectiveFontSize
-                font.family: compactRow.fontFamily
+                font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
+                font.family: compactRow.customFont ? compactRow.fontFamily : font.family
                 color: compactRow.baseTextColor
                 opacity: compactRow.separatorOpacity
                 Layout.alignment: Qt.AlignVCenter
@@ -158,8 +169,8 @@ RowLayout {
             PlasmaComponents.Label {
                 visible: compactRow.useText
                 text: itemData.label
-                font.pixelSize: compactRow.effectiveFontSize
-                font.family: compactRow.fontFamily
+                font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
+                font.family: compactRow.customFont ? compactRow.fontFamily : font.family
                 color: compactRow.labelColor
                 opacity: compactRow.labelOpacity
                 Layout.alignment: Qt.AlignVCenter
@@ -169,8 +180,8 @@ RowLayout {
                 id: valueLabel
                 visible: !itemData.segments
                 text: itemData.value || ""
-                font.pixelSize: compactRow.effectiveFontSize
-                font.family: compactRow.fontFamily
+                font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
+                font.family: compactRow.customFont ? compactRow.fontFamily : font.family
                 font.bold: compactRow.fontBold
                 color: itemData.color || compactRow.baseTextColor
                 horizontalAlignment: Text.AlignRight
@@ -220,8 +231,8 @@ RowLayout {
                     PlasmaComponents.Label {
                         visible: !itemData.segments
                         text: itemData.value || ""
-                        font.pixelSize: compactRow.effectiveFontSize
-                        font.family: compactRow.fontFamily
+                        font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
+                        font.family: compactRow.customFont ? compactRow.fontFamily : font.family
                         font.bold: compactRow.fontBold
                         color: itemData.color || compactRow.baseTextColor
                         horizontalAlignment: Text.AlignHCenter
@@ -271,8 +282,10 @@ RowLayout {
                             var lbl = itemData.label || "";
                             return lbl.endsWith(":") ? lbl.slice(0, -1) : lbl;
                         }
-                        font.pixelSize: Math.max(8, compactRow.effectiveFontSize - 2)
-                        font.family: compactRow.fontFamily
+                        font.pixelSize: compactRow.customFont
+                            ? Math.max(8, compactRow.effectiveFontSize - 2)
+                            : -1
+                        font.family: compactRow.customFont ? compactRow.fontFamily : font.family
                         color: compactRow.labelColor
                         opacity: compactRow.labelOpacity
                         Layout.alignment: Qt.AlignVCenter

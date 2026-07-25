@@ -207,7 +207,7 @@ KCM.SimpleKCM {
         Label {
             text: i18n("Type to search, ↓ to browse, Enter or click to select")
             opacity: 0.6
-            font.pointSize: fontSizeSlider.value > 0 ? fontSizeSlider.value * 0.8 : -1
+            font: Kirigami.Theme.smallFont
         }
 
         Slider {
