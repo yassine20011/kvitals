@@ -71,7 +71,7 @@ RowLayout {
                     visible: index > 0
                     text: "·"
                     font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
-                    font.family: compactRow.customFont ? compactRow.fontFamily : Kirigami.Theme.defaultFont.family
+                    font.family: compactRow.fontFamily
                     font.bold: compactRow.fontBold
                     color: compactRow.baseTextColor
                     opacity: compactRow.separatorOpacity
@@ -82,7 +82,7 @@ RowLayout {
                     visible: !!modelData.label
                     text: modelData.label || ""
                     font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
-                    font.family: compactRow.customFont ? compactRow.fontFamily : Kirigami.Theme.defaultFont.family
+                    font.family: compactRow.fontFamily
                     font.bold: compactRow.fontBold
                     color: compactRow.labelColor
                     opacity: compactRow.labelOpacity
@@ -90,7 +90,7 @@ RowLayout {
                 PlasmaComponents.Label {
                     text: modelData.value
                     font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
-                    font.family: compactRow.customFont ? compactRow.fontFamily : Kirigami.Theme.defaultFont.family
+                    font.family: compactRow.fontFamily
                     font.bold: compactRow.fontBold
                     color: modelData.color
                     horizontalAlignment: Text.AlignRight
@@ -140,7 +140,7 @@ RowLayout {
                 visible: itemIndex > 0 && !itemData.hideSeparator
                 text: "|"
                 font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
-                font.family: compactRow.customFont ? compactRow.fontFamily : Kirigami.Theme.defaultFont.family
+                font.family: compactRow.fontFamily
                 color: compactRow.baseTextColor
                 opacity: compactRow.separatorOpacity
                 Layout.alignment: Qt.AlignVCenter
@@ -170,7 +170,7 @@ RowLayout {
                 visible: compactRow.useText
                 text: itemData.label
                 font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
-                font.family: compactRow.customFont ? compactRow.fontFamily : Kirigami.Theme.defaultFont.family
+                font.family: compactRow.fontFamily
                 color: compactRow.labelColor
                 opacity: compactRow.labelOpacity
                 Layout.alignment: Qt.AlignVCenter
@@ -181,7 +181,7 @@ RowLayout {
                 visible: !itemData.segments
                 text: itemData.value || ""
                 font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
-                font.family: compactRow.customFont ? compactRow.fontFamily : Kirigami.Theme.defaultFont.family
+                font.family: compactRow.fontFamily
                 font.bold: compactRow.fontBold
                 color: itemData.color || compactRow.baseTextColor
                 horizontalAlignment: Text.AlignRight
@@ -232,7 +232,7 @@ RowLayout {
                         visible: !itemData.segments
                         text: itemData.value || ""
                         font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
-                        font.family: compactRow.customFont ? compactRow.fontFamily : Kirigami.Theme.defaultFont.family
+                        font.family: compactRow.fontFamily
                         font.bold: compactRow.fontBold
                         color: itemData.color || compactRow.baseTextColor
                         horizontalAlignment: Text.AlignHCenter
@@ -285,7 +285,7 @@ RowLayout {
                         font.pixelSize: compactRow.customFont
                             ? Math.max(8, compactRow.effectiveFontSize - 2)
                             : -1
-                        font.family: compactRow.customFont ? compactRow.fontFamily : Kirigami.Theme.defaultFont.family
+                        font.family: compactRow.fontFamily
                         color: compactRow.labelColor
                         opacity: compactRow.labelOpacity
                         Layout.alignment: Qt.AlignVCenter
