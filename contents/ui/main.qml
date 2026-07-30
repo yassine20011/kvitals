@@ -154,8 +154,8 @@ PlasmoidItem {
             case "temp":   return tempEnabled && temp.tempValue && temp.tempValue !== "--";
             case "gpu":    return gpuEnabled   && gpu.hasGpuData;
             case "bat":    return batEnabled   && battery.batValue;
-            case "net":    return netEnabled;
-            case "disk":   return diskEnabled;
+            case "net":    return netEnabled   && _sensorsReady;
+            case "disk":   return diskEnabled  && _sensorsReady;
             case "fan":    return fanEnabled   && fans.hasFanData;
             case "uptime": return uptimeEnabled && uptime.uptimeValue;
         }
