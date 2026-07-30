@@ -29,6 +29,24 @@ Item {
 
     property real _diskTempNum: NaN
 
+    // Defer SensorDataModel subscriptions until ksystemstats' disk plugin has settled.
+    property bool _bootReady: false
+    Timer {
+        interval: 500
+        repeat: false
+        running: true
+        onTriggered: root._bootReady = true
+    }
+
+    // Defer P5Support.DataSource (hotplug) until Solid/UDisks2 is fully ready.
+    property bool _hotplugReady: false
+    Timer {
+        interval: 1000
+        repeat: false
+        running: true
+        onTriggered: root._hotplugReady = true
+    }
+
     // Aggregate I/O sensors (used in compact panel and tooltip)
     Sensors.Sensor {
         id: diskReadSensor
@@ -87,9 +105,9 @@ Item {
 
     Connections {
         target: flatSensors
-        function onRowsInserted() { root._discoveryDirty = true; }
-        function onRowsRemoved()  { root._discoveryDirty = true; }
-        function onModelReset()   { root._discoveryDirty = true; }
+        function onRowsInserted() { root._discoveryDirty = true; root._tempDiscoveryDirty = true; }
+        function onRowsRemoved()  { root._discoveryDirty = true; root._tempDiscoveryDirty = true; }
+        function onModelReset()   { root._discoveryDirty = true; root._tempDiscoveryDirty = true; }
         function onDataChanged()  { root._discoveryDirty = true; }
     }
 
@@ -110,7 +128,7 @@ Item {
         id: diskData
         sensors: root._activeSensorIds
         updateRateLimit: root.updateInterval
-        enabled: root._activeSensorIds.length > 0
+        enabled: root._bootReady && root._activeSensorIds.length > 0
         onDataChanged: root.aggregatePerDisk()
         onReadyChanged: { if (ready) root.aggregatePerDisk(); }
     }
@@ -164,21 +182,23 @@ Item {
         return m ? m[1] : "";
     }
 
-    P5Support.DataSource {
-        id: hotplugSource
-        engine: "hotplug"
-        onSourceAdded: function(source) {
-            var disk = root._udiToDisk(source);
-            if (disk && root._unplugged[disk]) {
-                delete root._unplugged[disk];
-                root.refreshDiscovered();
+    Loader {
+        active: root._hotplugReady
+        sourceComponent: P5Support.DataSource {
+            engine: "hotplug"
+            onSourceAdded: function(source) {
+                var disk = root._udiToDisk(source);
+                if (disk && root._unplugged[disk]) {
+                    delete root._unplugged[disk];
+                    root.refreshDiscovered();
+                }
             }
-        }
-        onSourceRemoved: function(source) {
-            var disk = root._udiToDisk(source);
-            if (disk) {
-                root._unplugged[disk] = true;
-                root.refreshDiscovered();
+            onSourceRemoved: function(source) {
+                var disk = root._udiToDisk(source);
+                if (disk) {
+                    root._unplugged[disk] = true;
+                    root.refreshDiscovered();
+                }
             }
         }
     }
@@ -214,18 +234,11 @@ Item {
         }
     }
 
-    Connections {
-        target: flatSensors
-        function onRowsInserted() { root._tempDiscoveryDirty = true; }
-        function onRowsRemoved()  { root._tempDiscoveryDirty = true; }
-        function onModelReset()   { root._tempDiscoveryDirty = true; }
-    }
-
     Sensors.SensorDataModel {
         id: tempData
         sensors: root._tempSensorIds
         updateRateLimit: root.updateInterval
-        enabled: root._tempSensorIds.length > 0
+        enabled: root._bootReady && root._tempSensorIds.length > 0
         onDataChanged: root._aggregateTemp()
         onReadyChanged: { if (ready) root._aggregateTemp(); }
     }
