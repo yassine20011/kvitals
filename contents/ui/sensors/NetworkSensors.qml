@@ -30,6 +30,15 @@ Item {
     property string _activeIface: ""
     property var _discoveredIfaces: []
 
+    // Defer IP-discovery SensorDataModel until ksystemstats' network plugin has settled.
+    property bool _bootReady: false
+    Timer {
+        interval: 500
+        repeat: false
+        running: true
+        onTriggered: root._bootReady = true
+    }
+
     Sensors.SensorTreeModel { id: sensorTree }
 
     KItemModels.KDescendantsProxyModel {
@@ -92,7 +101,8 @@ Item {
         id: ipDiscoveryModel
         sensors: root._ipSensorIds
         updateRateLimit: root.updateInterval
-        enabled: root._ipSensorIds.length > 0
+        enabled: root._bootReady
+                 && root._ipSensorIds.length > 0
                  && (root.networkInterface === "auto" || root.networkInterface === "")
 
         onDataChanged: root._resolveActiveIface()

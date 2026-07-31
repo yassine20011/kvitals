@@ -155,8 +155,8 @@ PlasmoidItem {
             case "temp":   return tempEnabled && temp.tempValue && temp.tempValue !== "--";
             case "gpu":    return gpuEnabled   && gpu.hasGpuData;
             case "bat":    return batEnabled   && battery.batValue;
-            case "net":    return netEnabled;
-            case "disk":   return diskEnabled;
+            case "net":    return netEnabled   && _sensorsReady;
+            case "disk":   return diskEnabled  && _sensorsReady;
             case "fan":    return fanEnabled   && fans.hasFanData;
             case "uptime": return uptimeEnabled && uptime.uptimeValue;
         }
@@ -165,12 +165,16 @@ PlasmoidItem {
 
     // --- Color configuration properties ---
 
+    function isValidColor(s) {
+        return typeof s === "string" && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(s);
+    }
+
     property bool useCustomColors: Plasmoid.configuration.useCustomColors
     property string fontColor: Plasmoid.configuration.fontColor
     property string labelColor: Plasmoid.configuration.labelColor || ""
-    property color resolvedLabelColor: (useCustomColors && labelColor) ? labelColor : baseTextColor
+    property color resolvedLabelColor: (useCustomColors && isValidColor(labelColor)) ? labelColor : baseTextColor
     property string iconColor: Plasmoid.configuration.iconColor || ""
-    property color resolvedIconColor: (useCustomColors && iconColor) ? iconColor : resolvedLabelColor
+    property color resolvedIconColor: (useCustomColors && isValidColor(iconColor)) ? iconColor : resolvedLabelColor
     property bool enableThresholdColors: Plasmoid.configuration.enableThresholdColors
     property string warningColor: Plasmoid.configuration.warningColor || "#e5a50a"
     property string criticalColor: Plasmoid.configuration.criticalColor || "#da4453"
@@ -194,7 +198,7 @@ PlasmoidItem {
     property int diskTempWarningThreshold: Plasmoid.configuration.diskTempWarningThreshold
     property int diskTempCriticalThreshold: Plasmoid.configuration.diskTempCriticalThreshold
 
-    property color baseTextColor: (useCustomColors && fontColor !== "") ? fontColor : Kirigami.Theme.textColor
+    property color baseTextColor: (useCustomColors && isValidColor(fontColor)) ? fontColor : Kirigami.Theme.textColor
 
     // --- Pre-resolved per-metric colors ---
 

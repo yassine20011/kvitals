@@ -24,6 +24,17 @@ RowLayout {
     readonly property bool isVertical: layoutType === "vertical"
     readonly property bool customFont: effectiveFontSize > 0
 
+    // Defers isMask+color on Kirigami.Icon items until after the Plasma startup
+    // window-attachment sequence (ShellCorona::addOutput) completes. This prevents
+    // PlatformThemeData::setColor from being called while uninitialized (SIGSEGV #41).
+    property bool _themeReady: false
+    Timer {
+        interval: 0
+        repeat: false
+        running: true
+        onTriggered: compactRow._themeReady = true
+    }
+
     signal toggleExpanded()
 
     // Sticky width cache
@@ -158,8 +169,8 @@ RowLayout {
                     }
                     delegate: Kirigami.Icon {
                         source: modelData
-                        isMask: true
-                        color: compactRow.iconColor
+                        isMask: compactRow._themeReady
+                        color: compactRow._themeReady ? compactRow.iconColor : Qt.rgba(0, 0, 0, 0)
                         width: compactRow.iconSize
                         height: compactRow.iconSize
                     }
@@ -268,8 +279,8 @@ RowLayout {
                             }
                             delegate: Kirigami.Icon {
                                 source: modelData
-                                isMask: true
-                                color: compactRow.iconColor
+                                isMask: compactRow._themeReady
+                                color: compactRow._themeReady ? compactRow.iconColor : Qt.rgba(0, 0, 0, 0)
                                 width:  Math.round(compactRow.iconSize * 0.85)
                                 height: Math.round(compactRow.iconSize * 0.85)
                             }
