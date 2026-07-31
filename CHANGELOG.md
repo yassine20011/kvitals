@@ -2,6 +2,21 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [2.13.1] - 2026-07-31
+
+### Fixed
+
+- **Startup SIGSEGV on boot** (#73): Resolved a `SEGV_ACCERR` crash triggered when KActivities became ready and libPlasmaQuick parented the applet into the panel. `refWindow` propagated down the item tree and hit `KirigamiPlasmaStyle::setTextColor` on uninitialized `PlatformThemeData` objects. The `isEnabled()` guards for Network and Disk metrics now also check `_sensorsReady`, matching the existing pattern used by CPU, RAM, GPU, Fan, and Uptime.
+- **Kirigami icon crash at startup** (#73): `isMask` and the icon `color` property on `Kirigami.Icon` are no longer set immediately at component creation. Both are now applied inside a 0 ms `Timer` that fires only after `_themeReady`, preventing `syncColors`/`PlatformThemeData` from accessing a partially-initialized theme object during startup.
+- **Invalid QColor reaching Kirigami** (#73): Added `isValidColor()` hex-regex validation in `main.qml` for `fontColor`, `labelColor`, and `iconColor` config properties. Corrupt or empty color strings stored in the config no longer propagate to Kirigami color bindings.
+- **Disk sensor crash on boot** (#73): `SensorDataModel` instances for disk I/O and disk temperature are now gated behind a 500 ms `_bootReady` timer so the `ksystemstats` disk plugin has time to settle before KVitals subscribes to its D-Bus sensors.
+- **Network sensor crash on boot** (#73): The IP-discovery `SensorTreeModel` is similarly gated behind a 500 ms `_bootReady` timer, preventing rapid `rowsInserted` events during boot from triggering D-Bus re-subscriptions while the network plugin is still initialising.
+- **Solid/UDisks2 hotplug crash on boot** (#73): The `P5Support.DataSource` used for USB hotplug detection is now wrapped in a `Loader` activated only after a 1000 ms `_hotplugReady` timer, keeping it out of plasmashell's startup window entirely.
+- **Compact panel font family binding loop**: Resolved a self-referential `font.family` binding cycle in `CompactView` that triggered runtime QML loop warnings. The fallback now binds directly to `Kirigami.Theme.defaultFont.family`.
+- **Custom font discarded at system-default size**: The font family was previously skipped when `effectiveFontSize` was 0 (system default). Family and size are now applied independently so a custom font family is always honoured regardless of the chosen size.
+- **Panel reflow oscillations**: The `_stickyWidth` cache in `CompactView` now enforces a strict grow-only policy (the previous shrink threshold is removed), eliminating layout oscillations caused by fluctuating text metrics.
+- **Duplicate Connections blocks in DiskSensors**: Merged two separate `Connections { target: flatSensors }` blocks into one, halving the number of signal connections on the sensor model.
+
 ## [2.13.0] - 2026-07-23
 
 ### Added
