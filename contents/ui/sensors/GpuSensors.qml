@@ -23,6 +23,8 @@ Item {
     // Legacy per-GPU sub-metric visibility (fallback compatibility)
     property string gpuMetrics: ""
 
+    property string memoryFormat: "usedTotal"
+
     // List of { id: "gpu0", name: "GPU 1" } derived from SensorTreeModel (no polling)
     readonly property var discoveredGpus: _discovered
     property var _discovered: []
@@ -228,8 +230,14 @@ Item {
 
             var uStr = !isNaN(uVal) ? Math.round(uVal).toString().padStart(3) + "%" : "";
             var vStr = "";
-            if (!isNaN(vuVal) && !isNaN(vtVal) && vtVal > 0 && vuVal >= 0)
-                vStr = Utils.formatBytes(vuVal) + "/" + Utils.formatBytes(vtVal) + "G";
+            if (!isNaN(vuVal) && !isNaN(vtVal) && vtVal > 0 && vuVal >= 0) {
+                if (memoryFormat === "percentage")
+                    vStr = Math.round((vuVal / vtVal) * 100).toString().padStart(3) + "%";
+                else if (memoryFormat === "used")
+                    vStr = Utils.formatBytes(vuVal) + "G";
+                else
+                    vStr = Utils.formatBytes(vuVal) + "/" + Utils.formatBytes(vtVal) + "G";
+            }
             // tVal === 0 is ksystemstats' null sentinel for iGPU (no hwmon node)
             var tStr = (!isNaN(tVal) && tVal > 0) ? Utils.formatTemp(tVal, tempUnit) : "";
 
@@ -251,8 +259,17 @@ Item {
 
         _usageNum = usageCount > 0 ? totalUsage / usageCount : NaN;
         _usageStr = usageCount > 0 ? Math.round(_usageNum).toString().padStart(3) + "%" : "";
-        _vramStr  = (hasVram && totalVramTotal > 0)
-                    ? Utils.formatBytes(totalVramUsed) + "/" + Utils.formatBytes(totalVramTotal) + "G" : "";
+        
+        if (hasVram && totalVramTotal > 0) {
+            if (memoryFormat === "percentage")
+                _vramStr = Math.round((totalVramUsed / totalVramTotal) * 100).toString().padStart(3) + "%";
+            else if (memoryFormat === "used")
+                _vramStr = Utils.formatBytes(totalVramUsed) + "G";
+            else
+                _vramStr = Utils.formatBytes(totalVramUsed) + "/" + Utils.formatBytes(totalVramTotal) + "G";
+        } else {
+            _vramStr = "";
+        }
         _tempNum  = !isNaN(maxTemp) ? maxTemp : NaN;
         _tempStr  = !isNaN(maxTemp) ? Utils.formatTemp(maxTemp, tempUnit) : "";
     }
@@ -263,4 +280,5 @@ Item {
     onGpuLabelsChanged:     aggregate()
     onGpuSelectionChanged:  aggregate()
     onTempUnitChanged:      aggregate()
+    onMemoryFormatChanged:  aggregate()
 }
