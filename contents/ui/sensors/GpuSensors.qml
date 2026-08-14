@@ -251,6 +251,7 @@ Item {
 
         _usageNum = usageCount > 0 ? totalUsage / usageCount : NaN;
         _usageStr = usageCount > 0 ? Math.round(_usageNum).toString().padStart(3) + "%" : "";
+        
         _vramStr  = (hasVram && totalVramTotal > 0)
                     ? Utils.formatBytes(totalVramUsed) + "/" + Utils.formatBytes(totalVramTotal) + "G" : "";
         _tempNum  = !isNaN(maxTemp) ? maxTemp : NaN;
