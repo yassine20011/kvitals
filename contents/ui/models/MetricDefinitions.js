@@ -100,7 +100,7 @@ var DEFINITIONS = {
         group: "ram",
         subKey: "percentage",
         sensorId: "memory/physical/used",
-        label: "Usage",
+        label: "",
         chartKey: "ram",
         chartMax: 100,
         thresholdType: "normal",
@@ -133,7 +133,7 @@ var DEFINITIONS = {
         group: "temp",
         subKey: "temp",
         sensorId: "cpu/all/averageTemperature",
-        label: "System",
+        label: "",
         chartKey: "temp",
         chartMax: 100,
         thresholdType: "normal",
@@ -171,6 +171,17 @@ var DEFINITIONS = {
         thresholdType: "normal",
         thresholdKey: "gpuTemp",
         secondaryIcon: "temperature-normal"
+    },
+    "gpu.power": {
+        id: "gpu.power",
+        group: "gpu",
+        subKey: "power",
+        sensorPattern: "gpu/{id}/power",
+        label: "Power",
+        chartKey: "",
+        chartMax: 0,
+        thresholdType: "none",
+        iconOverrideKey: "powerIcon"
     },
     "bat.percentage": {
         id: "bat.percentage",

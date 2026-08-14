@@ -124,7 +124,8 @@ KCM.SimpleKCM {
         "gpu":  { label: i18n("GPU"),              subs: [
             {key: "usage", label: i18n("Usage")},
             {key: "vram",  label: i18n("VRAM")},
-            {key: "temp",  label: i18n("Temperature")}
+            {key: "temp",  label: i18n("Temperature")},
+            {key: "power", label: i18n("Power consumption")}
         ]},
         "bat":  { label: i18n("Battery"),          subs: [
             {key: "percentage", label: i18n("Percentage")},

@@ -70,6 +70,8 @@ Item {
         var clr = overrides.color !== undefined ? overrides.color : _resolveMetricColor(rawVal, threshType, threshKey);
         var defIcon = def.iconOverrideKey ? cfg[def.iconOverrideKey] : cfg.getGroupIcon(group);
 
+        var metricLabel = def.label ? (cfg.getGroupLabel(group) + " " + def.label) : cfg.getGroupLabel(group);
+
         return {
             id: overrides.id || def.id,
             defId: defId,
@@ -77,7 +79,7 @@ Item {
             subKey: subKey,
             deviceId: overrides.deviceId || "",
             deviceName: overrides.deviceName || "",
-            label: overrides.label || (group === "ram" && subKey === "percentage" ? cfg.ramLabel : (cfg.getGroupLabel(group) + " " + def.label)),
+            label: overrides.label || metricLabel,
             groupLabel: overrides.groupLabel || cfg.getGroupLabel(group),
             subLabel: overrides.subLabel || "",
             prefix: overrides.prefix !== undefined ? overrides.prefix : (def.prefix || ""),
@@ -197,6 +199,15 @@ Item {
                             value: gd.tempNumber, displayValue: gd.temp,
                             chartKey: "gpuTemp:" + gd.id,
                             status: !isNaN(gd.tempNumber) ? "ready" : "unavailable"
+                        }));
+                    }
+                    if (gd.power) {
+                        list.push(_createMetric("gpu.power", {
+                            id: "gpu:" + gd.id + ".power",
+                            deviceId: gd.id, deviceName: gpuName,
+                            label: gpuName + " Power", groupLabel: gpuName,
+                            value: gd.powerNumber, displayValue: gd.power,
+                            status: !isNaN(gd.powerNumber) ? "ready" : "unavailable"
                         }));
                     }
                 }

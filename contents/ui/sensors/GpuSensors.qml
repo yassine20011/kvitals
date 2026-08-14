@@ -32,25 +32,30 @@ Item {
     // Aggregated display (single-GPU compat)
     readonly property real gpuUsageNumber: _usageNum
     readonly property real gpuTempNumber:  _tempNum
+    readonly property real gpuPowerNumber: _powerNum
     readonly property string gpuValue:     _usageStr
     readonly property string gpuRamValue:  _vramStr
     readonly property string gpuTempValue: _tempStr
+    readonly property string gpuPowerValue:_powerStr
     readonly property string gpuDisplayValue:
-        [_usageStr, _vramStr, _tempStr].filter(function(v){return v;}).join(" ")
+        [_usageStr, _vramStr, _tempStr, _powerStr].filter(function(v){return v;}).join(" ")
     readonly property bool hasGpuData:      gpuDisplayValue.length > 0
     readonly property bool hasGpuUsageData: _usageStr.length > 0
     readonly property bool hasGpuVramData:  _vramStr.length  > 0
     readonly property bool hasGpuTempData:  _tempStr.length  > 0
+    readonly property bool hasGpuPowerData: _powerStr.length > 0
 
-    // Per-GPU list for multi display: [{ id, name, usage, vram, temp, usageNumber, tempNumber }]
+    // Per-GPU list for multi display: [{ id, name, usage, vram, temp, power, usageNumber, tempNumber, powerNumber }]
     readonly property var gpuDataList: _dataList
     property var _dataList: []
 
     property real _usageNum: NaN
     property real _tempNum:  NaN
+    property real _powerNum: NaN
     property string _usageStr: ""
     property string _vramStr:  ""
     property string _tempStr:  ""
+    property string _powerStr: ""
 
     // -------------------------------------------------------------------------
     // Step 1: Discover available GPUs via SensorTreeModel (metadata only, no polling)
@@ -78,7 +83,7 @@ Item {
         return result;
     }
 
-    // Parse sub-metrics string e.g. "usage,vram,temp" or legacy "gpu0:usage,vram|..."
+    // Parse sub-metrics string e.g. "usage,vram,temp,power" or legacy "gpu0:usage,vram|..."
     function parseGpuSubMetrics(str) {
         if (!str || str.length === 0) return ["usage", "vram", "temp"];
         if (str.indexOf(":") >= 0) {
@@ -87,7 +92,7 @@ Item {
                 var sep = pair.indexOf(":");
                 if (sep > 0) {
                     pair.substring(sep + 1).split(",").forEach(function(m) {
-                        if ((m === "usage" || m === "vram" || m === "temp") && res.indexOf(m) < 0)
+                        if ((m === "usage" || m === "vram" || m === "temp" || m === "power") && res.indexOf(m) < 0)
                             res.push(m);
                     });
                 }
@@ -95,7 +100,7 @@ Item {
             return res.length > 0 ? res : ["usage", "vram", "temp"];
         }
         var list = str.split(",").map(function(s){ return s.trim(); }).filter(function(m){
-            return m === "usage" || m === "vram" || m === "temp";
+            return m === "usage" || m === "vram" || m === "temp" || m === "power";
         });
         return list.length > 0 ? list : ["usage", "vram", "temp"];
     }
@@ -170,6 +175,7 @@ Item {
                 ids.push("gpu/" + g + "/totalVram");
             }
             if (m.indexOf("temp")  >= 0) ids.push("gpu/" + g + "/temperature");
+            if (m.indexOf("power") >= 0) ids.push("gpu/" + g + "/power");
         }
         return ids;
     }
@@ -208,6 +214,7 @@ Item {
         var newList = [];
         var totalUsage = 0, usageCount = 0;
         var totalVramUsed = 0, totalVramTotal = 0, hasVram = false;
+        var totalPower = 0, powerCount = 0;
         var maxTemp = NaN;
 
         for (var i = 0; i < ids.length; i++) {
@@ -215,6 +222,7 @@ Item {
             var showU = m.indexOf("usage") >= 0;
             var showV = m.indexOf("vram")  >= 0;
             var showT = m.indexOf("temp")  >= 0;
+            var showP = m.indexOf("power") >= 0;
 
             // Resolve display name: custom label > default name > fallback
             var hwName = "GPU " + (i + 1);
@@ -227,6 +235,7 @@ Item {
             var vuVal = showV ? _modelValue("gpu/" + g + "/usedVram")     : NaN;
             var vtVal = showV ? _modelValue("gpu/" + g + "/totalVram")    : NaN;
             var tVal  = showT ? _modelValue("gpu/" + g + "/temperature")  : NaN;
+            var pVal  = showP ? _modelValue("gpu/" + g + "/power")        : NaN;
 
             var uStr = !isNaN(uVal) ? Math.round(uVal).toString().padStart(3) + "%" : "";
             var vStr = "";
@@ -240,11 +249,13 @@ Item {
             }
             // tVal === 0 is ksystemstats' null sentinel for iGPU (no hwmon node)
             var tStr = (!isNaN(tVal) && tVal > 0) ? Utils.formatTemp(tVal, tempUnit) : "";
+            var pStr = (!isNaN(pVal) && pVal >= 0) ? (pVal >= 10 ? Math.round(pVal) : pVal.toFixed(1)) + "W" : "";
 
             newList.push({ id: g, name: name,
-                           usage: uStr, vram: vStr, temp: tStr,
+                           usage: uStr, vram: vStr, temp: tStr, power: pStr,
                            usageNumber: !isNaN(uVal) ? uVal : NaN,
-                           tempNumber:  (!isNaN(tVal) && tVal > 0) ? tVal : NaN });
+                           tempNumber:  (!isNaN(tVal) && tVal > 0) ? tVal : NaN,
+                           powerNumber: (!isNaN(pVal) && pVal >= 0) ? pVal : NaN });
 
             if (!isNaN(uVal)) { totalUsage += uVal; usageCount++; }
             if (!isNaN(vuVal) && !isNaN(vtVal) && vtVal > 0 && vuVal >= 0) {
@@ -253,6 +264,7 @@ Item {
                 hasVram = true;
             }
             if (!isNaN(tVal) && tVal > 0 && (isNaN(maxTemp) || tVal > maxTemp)) maxTemp = tVal;
+            if (!isNaN(pVal) && pVal >= 0) { totalPower += pVal; powerCount++; }
         }
 
         _dataList = newList;
@@ -272,6 +284,8 @@ Item {
         }
         _tempNum  = !isNaN(maxTemp) ? maxTemp : NaN;
         _tempStr  = !isNaN(maxTemp) ? Utils.formatTemp(maxTemp, tempUnit) : "";
+        _powerNum = powerCount > 0 ? totalPower : NaN;
+        _powerStr = powerCount > 0 ? (_powerNum >= 10 ? Math.round(_powerNum) : _powerNum.toFixed(1)) + "W" : "";
     }
 
     // Re-aggregate when sub-metrics, labels, selection, or unit change
