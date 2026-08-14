@@ -19,7 +19,6 @@ KCM.SimpleKCM {
     property string cfg_tempUnit: "C"
     property string cfg_networkUnit: "bytes"
     property string cfg_fanUnit: "rpm"
-    property string cfg_memoryFormat: "usedTotal"
 
     readonly property var displayModes: ["text", "icons", "icons+text", "none"]
     readonly property var displayModeLabels: [i18n("Text"), i18n("Icons"), i18n("Icons + Text"), i18n("None")]
@@ -292,22 +291,6 @@ KCM.SimpleKCM {
             model: [i18n("Bytes  (KB, MB)"), i18n("Bits  (Kb, Mb)")]
             currentIndex: cfg_networkUnit === "bits" ? 1 : 0
             onActivated: cfg_networkUnit = (currentIndex === 1 ? "bits" : "bytes")
-        }
-
-        ComboBox {
-            id: memoryFormatCombo
-            Kirigami.FormData.label: i18n("Memory format:")
-            model: [i18n("Used / Total (e.g. 2.1/8.0G)"), i18n("Used Only (e.g. 2.1G)"), i18n("Percentage (%)")]
-            currentIndex: {
-                if (cfg_memoryFormat === "percentage") return 2;
-                if (cfg_memoryFormat === "used") return 1;
-                return 0;
-            }
-            onActivated: {
-                if (currentIndex === 2) cfg_memoryFormat = "percentage";
-                else if (currentIndex === 1) cfg_memoryFormat = "used";
-                else cfg_memoryFormat = "usedTotal";
-            }
         }
 
         ComboBox {

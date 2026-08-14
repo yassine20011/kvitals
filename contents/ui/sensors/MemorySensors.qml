@@ -6,7 +6,6 @@ Item {
     property bool _dbg: { console.warn("[KVitals] MemorySensors: constructing..."); return true; }
 
     property int updateInterval: 2000
-    property string memoryFormat: "usedTotal"
 
     readonly property real ramPercentage: {
         if (ramUsedSensor.status !== Sensors.Sensor.Ready || ramTotalSensor.status !== Sensors.Sensor.Ready)
@@ -18,10 +17,6 @@ Item {
     readonly property string ramValue: {
         if (isNaN(ramPercentage))
             return "...";
-        if (memoryFormat === "percentage")
-            return Math.round(ramPercentage).toString().padStart(3) + "%";
-        if (memoryFormat === "used")
-            return Utils.formatBytes(ramUsedSensor.value) + "G";
         return Utils.formatBytes(ramUsedSensor.value) + "/" + Utils.formatBytes(ramTotalSensor.value) + "G";
     }
 

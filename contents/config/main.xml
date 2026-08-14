@@ -286,9 +286,6 @@
         <entry name="fanMaxRpm" type="Int">
             <default>2000</default>
         </entry>
-        <entry name="memoryFormat" type="String">
-            <default>usedTotal</default>
-        </entry>
 
         <!-- Opacity -->
         <entry name="labelOpacity" type="Double">

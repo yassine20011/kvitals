@@ -79,7 +79,6 @@ PlasmoidItem {
             MemorySensors {
                 id: _memory
                 updateInterval: metricConfig.updateInterval
-                memoryFormat: metricConfig.memoryFormat
             }
 
             TempSensors {
@@ -95,7 +94,6 @@ PlasmoidItem {
                 gpuSelection: metricConfig.gpuSelection
                 gpuLabels: metricConfig.gpuLabels
                 tempUnit: metricConfig.tempUnit
-                memoryFormat: metricConfig.memoryFormat
             }
 
             BatterySensors {

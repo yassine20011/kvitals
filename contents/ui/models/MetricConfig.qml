@@ -202,7 +202,6 @@ QtObject {
     readonly property string networkUnit:         Plasmoid.configuration.networkUnit       || "bytes"
     readonly property string fanUnit:             Plasmoid.configuration.fanUnit           || "rpm"
     readonly property int fanMaxRpm:              Plasmoid.configuration.fanMaxRpm         || 2000
-    readonly property string memoryFormat:        Plasmoid.configuration.memoryFormat      || "usedTotal"
     readonly property bool ramWidgetShowBoth:     Plasmoid.configuration.ramWidgetShowBoth || false
     readonly property string batteryDevice:       Plasmoid.configuration.batteryDevice     || "auto"
     readonly property string networkInterface:    Plasmoid.configuration.networkInterface  || "auto"
