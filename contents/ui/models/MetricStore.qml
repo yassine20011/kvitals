@@ -79,7 +79,7 @@ Item {
             deviceName: overrides.deviceName || "",
             label: overrides.label || (group === "ram" && subKey === "percentage" ? cfg.ramLabel : (cfg.getGroupLabel(group) + " " + def.label)),
             groupLabel: overrides.groupLabel || cfg.getGroupLabel(group),
-            subLabel: overrides.subLabel || "",
+            subLabel: overrides.subLabel !== undefined ? overrides.subLabel : (def.prefix || ""),
             prefix: overrides.prefix !== undefined ? overrides.prefix : (def.prefix || ""),
             icon: overrides.icon || defIcon,
             secondaryIcon: overrides.secondaryIcon !== undefined ? overrides.secondaryIcon : (def.secondaryIcon ? cfg.tempIcon : ""),
@@ -224,13 +224,13 @@ Item {
         if (cfg.isGroupEnabled("net") && s.network) {
             list.push(_createMetric("net.down", {
                 value: s.network.netDownRaw,
-                displayValue: "↓" + s.network.netDownValue,
+                displayValue: s.network.netDownValue,
                 label: cfg.netLabel + " ↓",
                 status: !isNaN(s.network.netDownRaw) ? "ready" : "loading"
             }));
             list.push(_createMetric("net.up", {
                 value: s.network.netUpRaw,
-                displayValue: "↑" + s.network.netUpValue,
+                displayValue: s.network.netUpValue,
                 label: cfg.netLabel + " ↑",
                 status: !isNaN(s.network.netUpRaw) ? "ready" : "loading"
             }));
@@ -252,25 +252,25 @@ Item {
                         id: "disk:" + dd.id + ".read",
                         deviceId: dd.id, deviceName: dName,
                         label: dName + " ↓", groupLabel: dName,
-                        displayValue: "↓" + dd.read,
+                        displayValue: dd.read,
                         status: "ready"
                     }));
                     list.push(_createMetric("disk.write", {
                         id: "disk:" + dd.id + ".write",
                         deviceId: dd.id, deviceName: dName,
                         label: dName + " ↑", groupLabel: dName,
-                        displayValue: "↑" + dd.write,
+                        displayValue: dd.write,
                         status: "ready"
                     }));
                 }
             } else {
                 list.push(_createMetric("disk.read", {
-                    displayValue: "↓" + s.disk.diskReadValue,
+                    displayValue: s.disk.diskReadValue,
                     label: cfg.diskLabel + " ↓",
                     status: "ready"
                 }));
                 list.push(_createMetric("disk.write", {
-                    displayValue: "↑" + s.disk.diskWriteValue,
+                    displayValue: s.disk.diskWriteValue,
                     label: cfg.diskLabel + " ↑",
                     status: "ready"
                 }));

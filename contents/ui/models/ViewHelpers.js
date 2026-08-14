@@ -31,9 +31,12 @@ function buildCompactItems(metricsList, orderedKeys) {
                     return { value: m.displayValue, color: m.color, key: m.subKey, label: m.subLabel };
                 });
 
+                var singlePfx = segs.length === 1 ? (devMetrics[0].subLabel || devMetrics[0].prefix || "") : "";
+                var singleLbl = singlePfx ? (devLabel + " " + singlePfx) : devLabel;
+
                 items.push({
                     icon: devIcon,
-                    label: devLabel + ":",
+                    label: (segs.length > 1 ? devLabel : singleLbl) + ":",
                     segments: segs.length > 1 ? segs : null,
                     value: segs.length === 1 ? segs[0].value : null,
                     color: devColor,
@@ -57,9 +60,11 @@ function buildCompactItems(metricsList, orderedKeys) {
             var gColor = groupMetrics[0].color;
 
             if (groupMetrics.length === 1) {
+                var singlePfx = groupMetrics[0].subLabel || groupMetrics[0].prefix || "";
+                var singleLbl = singlePfx ? (gLabel + " " + singlePfx) : gLabel;
                 items.push({
                     icon: gIcon,
-                    label: gLabel + ":",
+                    label: singleLbl + ":",
                     value: groupMetrics[0].displayValue,
                     color: gColor,
                     key: group
