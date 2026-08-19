@@ -74,30 +74,231 @@ A `QtObject` that wraps every `Plasmoid.configuration` value and provides typed 
 
 ### `MetricStore.qml`
 
-The central aggregator. On every sensor change it recomputes `metrics`, a `readonly` property holding a flat array of metric objects. Each object has a fixed shape:
+The central aggregator. On every sensor change it recomputes `metrics`, a `readonly` property holding a flat array of metric objects conforming to the Metric Contract.
+
+`MetricStore` also manages `chartHistory`, a ring buffer (up to 60 samples) per `chartKey`, written by `chartTimer` at `updateInterval` ms.
+
+## Metric Contract
+
+`MetricStore` serves as the normalization boundary between sensor modules and generic views:
 
 ```
-{
-  id, defId, group, subKey, deviceId, deviceName,
-  label, groupLabel, subLabel, prefix,
-  icon, secondaryIcon,
-  value,        // numeric (NaN when unavailable)
-  displayValue, // formatted string
-  popupDisplay, rawString,
-  color, status,
-  chartKey, chartMax, hasChart,
-  visibleInCompact, visibleInPopup
+Sensor QML Modules
+    ↓
+normalized metric
+    ↓
+MetricStore
+    ↓
+generic presentation (ViewHelpers / CompactView / FullView)
+```
+
+KVitals supports arbitrary metric sources as long as sensor modules normalize their data into the Metric Contract. Sensor components convert backend-specific structures (D-Bus objects, sysfs strings, boolean flags, or structured records) into numeric values or display strings before passing them to `MetricStore`:
+
+```
+D-Bus object / sysfs string / boolean state / structured backend value
+    ↓
+sensor-specific interpretation (polling, calculations, formatting)
+    ↓
+number or display string
+    ↓
+MetricStore (_createMetric normalization)
+```
+
+### Supported Metric Categories
+
+Every metric emitted by `MetricStore` falls into one of two categories:
+
+#### 1. Quantitative Metric
+Represents a scalar numeric measurement (percentages, rates, temperatures, frequencies, capacity, RPM, power).
+
+- `value`: Finite numeric scalar (`typeof value === "number" && isFinite(value)`). Set to `NaN` when temporarily loading or unavailable.
+- `displayValue`: Formatted string (e.g. `" 42%"`, `"55°C"`, `"16.4/32.0G"`).
+- `status`: `"ready"`, `"loading"`, or `"unavailable"`.
+- `hasChart`: `true` if `chartKey` is configured.
+- `chartKey`: Buffer identifier in `chartHistory`.
+- `chartMax`: Upper bound for chart scaling (`0` for auto-scale).
+- Thresholds: Warning and critical thresholds evaluate only against finite numeric values.
+
+MetricStore accepts finite numeric scalars, including negative values. Whether negative values are meaningful depends on the metric's domain semantics (such as battery charge/discharge rates, energy flow, or temperature deltas); sensor modules and metric definitions determine the appropriate interpretation.
+
+#### 2. Display-Only Metric
+Represents discrete text data without scalar telemetry (IP addresses, uptime strings).
+
+- `value`: `NaN` (explicit sentinel).
+- `displayValue`: Formatted string (e.g. `"192.168.1.10"`, `"2d 4h 12m"`).
+- `status`: `"ready"`, `"loading"`, or `"unavailable"`.
+- `hasChart`: `false` (`chartKey: ""`).
+- Thresholds: Not evaluated; retains base text color.
+- Chart history: Never enters `chartHistory`.
+
+### Normalization Rules
+
+`MetricStore._createMetric` enforces these normalization guarantees:
+
+1. **Finite number**: Preserved as the quantitative `value` (including negative numbers).
+2. **NaN**: Preserved as the non-quantitative or unavailable sentinel.
+3. **Infinity / -Infinity**: Normalized to `NaN`.
+4. **null / undefined**: Normalized to `NaN` (prevents coercion to 0).
+5. **boolean**: Normalized to `NaN` (prevents coercion to 0 or 1).
+6. **objects / arrays**: Normalized to `NaN`.
+7. **numeric strings**: Strings are never coerced into quantitative numbers; they are rejected to `NaN`.
+8. **displayValue**: Always normalized to a `string`.
+
+### Developer Examples
+
+#### Example 1: Quantitative Metric (Swap Usage)
+
+1. **MetricDefinitions.js**:
+```javascript
+"swap.usage": {
+    id: "swap.usage",
+    group: "ram",
+    subKey: "swap",
+    sensorId: "memory/swap/used",
+    label: "Swap Usage",
+    chartKey: "swap",
+    chartMax: 100,
+    thresholdType: "normal",
+    thresholdKey: "ram"
 }
 ```
 
-`MetricStore` also manages `chartHistory` — a ring buffer (up to 60 samples) per `chartKey`, written by `chartTimer` at `updateInterval` ms.
+2. **Sensor module (`MemorySensors.qml`)**:
+```qml
+Sensors.Sensor {
+    id: swapUsedSensor
+    sensorId: "memory/swap/used"
+    updateRateLimit: root.updateInterval
+}
+Sensors.Sensor {
+    id: swapTotalSensor
+    sensorId: "memory/swap/total"
+    updateRateLimit: root.updateInterval
+}
+
+readonly property real swapPercentage: {
+    if (swapUsedSensor.status !== Sensors.Sensor.Ready || swapTotalSensor.status !== Sensors.Sensor.Ready)
+        return NaN;
+    if (swapTotalSensor.value <= 0) return NaN;
+    return (swapUsedSensor.value / swapTotalSensor.value) * 100;
+}
+
+readonly property string swapValue: {
+    if (isNaN(swapPercentage)) return "...";
+    return Math.round(swapPercentage) + "%";
+}
+```
+
+3. **MetricStore integration (`MetricStore.qml`)**:
+```qml
+list.push(_createMetric("swap.usage", {
+    value: s.memory.swapPercentage,
+    displayValue: s.memory.swapValue,
+    status: !isNaN(s.memory.swapPercentage) ? "ready" : "loading"
+}));
+```
+
+4. **Normalized metric object in `MetricStore.metrics`**:
+```javascript
+{
+    id: "swap.usage",
+    defId: "swap.usage",
+    group: "ram",
+    subKey: "swap",
+    label: "RAM Swap Usage",
+    groupLabel: "RAM",
+    subLabel: "",
+    prefix: "",
+    icon: "nvidia-ram-symbolic",
+    secondaryIcon: "",
+    value: 24.5,
+    displayValue: "25%",
+    popupDisplay: "25%",
+    rawString: "25%",
+    color: "#ffffff",
+    status: "ready",
+    chartKey: "swap",
+    chartMax: 100,
+    hasChart: true,
+    visibleInCompact: true,
+    visibleInPopup: true
+}
+```
+
+#### Example 2: Display-Only Metric (Local IP)
+
+1. **MetricDefinitions.js**:
+```javascript
+"net.ip": {
+    id: "net.ip",
+    group: "net",
+    subKey: "ip",
+    sensorPattern: "network/{id}/ipv4withPrefixLength",
+    label: "Local IP",
+    chartKey: "",
+    chartMax: 0,
+    thresholdType: "none"
+}
+```
+
+2. **Sensor module (`NetworkSensors.qml`)**:
+```qml
+readonly property string netIpValue: {
+    if (netIpSensor.status !== Sensors.Sensor.Ready) return "...";
+    var v = netIpSensor.value || "";
+    var slash = v.indexOf("/");
+    return slash >= 0 ? v.substring(0, slash) : v;
+}
+```
+
+3. **MetricStore integration (`MetricStore.qml`)**:
+```qml
+list.push(_createMetric("net.ip", {
+    displayValue: s.network.netIpValue,
+    status: "ready"
+}));
+```
+
+4. **Normalized metric object in `MetricStore.metrics`**:
+```javascript
+{
+    id: "net.ip",
+    defId: "net.ip",
+    group: "net",
+    subKey: "ip",
+    label: "NET Local IP",
+    groupLabel: "NET",
+    subLabel: "",
+    prefix: "",
+    icon: "network-wireless",
+    secondaryIcon: "",
+    value: NaN,
+    displayValue: "192.168.1.10",
+    popupDisplay: "192.168.1.10",
+    rawString: "192.168.1.10",
+    color: "#ffffff",
+    status: "ready",
+    chartKey: "",
+    chartMax: 0,
+    hasChart: false,
+    visibleInCompact: false,
+    visibleInPopup: true
+}
+```
+
+### Architectural Roles
+
+- **HardwareDiscovery**: *"What sensors exist?"* (topology and IDs)
+- **Sensor modules**: *"What does this sensor mean?"* (polling, calculations, and domain formatting)
+- **MetricStore**: *"How do I normalize and expose this metric?"* (contract enforcement, thresholds, chart history)
+- **ViewHelpers / Views**: *"How do I present the metric?"* (generic layout and presentation)
 
 ### `ViewHelpers.js`
 
 A `.pragma library` file with two functions:
 
-- `buildCompactItems(metricsList, orderedKeys)` — groups and orders metrics into compact panel items. Items are either `{ icon, label, value, color, key }` (single value) or `{ icon, label, segments, color, key }` (multi-value, used for net, disk, multi-fan).
-- `buildPopupItems(metricsList, orderedKeys)` — returns one row per visible popup metric: `{ label, value, color, icon, chartKey, chartMax }`. `icon` may be a two-element array when a secondary icon is present.
+- `buildCompactItems(metricsList, orderedKeys)`: groups and orders metrics into compact panel items. Items are either `{ icon, label, value, color, key }` (single value) or `{ icon, label, segments, color, key }` (multi-value, used for net, disk, multi-fan).
+- `buildPopupItems(metricsList, orderedKeys)`: returns one row per visible popup metric: `{ label, value, color, icon, chartKey, chartMax }`. `icon` may be a two-element array when a secondary icon is present.
 
 ## Views
 
