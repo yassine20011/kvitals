@@ -96,12 +96,13 @@ Item {
         var clr = overrides.color !== undefined ? overrides.color : _resolveMetricColor(rawVal, threshType, threshKey);
         var defIcon = def.iconOverrideKey ? cfg[def.iconOverrideKey] : cfg.getGroupIcon(group);
 
+        var devId = overrides.deviceId || "";
         return {
             id: overrides.id || def.id,
             defId: defId,
             group: group,
             subKey: subKey,
-            deviceId: overrides.deviceId || "",
+            deviceId: devId,
             deviceName: overrides.deviceName || "",
             label: overrides.label || (group === "ram" && subKey === "percentage" ? cfg.ramLabel : (cfg.getGroupLabel(group) + " " + def.label)),
             groupLabel: overrides.groupLabel || cfg.getGroupLabel(group),
@@ -118,8 +119,8 @@ Item {
             chartKey: overrides.chartKey !== undefined ? overrides.chartKey : (def.chartKey || ""),
             chartMax: overrides.chartMax !== undefined ? overrides.chartMax : (def.chartMax || 0),
             hasChart: def.chartKey && def.chartKey.length > 0,
-            visibleInCompact: cfg.isMetricVisible(group, subKey, "compact"),
-            visibleInPopup: cfg.isMetricVisible(group, subKey, "widget")
+            visibleInCompact: cfg.isMetricVisible(group, subKey, "compact", devId),
+            visibleInPopup: cfg.isMetricVisible(group, subKey, "widget", devId)
         };
     }
 

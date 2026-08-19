@@ -68,6 +68,7 @@ Item {
         function onRowsInserted() { root._dirty = true; }
         function onRowsRemoved()  { root._dirty = true; }
         function onModelReset()   { root._dirty = true; }
+        function onDataChanged()  { root._dirty = true; }
     }
 
     function _rebuildInventory() {

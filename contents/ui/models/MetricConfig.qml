@@ -91,7 +91,7 @@ QtObject {
         }
     }
 
-    function isSubMetricEnabled(group, subKey) {
+    function isSubMetricEnabled(group, subKey, deviceId) {
         var str = "";
         switch (group) {
         case "cpu":  str = cpuSubMetrics; break;
@@ -105,14 +105,34 @@ QtObject {
         case "uptime": return true;
         default: return true;
         }
+
+        // Per-device sub-metric support
+        if (str.indexOf(":") >= 0) {
+            if (deviceId) {
+                var pairs = str.split("|");
+                for (var i = 0; i < pairs.length; i++) {
+                    var sep = pairs[i].indexOf(":");
+                    if (sep > 0 && pairs[i].substring(0, sep) === deviceId) {
+                        var subs = pairs[i].substring(sep + 1).split(",").map(function(s){ return s.trim(); });
+                        return subs.indexOf(subKey) >= 0;
+                    }
+                }
+            }
+            var allPairs = str.split("|");
+            for (var j = 0; j < allPairs.length; j++) {
+                var pSep = allPairs[j].indexOf(":");
+                var pSubs = (pSep > 0 ? allPairs[j].substring(pSep + 1) : allPairs[j]).split(",").map(function(s){ return s.trim(); });
+                if (pSubs.indexOf(subKey) >= 0) return true;
+            }
+            return false;
+        }
+
         return str.split(",").map(function(s){ return s.trim(); }).indexOf(subKey) >= 0;
     }
 
     // Returns true when a metric should appear in the given view ("compact" or "widget").
     // Checks group enable, group visibility target, and sub-metric enable in that order.
-    // The ramWidgetShowBoth flag is a special case: it lets the popup show both the
-    // percentage row and the used/total row even when only one is in cpuSubMetrics.
-    function isMetricVisible(group, subKey, view) {
+    function isMetricVisible(group, subKey, view, deviceId) {
         if (!isGroupEnabled(group)) return false;
         var vis = getGroupVisibility(group);
         if (vis !== "both" && vis !== view) return false;
@@ -121,7 +141,7 @@ QtObject {
             if (subKey === "percentage" || subKey === "used") return true;
         }
 
-        return isSubMetricEnabled(group, subKey);
+        return isSubMetricEnabled(group, subKey, deviceId);
     }
 
     // Labels
