@@ -1,10 +1,11 @@
 import QtQuick
 import org.kde.ksysguard.sensors as Sensors
-import org.kde.kitemmodels as KItemModels
+import "../models/MetricDefinitions.js" as MetricDefinitions
 
 Item {
     id: root
 
+    property var discovery: null
     property int updateInterval: 2000
     property string fanUnit: "rpm" // "rpm" or "percent"
     property string fanLabels: ""
@@ -23,38 +24,14 @@ Item {
     readonly property bool multiFan: _discovered.length > 1
 
     // -------------------------------------------------------------------------
-    // Step 1: Discover available Fans via SensorTreeModel
+    // Step 1: Discover available Fans via HardwareDiscovery
     // -------------------------------------------------------------------------
 
-    Sensors.SensorTreeModel {
-        id: sensorTree
-    }
-
-    KItemModels.KDescendantsProxyModel {
-        id: flatSensors
-        model: sensorTree
-    }
-
     function refreshDiscovered() {
-        var ids = [];
-        for (var row = 0; row < flatSensors.rowCount(); row++) {
-            var idx = flatSensors.index(row, 0);
-            var sensorId = flatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
-            if (!sensorId || sensorId.length === 0) continue;
-            // Match any sensor that contains /fan and doesn't end with a non-digit (typically fan1, fan2, etc)
-            var match = sensorId.match(/^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i);
-            if (!match) continue;
-            ids.push(sensorId);
-        }
-        // Sort by sensor id before numbering: the sensor tree's traversal
-        // order isn't guaranteed stable across sessions, and renumbering
-        // fans on every restart would make "Fan 1"/"Fan 2" (and any custom
-        // labels keyed off them) refer to different physical fans over time.
+        if (!discovery) return;
+        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.FAN : /^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i;
+        var ids = discovery.queryIds(pattern);
         ids.sort();
-        // KSysGuard's DisplayRole is often generic/duplicated across fans
-        // (e.g. the same "Fan Speed" label for every one), so it can't be
-        // used to tell them apart. Assign a stable numbered name instead,
-        // same as GpuSensors.qml does for multiple GPUs.
         var found = ids.map(function(id, i) {
             return { id: id, name: "Fan " + (i + 1), number: i + 1 };
         });
@@ -65,11 +42,11 @@ Item {
     }
 
     Connections {
-        target: flatSensors
-        function onRowsInserted() { root.refreshDiscovered(); }
-        function onRowsRemoved()  { root.refreshDiscovered(); }
-        function onModelReset()   { root.refreshDiscovered(); }
+        target: discovery
+        function onRevisionChanged() { root.refreshDiscovered(); }
     }
+
+    onDiscoveryChanged: refreshDiscovered()
 
     Component.onCompleted: refreshDiscovered()
 

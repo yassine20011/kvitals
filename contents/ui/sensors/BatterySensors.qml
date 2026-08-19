@@ -1,11 +1,12 @@
 import QtQuick
 import org.kde.ksysguard.sensors as Sensors
 import org.kde.plasma.plasma5support as Plasma5Support
+import "../models/MetricDefinitions.js" as MetricDefinitions
 
 Item {
     id: root
-    property bool _dbg: { console.warn("[KVitals] BatterySensors: constructing..."); return true; }
 
+    property var discovery: null
     property int updateInterval: 2000
     property string batteryDevice: "auto"
 
@@ -32,6 +33,27 @@ Item {
 
     property string discoveredBatId: ""
 
+    function refreshDiscovered() {
+        if (batteryDevice && batteryDevice !== "auto") return;
+        if (!discovery) return;
+        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.BATTERY : /^power\/(?!all)([^\/]+)\/chargePercentage$/;
+        var ids = discovery.queryIds(pattern);
+        if (ids.length > 0) {
+            var match = ids[0].match(pattern);
+            if (match && match[1]) {
+                persistDetectedBattery(match[1]);
+                cleanupProbes();
+            }
+        }
+    }
+
+    Connections {
+        target: discovery
+        function onRevisionChanged() { root.refreshDiscovered(); }
+    }
+
+    onDiscoveryChanged: refreshDiscovered()
+
     property string batChargeSensorId: {
         var base = (batteryDevice && batteryDevice !== "auto") ? batteryDevice : discoveredBatId;
         return base ? ("power/" + base + "/chargePercentage") : "";
@@ -52,8 +74,11 @@ Item {
     property var stage1Probes: []
 
     Component.onCompleted: {
-        console.warn("[KVitals] BatterySensors: ready. batteryDevice = " + batteryDevice);
         if (batteryDevice && batteryDevice !== "auto")
+            return;
+
+        refreshDiscovered();
+        if (discoveredBatId)
             return;
 
         for (var i = 0; i < batteryCandidates.length; i++) {
@@ -75,10 +100,10 @@ Item {
         property int attempts: 0
         onTriggered: {
             attempts++;
-            console.warn("[KVitals] BatterySensors: probe attempt = " + attempts);
+            console.debug("[KVitals] BatterySensors: probe attempt = " + attempts);
             for (var i = 0; i < stage1Probes.length; i++) {
                 if (stage1Probes[i].probe && stage1Probes[i].probe.status === Sensors.Sensor.Ready) {
-                    console.warn("[KVitals] BatterySensors: stage 1 found = " + stage1Probes[i].candidate);
+                    console.debug("[KVitals] BatterySensors: stage 1 found = " + stage1Probes[i].candidate);
                     persistDetectedBattery(stage1Probes[i].candidate);
                     running = false;
                     cleanupProbes();
@@ -149,7 +174,7 @@ Item {
                     return;
                 }
                 if (ids.length > 1) {
-                    console.warn("BatterySensors: multiple batteries found:", JSON.stringify(ids), "— using first:", ids[0]);
+                    console.warn("[KVitals] BatterySensors: multiple batteries found: " + JSON.stringify(ids) + " - using first: " + ids[0]);
                     persistDetectedBattery(ids[0]);
                     return;
                 }

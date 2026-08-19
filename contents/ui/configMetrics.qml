@@ -6,7 +6,8 @@ import org.kde.kcmutils as KCM
 import org.kde.plasma.plasmoid
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.ksysguard.sensors as Sensors
-import org.kde.kitemmodels as KItemModels
+import "./models"
+import "./models/MetricDefinitions.js" as MetricDefinitions
 
 KCM.SimpleKCM {
     id: metricsPage
@@ -255,55 +256,24 @@ KCM.SimpleKCM {
         cfg_metricOrder = keys.join(",");
     }
 
-    // ── Sensor discovery (GPU, Disk, Network) ─────────────────────────────
-
-    Sensors.SensorTreeModel { id: cfgSensorTree }
-    KItemModels.KDescendantsProxyModel { id: cfgFlatSensors; model: cfgSensorTree }
+    // Sensor discovery (GPU, Disk, Fan) via HardwareDiscovery
+    HardwareDiscovery {
+        id: discovery
+    }
 
     // GPU discovery
-    property var _liveDiscoveredGpus: []
-
-    Timer {
-        id: gpuRefreshDebounce
-        interval: 100
-        repeat: false
-        onTriggered: {
-            var found = [];
-            for (var row = 0; row < cfgFlatSensors.rowCount(); row++) {
-                var idx = cfgFlatSensors.index(row, 0);
-                var sensorId = cfgFlatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
-                if (!sensorId || sensorId.length === 0) continue;
-                var match = sensorId.match(/^gpu\/(gpu\d+)\/usage$/);
-                if (!match) continue;
+    readonly property var discoveredGpus: {
+        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.GPU : /^gpu\/(gpu\d+)\/usage$/;
+        var ids = discovery.revision >= 0 ? discovery.queryIds(pattern) : [];
+        var found = [];
+        for (var i = 0; i < ids.length; i++) {
+            var match = ids[i].match(pattern);
+            if (match) {
                 found.push({ id: match[1], name: "GPU " + (found.length + 1) });
             }
-            if (JSON.stringify(found) !== JSON.stringify(_liveDiscoveredGpus))
-                _liveDiscoveredGpus = found;
         }
+        return found;
     }
-
-    function refreshConfigGpus() { gpuRefreshDebounce.restart(); }
-
-    property bool _discoveryDirty: false
-
-    Timer {
-        id: discoveryTimer
-        interval: 500
-        repeat: false
-        running: _discoveryDirty
-        onTriggered: { _discoveryDirty = false; metricsPage.refreshConfigGpus(); }
-    }
-
-    Connections {
-        target: cfgFlatSensors
-        function onRowsInserted() { metricsPage._discoveryDirty = true; }
-        function onRowsRemoved()  { metricsPage._discoveryDirty = true; }
-        function onModelReset()   { metricsPage._discoveryDirty = true; }
-        function onDataChanged()  { metricsPage._discoveryDirty = true; }
-    }
-
-    readonly property var discoveredGpus: _liveDiscoveredGpus
-
 
     // GPU label helpers
     function parseGpuLabels(str) {
@@ -326,50 +296,72 @@ KCM.SimpleKCM {
         cfg_gpuLabels = parts.join("|");
     }
 
-    // Disk discovery
-    property var _liveDiscoveredDisks: []
+    // GPU sub-metric helpers
+    function parseGpuSubMetricsMap(str) {
+        var result = {};
+        if (!str) return result;
+        if (str.indexOf(":") >= 0) {
+            str.split("|").forEach(function(pair) {
+                var sep = pair.indexOf(":");
+                if (sep > 0) {
+                    var gid = pair.substring(0, sep);
+                    var subs = pair.substring(sep + 1).split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+                    result[gid] = subs;
+                }
+            });
+        }
+        return result;
+    }
 
-    Timer {
-        id: diskRefreshDebounce
-        interval: 100
-        repeat: false
-        onTriggered: {
-            var found = [];
-            for (var row = 0; row < cfgFlatSensors.rowCount(); row++) {
-                var idx = cfgFlatSensors.index(row, 0);
-                var sensorId = cfgFlatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
-                if (!sensorId) continue;
-                var match = sensorId.match(/^disk\/(nvme\d+n\d+|sd[a-z]+)\/read$/);
-                if (!match) continue;
-                if (found.some(function(d){ return d.id === match[1]; })) continue;
+    function getGpuActiveSubMetrics(gpuId) {
+        var map = parseGpuSubMetricsMap(cfg_gpuSubMetrics);
+        if (map[gpuId] && map[gpuId].length > 0) {
+            return map[gpuId];
+        }
+        if (cfg_gpuSubMetrics && cfg_gpuSubMetrics.indexOf(":") < 0) {
+            return cfg_gpuSubMetrics.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+        }
+        return ["usage", "vram", "temp"];
+    }
+
+    function toggleGpuSubMetric(gpuId, subKey, checked) {
+        var map = parseGpuSubMetricsMap(cfg_gpuSubMetrics);
+        for (var i = 0; i < discoveredGpus.length; i++) {
+            var gid = discoveredGpus[i].id;
+            if (!map[gid]) {
+                map[gid] = getGpuActiveSubMetrics(gid);
+            }
+        }
+        var subs = map[gpuId] ? map[gpuId].slice() : ["usage", "vram", "temp"];
+        if (checked) {
+            if (subs.indexOf(subKey) < 0) subs.push(subKey);
+        } else {
+            if (subs.length > 1) {
+                subs = subs.filter(function(s){ return s !== subKey; });
+            }
+        }
+        map[gpuId] = subs;
+
+        var parts = [];
+        for (var id in map) {
+            parts.push(id + ":" + map[id].join(","));
+        }
+        cfg_gpuSubMetrics = parts.join("|");
+    }
+
+    // Disk discovery
+    readonly property var discoveredDisks: {
+        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_READ : /^disk\/(nvme\d+n\d+|sd[a-z]+)\/read$/;
+        var ids = discovery.revision >= 0 ? discovery.queryIds(pattern) : [];
+        var found = [];
+        for (var i = 0; i < ids.length; i++) {
+            var match = ids[i].match(pattern);
+            if (match && !found.some(function(d){ return d.id === match[1]; })) {
                 found.push({ id: match[1], name: "DSK " + (found.length + 1) });
             }
-            if (JSON.stringify(found) !== JSON.stringify(_liveDiscoveredDisks))
-                _liveDiscoveredDisks = found;
         }
+        return found;
     }
-
-    function refreshConfigDisks() { diskRefreshDebounce.restart(); }
-
-    property var _discoveryDirtyDisk: false
-
-    Timer {
-        id: diskDiscoveryTimer
-        interval: 500
-        repeat: false
-        running: _discoveryDirtyDisk
-        onTriggered: { _discoveryDirtyDisk = false; metricsPage.refreshConfigDisks(); }
-    }
-
-    Connections {
-        target: cfgFlatSensors
-        function onRowsInserted() { metricsPage._discoveryDirtyDisk = true; }
-        function onRowsRemoved()  { metricsPage._discoveryDirtyDisk = true; }
-        function onModelReset()   { metricsPage._discoveryDirtyDisk = true; }
-        function onDataChanged()  { metricsPage._discoveryDirtyDisk = true; }
-    }
-
-    readonly property var discoveredDisks: _liveDiscoveredDisks
 
     // Disk label helpers
     function parseDiskLabels(str) {
@@ -392,55 +384,13 @@ KCM.SimpleKCM {
         cfg_diskLabels = parts.join("|");
     }
 
-    // --- Fan discovery ---
-
-    property var _liveDiscoveredFans: []
-
-    Timer {
-        id: fanRefreshDebounce
-        interval: 100
-        repeat: false
-        onTriggered: {
-            var ids = [];
-            for (var row = 0; row < cfgFlatSensors.rowCount(); row++) {
-                var idx = cfgFlatSensors.index(row, 0);
-                var sensorId = cfgFlatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
-                if (!sensorId) continue;
-                var match = sensorId.match(/^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i);
-                if (!match) continue;
-                if (ids.indexOf(sensorId) < 0) ids.push(sensorId);
-            }
-            // Same stable-numbering rationale as FanSensors.qml: sort by id
-            // so the config page's "Fan N" numbering matches the panel's and
-            // stays consistent across sessions.
-            ids.sort();
-            var found = ids.map(function(id, i) { return { id: id, name: "Fan " + (i + 1) }; });
-            if (JSON.stringify(found) !== JSON.stringify(_liveDiscoveredFans))
-                _liveDiscoveredFans = found;
-        }
+    // Fan discovery
+    readonly property var discoveredFans: {
+        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.FAN : /^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i;
+        var ids = discovery.revision >= 0 ? discovery.queryIds(pattern) : [];
+        ids.sort();
+        return ids.map(function(id, i) { return { id: id, name: "Fan " + (i + 1) }; });
     }
-
-    function refreshConfigFans() { fanRefreshDebounce.restart(); }
-
-    property var _discoveryDirtyFan: false
-
-    Timer {
-        id: fanDiscoveryTimer
-        interval: 500
-        repeat: false
-        running: _discoveryDirtyFan
-        onTriggered: { _discoveryDirtyFan = false; metricsPage.refreshConfigFans(); }
-    }
-
-    Connections {
-        target: cfgFlatSensors
-        function onRowsInserted() { metricsPage._discoveryDirtyFan = true; }
-        function onRowsRemoved()  { metricsPage._discoveryDirtyFan = true; }
-        function onModelReset()   { metricsPage._discoveryDirtyFan = true; }
-        function onDataChanged()  { metricsPage._discoveryDirtyFan = true; }
-    }
-
-    readonly property var discoveredFans: _liveDiscoveredFans
 
     // --- Fan max-RPM capability check ---
     // The "Max RPM for percentage" fallback is dead config when every
@@ -519,26 +469,9 @@ KCM.SimpleKCM {
     // GPU sub-metric helpers (per-device, stored in gpuSubMetrics globally)
     // gpuSubMetrics applies to all GPUs uniformly (simplification from per-GPU gpuMetrics)
 
-    // ── UI ─────────────────────────────────────────────────────────────────
-
-    property bool _isReady: false
-    Timer {
-        id: readyTimer
-        interval: 100
-        running: true
-        repeat: false
-        onTriggered: metricsPage._isReady = true
-    }
-    BusyIndicator {
-        anchors.centerIn: metricsPage
-        running: !metricsPage._isReady
-        visible: running
-        z: 999
-    }
+    // UI
 
     Kirigami.FormLayout {
-        opacity: metricsPage._isReady ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 150 } }
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
@@ -685,6 +618,7 @@ KCM.SimpleKCM {
 
                             // Sub-metric checkboxes
                             Flow {
+                                visible: catDelegate.key !== "gpu"
                                 spacing: Kirigami.Units.largeSpacing
                                 Layout.fillWidth: true
 
@@ -776,18 +710,11 @@ KCM.SimpleKCM {
                                 spacing: Kirigami.Units.smallSpacing
                                 Layout.fillWidth: true
 
-                                RowLayout {
+                                Label {
                                     visible: metricsPage.discoveredGpus.length === 0
-                                    spacing: Kirigami.Units.smallSpacing
-                                    BusyIndicator {
-                                        running: parent.visible
-                                        Layout.preferredWidth: Kirigami.Units.gridUnit
-                                        Layout.preferredHeight: Kirigami.Units.gridUnit
-                                    }
-                                    Label {
-                                        text: i18n("Discovering GPUs...")
-                                        opacity: 0.7; font.italic: true
-                                    }
+                                    text: i18n("No GPU detected")
+                                    opacity: 0.7
+                                    font.italic: true
                                 }
 
                                 Label {
@@ -857,6 +784,34 @@ KCM.SimpleKCM {
                                                 }
                                             }
 
+                                            // Per-GPU sub-metric checkboxes
+                                            Flow {
+                                                spacing: Kirigami.Units.largeSpacing
+                                                Layout.fillWidth: true
+
+                                                property var activeGpuSubs: metricsPage.getGpuActiveSubMetrics(gpuDelegate.modelData.id)
+
+                                                CheckBox {
+                                                    text: i18n("Usage")
+                                                    checked: parent.activeGpuSubs.indexOf("usage") >= 0
+                                                    enabled: !(checked && parent.activeGpuSubs.length <= 1)
+                                                    onToggled: metricsPage.toggleGpuSubMetric(gpuDelegate.modelData.id, "usage", checked)
+                                                }
+
+                                                CheckBox {
+                                                    text: i18n("VRAM")
+                                                    checked: parent.activeGpuSubs.indexOf("vram") >= 0
+                                                    enabled: !(checked && parent.activeGpuSubs.length <= 1)
+                                                    onToggled: metricsPage.toggleGpuSubMetric(gpuDelegate.modelData.id, "vram", checked)
+                                                }
+
+                                                CheckBox {
+                                                    text: i18n("Temperature")
+                                                    checked: parent.activeGpuSubs.indexOf("temp") >= 0
+                                                    enabled: !(checked && parent.activeGpuSubs.length <= 1)
+                                                    onToggled: metricsPage.toggleGpuSubMetric(gpuDelegate.modelData.id, "temp", checked)
+                                                }
+                                            }
                                         }
                                     }
                                 }

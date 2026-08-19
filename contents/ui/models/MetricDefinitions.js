@@ -64,6 +64,17 @@ var GROUPS = {
 // by a partial metricOrder setting.
 var ALL_GROUP_KEYS = ["cpu", "ram", "temp", "gpu", "bat", "net", "disk", "fan", "uptime"];
 
+// Canonical discovery patterns for dynamic hardware devices
+var PATTERNS = {
+    GPU: /^gpu\/(gpu\d+)\/usage$/,
+    DISK_READ: /^disk\/(nvme\d+n\d+|sd[a-z]+)\/read$/,
+    DISK_TEMP: /^lmsensors\/(nvme-pci-[^/]+|drivetemp-scsi-[^/]+)\/temp[12]$/,
+    FAN: /^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i,
+    NETWORK_IFACE: /^network\/([^/]+)\/download$/,
+    TEMP_LMSENSORS: /^lmsensors\/(.+)\/temp\d+$/,
+    BATTERY: /^power\/(?!all)([^\/]+)\/chargePercentage$/
+};
+
 // DEFINITIONS is the source of truth for every metric.
 // MetricStore._createMetric looks up entries by "group.subKey" and merges them
 // with runtime overrides supplied by the sensor layer.
@@ -141,6 +152,11 @@ var DEFINITIONS = {
         chartMax: 0,
         thresholdType: "none"
     },
+    // sensorId here is not used at runtime. TempSensors.qml discovers the RAM
+    // temp sensor dynamically by scanning lmsensors for any adapter whose name
+    // starts with "spd5118" (the DDR5 SO-DIMM temp driver). On machines without
+    // that driver (DDR4, desktops, etc.) ramTempExists stays false and MetricStore
+    // skips this entry entirely.
     "ram.temp": {
         id: "ram.temp",
         group: "ram",

@@ -1,12 +1,12 @@
 import QtQuick
 import org.kde.ksysguard.sensors as Sensors
-import org.kde.kitemmodels as KItemModels
 import org.kde.plasma.plasma5support as P5Support
+import "../models/MetricDefinitions.js" as MetricDefinitions
 
 Item {
     id: root
-    property bool _dbg: { console.warn("[KVitals] DiskSensors: constructing..."); return true; }
 
+    property var discovery: null
     property int updateInterval: 2000
     property bool enabled: true
     property string tempUnit: "C"
@@ -62,22 +62,15 @@ Item {
         enabled: root.enabled
     }
 
-    // --- Per-disk discovery via SensorTreeModel ---
-
-    Sensors.SensorTreeModel { id: sensorTree }
-
-    KItemModels.KDescendantsProxyModel {
-        id: flatSensors
-        model: sensorTree
-    }
+    // --- Per-disk discovery via HardwareDiscovery ---
 
     function refreshDiscovered() {
+        if (!discovery) return;
         var found = [];
-        for (var row = 0; row < flatSensors.rowCount(); row++) {
-            var idx = flatSensors.index(row, 0);
-            var sid = flatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
-            if (!sid) continue;
-            var match = sid.match(/^disk\/(nvme\d+n\d+|sd[a-z]+)\/read$/);
+        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_READ : /^disk\/(nvme\d+n\d+|sd[a-z]+)\/read$/;
+        var ids = discovery.queryIds(pattern);
+        for (var i = 0; i < ids.length; i++) {
+            var match = ids[i].match(pattern);
             if (!match) continue;
             var did = match[1];
             if (_unplugged[did]) continue;
@@ -88,27 +81,6 @@ Item {
             _discovered = found;
             aggregatePerDisk();
         }
-    }
-
-    property bool _discoveryDirty: false
-
-    Timer {
-        id: discoveryTimer
-        interval: 500
-        repeat: false
-        running: _discoveryDirty
-        onTriggered: {
-            _discoveryDirty = false;
-            root.refreshDiscovered();
-        }
-    }
-
-    Connections {
-        target: flatSensors
-        function onRowsInserted() { root._discoveryDirty = true; root._tempDiscoveryDirty = true; }
-        function onRowsRemoved()  { root._discoveryDirty = true; root._tempDiscoveryDirty = true; }
-        function onModelReset()   { root._discoveryDirty = true; root._tempDiscoveryDirty = true; }
-        function onDataChanged()  { root._discoveryDirty = true; }
     }
 
     // --- Per-disk sensor IDs ---
@@ -208,30 +180,25 @@ Item {
     property var _tempSensorIds: []
 
     function _refreshTempSensors() {
-        var found = [];
-        for (var row = 0; row < flatSensors.rowCount(); row++) {
-            var idx = flatSensors.index(row, 0);
-            var sid = flatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
-            if (!sid) continue;
-            if (/^lmsensors\/(nvme-pci-[^/]+|drivetemp-scsi-[^/]+)\/temp[12]$/.test(sid))
-                found.push(sid);
-        }
+        if (!discovery) return;
+        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_TEMP : /^lmsensors\/(nvme-pci-[^/]+|drivetemp-scsi-[^/]+)\/temp[12]$/;
+        var found = discovery.queryIds(pattern);
         if (JSON.stringify(found) !== JSON.stringify(_tempSensorIds)) {
             _tempSensorIds = found;
         }
     }
 
-    property bool _tempDiscoveryDirty: false
-
-    Timer {
-        id: tempDiscoveryTimer
-        interval: 500
-        repeat: false
-        running: _tempDiscoveryDirty
-        onTriggered: {
-            _tempDiscoveryDirty = false;
+    Connections {
+        target: discovery
+        function onRevisionChanged() {
+            root.refreshDiscovered();
             root._refreshTempSensors();
         }
+    }
+
+    onDiscoveryChanged: {
+        refreshDiscovered();
+        _refreshTempSensors();
     }
 
     Sensors.SensorDataModel {

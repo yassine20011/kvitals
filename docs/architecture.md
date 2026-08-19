@@ -1,133 +1,191 @@
 # Architecture
 
-KVitals is a KDE Plasma 6 widget (plasmoid) with a modular architecture connecting native **KSysGuard sensors** to a **QML UI** through dedicated sensor components.
+KVitals is a KDE Plasma 6 widget (plasmoid) built around a data-driven metric pipeline. Sensor components feed raw values into a central store, which produces a flat list of typed metric objects. The views consume that list without knowing anything about sensor internals.
 
-## Data Flow
+## Data flow
 
-![KVitals Data Flow](dataflow.svg)
+![KVitals Data Flow](dataflow-dark.svg#only-dark){ width="100%" }
+![KVitals Data Flow](dataflow-light.svg#only-light){ width="100%" }
 
-## Sensor Modules (`contents/ui/sensors/`)
+## Hardware discovery (`contents/ui/models/HardwareDiscovery.qml`)
 
-Each system metric has its own QML component under `sensors/`. These components encapsulate all sensor subscriptions, data parsing, and value formatting for their metric.
+KVitals separates hardware discovery from sensor interpretation:
 
-| Module | Sensors | Exposed Properties |
+- **Hardware discovery**: What devices and sensor nodes exist on this system.
+- **Sensor interpretation**: What a sensor reading means, how it is polled, filtered, and formatted.
+
+`HardwareDiscovery.qml` maintains exactly **one** `SensorTreeModel` and `KDescendantsProxyModel` per active QML context (one in the runtime widget, one while the configuration dialog is open). It listens to topology changes (`rowsInserted`, `rowsRemoved`, `modelReset`), debounces updates (350ms), and exposes a minimal generic query API:
+
+- `count`: Total number of registered sensors.
+- `revision`: Reactive counter incremented when hardware topology changes.
+- `allSensorIds`: Array of all discovered sensor ID strings.
+- `query(pattern)`: Returns array of matching `{ id, name }` objects.
+- `queryIds(pattern)`: Returns array of matching sensor ID strings.
+- `sensorExists(id)`: Fast boolean check.
+
+`HardwareDiscovery` contains zero GPU, disk, fan, network, temperature, or battery specific logic.
+
+## Sensor modules (`contents/ui/sensors/`)
+
+Each metric category has its own QML component. Components receive the shared `HardwareDiscovery` instance, query their relevant sensor IDs, and own all value polling, calculations, and domain heuristics.
+
+| Module | Discovery query | Key exposed properties |
 |---|---|---|
-| `CpuSensors.qml` | `cpu/all/usage` | `cpuValue` |
-| `MemorySensors.qml` | `memory/physical/used`, `total` | `ramValue` |
-| `TempSensors.qml` | `cpu/all/averageTemperature` | `tempValue` |
-| `GpuSensors.qml` | `gpu/all/usage`, `totalVram`, `usedVram`, `temperature` | `gpuValue`, `gpuRamValue`, `gpuTempValue`, `gpuDisplayValue`, `hasGpuData` |
-| `BatterySensors.qml` | `power/<device>/chargePercentage`, `chargeRate` | `batValue`, `powerValue` |
-| `NetworkSensors.qml` | `network/<iface>/download`, `upload` | `netDownValue`, `netUpValue` |
+| `CpuSensors.qml` | Static (`cpu/all/usage`, `averageFrequency`) | `cpuValue`, `cpuNumericValue`, `cpuFreqValue` |
+| `MemorySensors.qml` | Static (`memory/physical/used`, `total`) | `ramValue`, `ramPercentValue`, `ramPercentage` |
+| `TempSensors.qml` | `PATTERNS.TEMP_LMSENSORS` + ISA Super I/O / SPD5118 filtering | `tempValue`, `cpuTempValue`, `ramTempValue`, `ramTempExists` |
+| `GpuSensors.qml` | `PATTERNS.GPU` (`gpu/gpu\d+/usage`) | `gpuDataList`, `discoveredGpus` |
+| `BatterySensors.qml` | `PATTERNS.BATTERY` + probe/qdbus fallback | `batValue`, `batNumericValue`, `powerValue` |
+| `NetworkSensors.qml` | `PATTERNS.NETWORK_IFACE` (`network/[^/]+/download`) | `netDownValue`, `netUpValue`, `netIpValue` |
+| `DiskSensors.qml` | `PATTERNS.DISK_READ` & `PATTERNS.DISK_TEMP` + Solid hotplug filter | `diskReadValue`, `diskWriteValue`, `diskDataList` |
+| `FanSensors.qml` | `PATTERNS.FAN` + alphabetical sort and max RPM check | `fanDataList`, `hasFanData`, `multiFan` |
+| `UptimeSensors.qml` | Static (`os/system/uptime`) | `uptimeValue` |
 
-A shared `Utils.qml` singleton provides formatting helpers (`formatBytes`, `formatRate`) and sensor-reading utilities (`sensorValueOrNaN`, `firstReadyNumber`, `maxReadyNumber`, `firstReadyVramPair`).
+`Utils.qml` is a singleton providing formatting helpers (`formatBytes`, `formatRate`, `resolveColor`) used by most sensor components.
 
-### Performance Benefits
+### Performance properties
 
-1. **Zero Subprocesses**: No `bash`, `awk`, or `cat` commands are spawned.
-2. **Stable File Descriptors**: No CLI pipes need to be kept open, eliminating Plasma 6 Wayland FD-exhaustion crashes.
-3. **Low Latency**: The widget reads the exact same backend API as the official KDE System Monitor.
+- Exactly one `SensorTreeModel` active at runtime across the entire widget.
+- No subprocesses during normal execution.
+- Reads from the same ksystemstats backend as the official KDE System Monitor.
+- Disabling a sensor group stops all its subscriptions immediately.
 
-## Orchestrator (`main.qml`)
+## Models layer (`contents/ui/models/`)
 
-`main.qml` acts as a lightweight orchestrator:
+This layer sits between sensors and views and is where metric aggregation lives.
 
-1. **Reads configuration** from `Plasmoid.configuration`
-2. **Instantiates sensor modules** with the configured `updateInterval`
-3. **Builds metrics models** using the `orderedKeys` array (derived from the `metricOrder` config)
-4. **Applies view-specific visibility rules** such as `compactShow*` settings and compact grouping
-5. **Passes models** to `CompactView` and `FullView` for rendering
+### `MetricDefinitions.js`
+
+A `.pragma library` file (shared singleton) holding:
+
+- `GROUPS`: Metadata per category (id, default label, icon, default sub-metrics).
+- `PATTERNS`: Canonical discovery regex patterns (`GPU`, `DISK_READ`, `DISK_TEMP`, `FAN`, `NETWORK_IFACE`, `TEMP_LMSENSORS`, `BATTERY`).
+- `DEFINITIONS`: One entry per metric keyed by `"group.subKey"`. Each entry declares the sensor path, chart settings, threshold type/key, and direction prefix. `MetricStore._createMetric` merges these definitions with runtime overrides from the sensor layer.
+
+### `MetricConfig.qml`
+
+A `QtObject` that wraps every `Plasmoid.configuration` value and provides typed accessors used by both sensor components and `MetricStore`. Nothing outside this file reads `Plasmoid.configuration` directly. It owns:
+
+- Group enable flags and `isGroupEnabled(group)`
+- Sub-metric selection per group and `isSubMetricEnabled(group, subKey)`
+- Visibility target per group (`"compact"`, `"widget"`, `"both"`) and `isMetricVisible(group, subKey, view)`
+- Labels, icons, and threshold values with fallback defaults
+- `orderedKeys` — the final display order, filled from the user's `metricOrder` setting with any missing groups appended from `MetricDefinitions.ALL_GROUP_KEYS`
+
+### `MetricStore.qml`
+
+The central aggregator. On every sensor change it recomputes `metrics`, a `readonly` property holding a flat array of metric objects. Each object has a fixed shape:
 
 ```
-main.qml
-  ├── CpuSensors { id: cpu }
-  ├── MemorySensors { id: memory }
-  ├── TempSensors { id: temp }
-  ├── GpuSensors { id: gpu }
-  ├── BatterySensors { id: battery }
-  ├── NetworkSensors { id: network }
-  ├── compactRepresentation: CompactView { metricsModel: ... }
-  └── fullRepresentation: FullView { metricsModel: ... }
+{
+  id, defId, group, subKey, deviceId, deviceName,
+  label, groupLabel, subLabel, prefix,
+  icon, secondaryIcon,
+  value,        // numeric (NaN when unavailable)
+  displayValue, // formatted string
+  popupDisplay, rawString,
+  color, status,
+  chartKey, chartMax, hasChart,
+  visibleInCompact, visibleInPopup
+}
 ```
+
+`MetricStore` also manages `chartHistory` — a ring buffer (up to 60 samples) per `chartKey`, written by `chartTimer` at `updateInterval` ms.
+
+### `ViewHelpers.js`
+
+A `.pragma library` file with two functions:
+
+- `buildCompactItems(metricsList, orderedKeys)` — groups and orders metrics into compact panel items. Items are either `{ icon, label, value, color, key }` (single value) or `{ icon, label, segments, color, key }` (multi-value, used for net, disk, multi-fan).
+- `buildPopupItems(metricsList, orderedKeys)` — returns one row per visible popup metric: `{ label, value, color, icon, chartKey, chartMax }`. `icon` may be a two-element array when a secondary icon is present.
 
 ## Views
 
-### CompactView (Panel)
+### CompactView (panel)
 
-A `RowLayout` with a `Repeater` that renders each compact-visible metric as:
-- **Icon** (optional, via `Kirigami.Icon` with `isMask: true`)
-- **Label** (optional, e.g., "CPU:")
-- **Value** (always shown, e.g., "26%")
-- **Separator** (`|` between metrics)
+A `RowLayout` with a `Repeater` driven by `buildCompactItems`. Each item renders as:
 
-Visibility of icons/labels is controlled by the `displayMode` property. Metric inclusion is controlled by both the metric-level `show*` settings and the compact-panel `compactShow*` settings, allowing a metric to remain visible in the popup/tooltip while being hidden from the panel.
+- Icon (`Kirigami.Icon` with `isMask: true` to match panel text color)
+- Label (e.g. `NET ↓:`)
+- Value (e.g. `82.2 KB/s`)
+- Separator (`|` between groups)
 
-The compact panel also supports horizontal and vertical delegates through the `layoutType` setting.
+`displayMode` controls icon/label/text visibility. `layoutType` switches between horizontal and vertical delegates.
 
-!!! tip
-    Icons use `isMask: true` to render as monochrome, matching the panel's text color regardless of the icon theme.
+### FullView (popup)
 
-### FullView (Popup)
-
-A `ColumnLayout` with a `Repeater` showing a detailed row per enabled metric with label and bold value, displayed when clicking the widget.
+A `ColumnLayout` with a `Repeater` driven by `buildPopupItems`. Each row shows a label, a bold value, and an optional sparkline chart drawn from `MetricStore.chartHistory`.
 
 ### Tooltip
 
-Multi-line text showing all enabled metrics, displayed on hover. Compact-panel visibility settings do not filter the tooltip.
+A static `"KVitals"` title only. Metrics are not duplicated into the tooltip.
 
-## Configuration System
+## Configuration system
 
 ```
-config/main.xml          ← Config schema (entry names, types, defaults)
-config/config.qml        ← Tab registration (General, Metrics, Icons, Colors)
-ui/configGeneral.qml     ← General tab (display mode, layout, font, interval)
-ui/configMetrics.qml     ← Metrics tab (show/hide toggles, compact panel visibility, metric order, grouping, network interface, battery device)
-ui/configIcons.qml       ← Icons tab (per-metric icon picker)
-ui/configColors.qml      ← Colors tab (font color, warning/critical colors, thresholds)
+config/main.xml          <- config schema (keys, types, defaults)
+config/config.qml        <- tab registration
+ui/configGeneral.qml     <- display mode, layout, font, interval, units
+ui/configMetrics.qml     <- enable/disable, visibility, order, grouping, overrides
+ui/configIcons.qml       <- per-metric icon picker
+ui/configColors.qml      <- font color, warning/critical colors, thresholds
 ```
 
-All config values are accessed in `main.qml` via `Plasmoid.configuration.<key>`.
+All values flow through `MetricConfig.qml`. Nothing in the sensor or view layer reads `Plasmoid.configuration` directly.
 
-!!! tip "Adding a New Sensor"
-    1. Create `contents/ui/sensors/NewSensor.qml` exposing formatted value properties
-    2. Register it in `sensors/qmldir`
-    3. Instantiate it in `main.qml`
-    4. Add it to the `orderedKeys` loop in compact/full/tooltip builders
-    5. Add `show*` and `compactShow*` config entries in `main.xml`
-    6. Add the metric and compact panel checkboxes in `configMetrics.qml`
+## Adding a new sensor
 
-## Project Structure
+1. Create `contents/ui/sensors/NewSensor.qml` exposing formatted value properties.
+2. Register it in `sensors/qmldir`.
+3. Add an entry (or entries) to `MetricDefinitions.DEFINITIONS` and `GROUPS`.
+4. Add config entries to `config/main.xml` and expose them in `MetricConfig.qml`.
+5. Instantiate the sensor in `main.qml` and pass it to `MetricStore` via `sensors`.
+6. Add a metric push block in `MetricStore.metrics` for the new group.
+7. Add toggle checkboxes in `configMetrics.qml`.
+
+## Project structure
 
 ```
 kvitals/
-├── metadata.json                   # Plasmoid metadata (name, version, id)
-├── install.sh                      # Local install script
-├── install-remote.sh               # Remote install (curl/wget)
-├── CHANGELOG.md                    # Version history
-├── docs/                           # Documentation
-│   ├── installation.md
-│   ├── configuration.md
+├── metadata.json
+├── install.sh
+├── install-remote.sh
+├── CHANGELOG.md
+├── ROADMAP.md
+├── docs/
 │   ├── architecture.md
+│   ├── configuration.md
+│   ├── installation.md
 │   ├── contributing.md
-│   └── troubleshooting.md
+│   ├── troubleshooting.md
+│   └── temp-sensor-logic.md
 └── contents/
     ├── config/
-    │   ├── config.qml              # Tab registration
-    │   └── main.xml                # Config schema
+    │   ├── config.qml
+    │   └── main.xml
     └── ui/
-        ├── main.qml                # Widget orchestrator
-        ├── CompactView.qml         # Panel representation
-        ├── FullView.qml            # Popup representation
-        ├── configGeneral.qml       # General settings tab
-        ├── configMetrics.qml       # Metrics settings tab
-        ├── configIcons.qml         # Icons settings tab
-        ├── configColors.qml        # Colors settings tab
-        └── sensors/                # Sensor modules
-            ├── qmldir              # QML module definition
-            ├── CpuSensors.qml      # CPU usage
-            ├── MemorySensors.qml   # RAM usage
-            ├── TempSensors.qml     # CPU temperature
-            ├── GpuSensors.qml      # GPU usage, VRAM, temp
-            ├── BatterySensors.qml  # Battery & power
-            ├── NetworkSensors.qml  # Network speed
-            └── Utils.qml           # Shared formatting helpers
+        ├── main.qml               <- widget root, wires sensors to MetricStore
+        ├── CompactView.qml
+        ├── FullView.qml
+        ├── configGeneral.qml
+        ├── configMetrics.qml
+        ├── configIcons.qml
+        ├── configColors.qml
+        ├── models/
+        │   ├── MetricDefinitions.js  <- shared metric catalog
+        │   ├── MetricConfig.qml      <- Plasmoid.configuration adapter
+        │   ├── MetricStore.qml       <- flat metrics list + chart history
+        │   └── ViewHelpers.js        <- grouping/ordering for each view
+        └── sensors/
+            ├── qmldir
+            ├── CpuSensors.qml
+            ├── MemorySensors.qml
+            ├── TempSensors.qml
+            ├── GpuSensors.qml
+            ├── BatterySensors.qml
+            ├── NetworkSensors.qml
+            ├── DiskSensors.qml
+            ├── FanSensors.qml
+            ├── UptimeSensors.qml
+            └── Utils.qml
 ```
