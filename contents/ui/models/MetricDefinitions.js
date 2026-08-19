@@ -1,6 +1,8 @@
 .pragma library
 
-// Metric groups metadata
+// GROUPS describes each metric category: its default label, icon, and which
+// sub-metrics are active by default. MetricConfig reads defaultSubMetrics as
+// a fallback when the user hasn't saved a custom selection yet.
 var GROUPS = {
     cpu: {
         id: "cpu",
@@ -58,9 +60,30 @@ var GROUPS = {
     }
 };
 
+// Canonical display order. MetricConfig uses this list to fill any gaps left
+// by a partial metricOrder setting.
 var ALL_GROUP_KEYS = ["cpu", "ram", "temp", "gpu", "bat", "net", "disk", "fan", "uptime"];
 
-// Authoritative metric definitions
+// DEFINITIONS is the source of truth for every metric.
+// MetricStore._createMetric looks up entries by "group.subKey" and merges them
+// with runtime overrides supplied by the sensor layer.
+//
+// Fields:
+//   id            - unique key, mirrors the DEFINITIONS key
+//   group         - parent group (cpu, ram, gpu, ...)
+//   subKey        - sub-metric within the group (usage, freq, temp, ...)
+//   sensorId      - fixed ksystemstats path (single-instance metrics only)
+//   sensorPattern - path template where {id} is substituted per device
+//                   (multi-instance metrics: GPU, battery, network, disk, fan)
+//   label         - text shown in the popup row label
+//   prefix        - direction symbol shown before the value (↓ / ↑); also
+//                   copied to subLabel so compact-view segments show it once
+//   chartKey      - key into the chart history buffer; empty means no sparkline
+//   chartMax      - fixed upper bound for the sparkline (0 = auto-scale to window)
+//   thresholdType - "normal" (warn high), "inverted" (warn low), "none"
+//   thresholdKey  - matches a *WarningThreshold / *CriticalThreshold in MetricConfig
+//   secondaryIcon - extra icon shown beside the primary one in the popup row
+//   iconOverrideKey - if present, MetricConfig[iconOverrideKey] replaces the group icon
 var DEFINITIONS = {
     "cpu.usage": {
         id: "cpu.usage",
@@ -106,6 +129,8 @@ var DEFINITIONS = {
         thresholdType: "normal",
         thresholdKey: "ram"
     },
+    // ram.used and ram.percentage both read memory/physical/used; MetricStore
+    // formats one as % and the other as used/total GB.
     "ram.used": {
         id: "ram.used",
         group: "ram",
@@ -139,6 +164,7 @@ var DEFINITIONS = {
         thresholdType: "normal",
         thresholdKey: "system"
     },
+    // GPU metrics use sensorPattern; MetricStore substitutes {id} per discovered GPU.
     "gpu.usage": {
         id: "gpu.usage",
         group: "gpu",
@@ -194,6 +220,8 @@ var DEFINITIONS = {
         thresholdType: "none",
         iconOverrideKey: "powerIcon"
     },
+    // prefix on net/disk entries is copied to subLabel by _createMetric so the
+    // direction arrow appears in the label column, not prepended to the value.
     "net.down": {
         id: "net.down",
         group: "net",
@@ -260,6 +288,8 @@ var DEFINITIONS = {
         thresholdKey: "diskTemp",
         secondaryIcon: "temperature-normal"
     },
+    // fan.speed uses a two-level pattern: {adapter} is the lmsensors chip name,
+    // {id} is the fan sensor within that chip.
     "fan.speed": {
         id: "fan.speed",
         group: "fan",

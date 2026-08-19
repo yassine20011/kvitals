@@ -1,3 +1,11 @@
+// MetricStore aggregates live sensor values into a flat list of metric objects.
+// Views (CompactView, FullView) never read sensor components directly; they only
+// consume the metrics list and chartHistory exposed here.
+//
+// Data flow:
+//   Sensor QML components -> MetricStore.metrics (recalculated on each sensor change)
+//   chartTimer -> MetricStore.chartHistory (sampled every updateInterval ms)
+//   ViewHelpers.js -> presentation items consumed by the views
 import QtQuick
 import "../sensors"
 import "./MetricDefinitions.js" as Defs
@@ -10,16 +18,20 @@ Item {
     required property bool sensorsReady
     required property color baseTextColor
 
-    // Chart history buffer: { chartKey: [samples] }
+    // Chart history buffer keyed by chartKey. Each entry is a sliding window of
+    // up to maxChartPoints numeric samples collected by chartTimer.
     property var chartHistory: ({})
     property int chartVersion: 0
     property int maxChartPoints: 60
 
+    // Returns the sample array for a chartKey, or [] if none exists yet.
     function getHistory(key) {
         if (!key || !chartHistory[key]) return [];
         return chartHistory[key];
     }
 
+    // Appends val to the chartKey ring buffer. Returns false without writing if
+    // val is not a finite non-negative number.
     function _pushHistory(key, val) {
         if (!key) return false;
         if (typeof val !== "number" || isNaN(val) || val < 0) return false;
@@ -48,6 +60,9 @@ Item {
         }
     }
 
+    // _resolveMetricColor picks a color based on the numeric value and the
+    // metric's threshold settings. Returns baseTextColor when threshold colors
+    // are off, the type is "none", or the value is not a number.
     function _resolveMetricColor(numVal, thresholdType, thresholdKey) {
         if (!root.config || !root.config.enableThresholdColors || thresholdType === "none" || isNaN(numVal))
             return root.baseTextColor;
@@ -59,6 +74,17 @@ Item {
         return Utils.resolveColor(numVal, warn, crit, root.config.warningColor, root.config.criticalColor, root.baseTextColor, inverted);
     }
 
+    // _createMetric builds one metric object from a DEFINITIONS entry and a set
+    // of runtime overrides from the sensor layer. Override fields always win.
+    //
+    // The returned object shape is the metric "struct" used everywhere else:
+    //   id, defId, group, subKey, deviceId, deviceName
+    //   label, groupLabel, subLabel, prefix
+    //   icon, secondaryIcon
+    //   value (numeric), displayValue (string), popupDisplay, rawString
+    //   color, status
+    //   chartKey, chartMax, hasChart
+    //   visibleInCompact, visibleInPopup
     function _createMetric(defId, overrides) {
         var def = Defs.DEFINITIONS[defId] || {};
         var cfg = root.config;
