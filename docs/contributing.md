@@ -35,20 +35,21 @@ Thanks for your interest in contributing to KVitals!
 
 ### Adding a New Metric
 
-1. **Sensors** — Find the relevant `org.kde.ksysguard.sensors` sensor ID using `kstatsviewer`
-2. **Settings** — Add `show*` and `compactShow*` entries to `contents/config/main.xml`
-3. **Configuration UI** — Add the metric and compact visibility checkboxes to `configMetrics.qml`
-4. **Icons** — Add an icon picker to `configIcons.qml`
-5. **UI** — Add property bindings and model entries in `main.qml`
+For adding a sub-metric to an existing sensor group (the most common addition):
 
-!!! note
-    Don't forget to add a default icon name for the new metric in `configIcons.qml`'s reset button handler.
+1. **Find sensor ID**: Identify the sensor path in `ksystemstats` using `kstatsviewer` or `qdbus org.kde.ksystemstats1 /org/kde/ksystemstats1 org.kde.ksystemstats1.allSensors`.
+2. **Metric definition**: Add the metric entry to `DEFINITIONS` in `contents/ui/models/MetricDefinitions.js` (and optionally to `GROUPS[group].defaultSubMetrics`).
+3. **Sensor module**: Subscribe to the sensor and expose the numeric or formatted property in `contents/ui/sensors/<Group>Sensors.qml`.
+4. **Metric store**: Push the metric in `contents/ui/models/MetricStore.qml` using `_createMetric("group.subKey", { ... })`.
+5. **Config UI**: Add `{ key: "subKey", label: i18n("...") }` to `metricMeta[group].subs` in `contents/ui/configMetrics.qml`.
+
+To add an entirely new hardware category (such as NPU or Cooler), see the module guide in [Architecture Documentation](architecture.md#workflow-b-adding-a-new-hardware-category--sensor-module).
 
 ### Adding a New Setting
 
-1. Add the entry to `contents/config/main.xml` with a default value
-2. Add the UI control to the appropriate config tab (`configGeneral.qml`, `configMetrics.qml`, `configIcons.qml`, or `configColors.qml`)
-3. Bind the value in `main.qml` via `Plasmoid.configuration.<key>`
+1. Add the entry to `contents/config/main.xml` with a default value.
+2. Add the UI control to the appropriate config tab (`configGeneral.qml`, `configMetrics.qml`, `configIcons.qml`, or `configColors.qml`).
+3. Expose the value in `contents/ui/models/MetricConfig.qml` (for metric settings) or read it in `contents/ui/main.qml` (for general presentation settings).
 
 ## Pull Requests
 
@@ -60,15 +61,15 @@ Thanks for your interest in contributing to KVitals!
 !!! tip "Commit Messages"
     Use conventional commits for clear history:
 
-    - `feat:` — New feature
-    - `fix:` — Bug fix
-    - `chore:` — Maintenance
-    - `docs:` — Documentation
+    - `feat:`: New feature
+    - `fix:`: Bug fix
+    - `chore:`: Maintenance
+    - `docs:`: Documentation
 
 ## Code Style
 
-- **QML** — Follow KDE's QML conventions, use `Kirigami` components where possible
-- **Commits** — Use conventional commits: `feat:`, `fix:`, `chore:`, `docs:`
+- **QML**: Follow KDE QML conventions, use Kirigami components where possible
+- **Commits**: Use conventional commits (`feat:`, `fix:`, `chore:`, `docs:`)
 
 ## Reporting Issues
 
