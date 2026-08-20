@@ -1,11 +1,11 @@
 import QtQuick
 import org.kde.ksysguard.sensors as Sensors
-import org.kde.kitemmodels as KItemModels
+import "../models/MetricDefinitions.js" as MetricDefinitions
 
 Item {
     id: root
-    property bool _dbg: { console.warn("[KVitals] GpuSensors: constructing..."); return true; }
 
+    property var discovery: null
     property int updateInterval: 2000
 
     // Comma-separated selected GPU IDs e.g. "gpu0,gpu1". Empty = all discovered.
@@ -23,7 +23,7 @@ Item {
     // Legacy per-GPU sub-metric visibility (fallback compatibility)
     property string gpuMetrics: ""
 
-    // List of { id: "gpu0", name: "GPU 1" } derived from SensorTreeModel (no polling)
+    // List of { id: "gpu0", name: "GPU 1" } derived from HardwareDiscovery
     readonly property var discoveredGpus: _discovered
     property var _discovered: []
 
@@ -51,19 +51,10 @@ Item {
     property string _tempStr:  ""
 
     // -------------------------------------------------------------------------
-    // Step 1: Discover available GPUs via SensorTreeModel (metadata only, no polling)
+    // Step 1: Discover available GPUs via HardwareDiscovery
     // -------------------------------------------------------------------------
 
-    Sensors.SensorTreeModel {
-        id: sensorTree
-    }
-
-    KItemModels.KDescendantsProxyModel {
-        id: flatSensors
-        model: sensorTree
-    }
-
-    // Parse "gpu0:Label A|gpu1:Label B" → { gpu0: "Label A", gpu1: "Label B" }
+    // Parse "gpu0:Label A|gpu1:Label B" -> { gpu0: "Label A", gpu1: "Label B" }
     function parseGpuLabels(str) {
         var result = {};
         if (!str) return result;
@@ -76,21 +67,21 @@ Item {
         return result;
     }
 
-    // Parse sub-metrics string e.g. "usage,vram,temp" or legacy "gpu0:usage,vram|..."
-    function parseGpuSubMetrics(str) {
+    // Parse sub-metrics string e.g. "gpu0:usage,vram,temp|gpu1:usage,temp" or global "usage,vram,temp"
+    function parseGpuSubMetrics(str, gpuId) {
         if (!str || str.length === 0) return ["usage", "vram", "temp"];
         if (str.indexOf(":") >= 0) {
-            var res = [];
-            str.split("|").forEach(function(pair) {
-                var sep = pair.indexOf(":");
-                if (sep > 0) {
-                    pair.substring(sep + 1).split(",").forEach(function(m) {
-                        if ((m === "usage" || m === "vram" || m === "temp") && res.indexOf(m) < 0)
-                            res.push(m);
+            var pairs = str.split("|");
+            for (var i = 0; i < pairs.length; i++) {
+                var sep = pairs[i].indexOf(":");
+                if (sep > 0 && pairs[i].substring(0, sep) === gpuId) {
+                    var subs = pairs[i].substring(sep + 1).split(",").map(function(s){ return s.trim(); }).filter(function(m){
+                        return m === "usage" || m === "vram" || m === "temp";
                     });
+                    return subs.length > 0 ? subs : ["usage", "vram", "temp"];
                 }
-            });
-            return res.length > 0 ? res : ["usage", "vram", "temp"];
+            }
+            return ["usage", "vram", "temp"];
         }
         var list = str.split(",").map(function(s){ return s.trim(); }).filter(function(m){
             return m === "usage" || m === "vram" || m === "temp";
@@ -99,47 +90,29 @@ Item {
     }
 
     function refreshDiscovered() {
-        console.debug("[KVitals] GpuSensors: scan started. rows = " + flatSensors.rowCount());
+        if (!discovery) return;
         var found = [];
-        for (var row = 0; row < flatSensors.rowCount(); row++) {
-            var idx = flatSensors.index(row, 0);
-            var sensorId = flatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
-            if (!sensorId || sensorId.length === 0) continue;
-            var match = sensorId.match(/^gpu\/(gpu\d+)\/usage$/);
+        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.GPU : /^gpu\/(gpu\d+)\/usage$/;
+        var ids = discovery.queryIds(pattern);
+        for (var i = 0; i < ids.length; i++) {
+            var match = ids[i].match(pattern);
             if (!match) continue;
             found.push({ id: match[1], name: "GPU " + (found.length + 1) });
         }
 
-        console.debug("[KVitals] GpuSensors: scan finished. found = " + JSON.stringify(found));
         if (JSON.stringify(found) !== JSON.stringify(_discovered)) {
-            console.warn("[KVitals] GpuSensors: discovered GPUs updated = " + JSON.stringify(found));
             _discovered = found;
         }
     }
 
-    property bool _discoveryDirty: false
-
-    Timer {
-        id: discoveryTimer
-        interval: 500
-        repeat: false
-        running: _discoveryDirty
-        onTriggered: {
-            _discoveryDirty = false;
-            root.refreshDiscovered();
-        }
-    }
-
     Connections {
-        target: flatSensors
-        function onRowsInserted()    { root._discoveryDirty = true; }
-        function onRowsRemoved()     { root._discoveryDirty = true; }
-        function onModelReset()      { root._discoveryDirty = true; }
-        function onDataChanged()     { root._discoveryDirty = true; }
+        target: discovery
+        function onRevisionChanged() { root.refreshDiscovered(); }
     }
+
+    onDiscoveryChanged: refreshDiscovered()
 
     Component.onCompleted: {
-        console.warn("[KVitals] GpuSensors: ready. selection=" + gpuSelection);
         refreshDiscovered();
     }
 
@@ -159,9 +132,10 @@ Item {
 
     readonly property var _activeSensorIds: {
         var ids = [];
-        var m = parseGpuSubMetrics(gpuSubMetrics || gpuMetrics);
+        var rawStr = gpuSubMetrics || gpuMetrics;
         for (var i = 0; i < _activeIds.length; i++) {
             var g = _activeIds[i];
+            var m = parseGpuSubMetrics(rawStr, g);
             if (m.indexOf("usage") >= 0) ids.push("gpu/" + g + "/usage");
             if (m.indexOf("vram")  >= 0) {
                 ids.push("gpu/" + g + "/usedVram");
@@ -202,7 +176,7 @@ Item {
     function aggregate() {
         var ids = _activeIds;
         var customLabels = parseGpuLabels(gpuLabels);
-        var m = parseGpuSubMetrics(gpuSubMetrics || gpuMetrics);
+        var rawStr = gpuSubMetrics || gpuMetrics;
         var newList = [];
         var totalUsage = 0, usageCount = 0;
         var totalVramUsed = 0, totalVramTotal = 0, hasVram = false;
@@ -210,6 +184,7 @@ Item {
 
         for (var i = 0; i < ids.length; i++) {
             var g = ids[i];
+            var m = parseGpuSubMetrics(rawStr, g);
             var showU = m.indexOf("usage") >= 0;
             var showV = m.indexOf("vram")  >= 0;
             var showT = m.indexOf("temp")  >= 0;

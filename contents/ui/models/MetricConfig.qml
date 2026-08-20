@@ -1,3 +1,13 @@
+// MetricConfig is the single-source adapter between Plasmoid.configuration and
+// the rest of the widget. Every sensor module and MetricStore read from here
+// rather than touching Plasmoid.configuration directly.
+//
+// It owns:
+//   - group enable flags and isGroupEnabled()
+//   - sub-metric and visibility settings per group
+//   - labels, icons, and threshold values (with defaults)
+//   - isMetricVisible() which combines all three visibility axes
+//   - orderedKeys: the canonical metric display order
 import QtQuick
 import org.kde.plasma.plasmoid
 import "./MetricDefinitions.js" as Defs
@@ -19,7 +29,8 @@ QtObject {
         }
     }
 
-    // Category enablement
+    // Whether each group appears in the widget at all. Disabled groups are
+    // skipped by MetricStore and hidden from the config metrics page.
     readonly property bool cpuEnabled:    Plasmoid.configuration.cpuEnabled
     readonly property bool ramEnabled:    Plasmoid.configuration.ramEnabled
     readonly property bool tempEnabled:   Plasmoid.configuration.tempEnabled
@@ -53,7 +64,8 @@ QtObject {
     readonly property string netSubMetrics:  Plasmoid.configuration.netSubMetrics  || "down,up"
     readonly property string diskSubMetrics: Plasmoid.configuration.diskSubMetrics || "read,write"
 
-    // Group visibility target (compact, widget, both)
+    // Where each group appears: "compact" (panel only), "widget" (popup only),
+    // or "both". isMetricVisible() enforces this per sub-metric.
     readonly property string cpuVisibility:    Plasmoid.configuration.cpuVisibility    || "both"
     readonly property string ramVisibility:    Plasmoid.configuration.ramVisibility    || "both"
     readonly property string tempVisibility:   Plasmoid.configuration.tempVisibility   || "both"
@@ -79,7 +91,7 @@ QtObject {
         }
     }
 
-    function isSubMetricEnabled(group, subKey) {
+    function isSubMetricEnabled(group, subKey, deviceId) {
         var str = "";
         switch (group) {
         case "cpu":  str = cpuSubMetrics; break;
@@ -93,20 +105,43 @@ QtObject {
         case "uptime": return true;
         default: return true;
         }
+
+        // Per-device sub-metric support
+        if (str.indexOf(":") >= 0) {
+            if (deviceId) {
+                var pairs = str.split("|");
+                for (var i = 0; i < pairs.length; i++) {
+                    var sep = pairs[i].indexOf(":");
+                    if (sep > 0 && pairs[i].substring(0, sep) === deviceId) {
+                        var subs = pairs[i].substring(sep + 1).split(",").map(function(s){ return s.trim(); });
+                        return subs.indexOf(subKey) >= 0;
+                    }
+                }
+            }
+            var allPairs = str.split("|");
+            for (var j = 0; j < allPairs.length; j++) {
+                var pSep = allPairs[j].indexOf(":");
+                var pSubs = (pSep > 0 ? allPairs[j].substring(pSep + 1) : allPairs[j]).split(",").map(function(s){ return s.trim(); });
+                if (pSubs.indexOf(subKey) >= 0) return true;
+            }
+            return false;
+        }
+
         return str.split(",").map(function(s){ return s.trim(); }).indexOf(subKey) >= 0;
     }
 
-    function isMetricVisible(group, subKey, view) {
+    // Returns true when a metric should appear in the given view ("compact" or "widget").
+    // Checks group enable, group visibility target, and sub-metric enable in that order.
+    function isMetricVisible(group, subKey, view, deviceId) {
         if (!isGroupEnabled(group)) return false;
         var vis = getGroupVisibility(group);
         if (vis !== "both" && vis !== view) return false;
-        
-        // RAM popup override for showing both percentage and used
+
         if (view === "widget" && group === "ram" && ramWidgetShowBoth) {
             if (subKey === "percentage" || subKey === "used") return true;
         }
 
-        return isSubMetricEnabled(group, subKey);
+        return isSubMetricEnabled(group, subKey, deviceId);
     }
 
     // Labels
@@ -162,7 +197,9 @@ QtObject {
         }
     }
 
-    // Thresholds
+    // Threshold colors. getWarningThreshold / getCriticalThreshold look up the
+    // property by name (e.g. "cpu" -> cpuWarningThreshold) so new groups only
+    // need new properties here, not changes to those functions.
     readonly property bool enableThresholdColors: Plasmoid.configuration.enableThresholdColors
     readonly property string warningColor:        Plasmoid.configuration.warningColor  || "#e5a50a"
     readonly property string criticalColor:       Plasmoid.configuration.criticalColor || "#da4453"
@@ -208,7 +245,10 @@ QtObject {
     readonly property bool showNetworkIp:         Plasmoid.configuration.showNetworkIp     || false
     readonly property string gpuSelection:        Plasmoid.configuration.gpuSelection      || ""
 
-    // Ordering
+    // orderedKeys is the final display order for both views. It starts from
+    // metricOrder (user-defined), then appends any group keys missing from that
+    // list using ALL_GROUP_KEYS so new groups always appear rather than silently
+    // disappearing from the panel.
     readonly property string metricOrder: Plasmoid.configuration.metricOrder || "cpu,ram,temp,gpu,bat,net,disk,fan,uptime"
     readonly property var orderedKeys: {
         var all = Defs.ALL_GROUP_KEYS;

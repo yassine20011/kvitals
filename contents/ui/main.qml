@@ -61,15 +61,20 @@ PlasmoidItem {
         id: sensorLoader
         active: false
         sourceComponent: Item {
-            property alias cpu:     _cpu
-            property alias memory:  _memory
-            property alias temp:    _temp
-            property alias gpu:     _gpu
-            property alias battery: _battery
-            property alias network: _network
-            property alias disk:    _disk
-            property alias fans:    _fans
-            property alias uptime:  _uptime
+            property alias discovery: _discovery
+            property alias cpu:       _cpu
+            property alias memory:    _memory
+            property alias temp:      _temp
+            property alias gpu:       _gpu
+            property alias battery:   _battery
+            property alias network:   _network
+            property alias disk:      _disk
+            property alias fans:      _fans
+            property alias uptime:    _uptime
+
+            HardwareDiscovery {
+                id: _discovery
+            }
 
             CpuSensors {
                 id: _cpu
@@ -83,12 +88,14 @@ PlasmoidItem {
 
             TempSensors {
                 id: _temp
+                discovery: _discovery
                 updateInterval: metricConfig.updateInterval
                 tempUnit: metricConfig.tempUnit
             }
 
             GpuSensors {
                 id: _gpu
+                discovery: _discovery
                 updateInterval: metricConfig.updateInterval
                 gpuSubMetrics: metricConfig.gpuSubMetrics
                 gpuSelection: metricConfig.gpuSelection
@@ -98,12 +105,14 @@ PlasmoidItem {
 
             BatterySensors {
                 id: _battery
+                discovery: _discovery
                 updateInterval: metricConfig.updateInterval
                 batteryDevice: metricConfig.batteryDevice || "auto"
             }
 
             NetworkSensors {
                 id: _network
+                discovery: _discovery
                 updateInterval: metricConfig.updateInterval
                 networkInterface: metricConfig.networkInterface
                 networkUnit: metricConfig.networkUnit
@@ -111,6 +120,7 @@ PlasmoidItem {
 
             DiskSensors {
                 id: _disk
+                discovery: _discovery
                 updateInterval: metricConfig.updateInterval
                 enabled: metricConfig.diskEnabled
                 tempUnit: metricConfig.tempUnit
@@ -120,6 +130,7 @@ PlasmoidItem {
 
             FanSensors {
                 id: _fans
+                discovery: _discovery
                 updateInterval: metricConfig.updateInterval
                 fanUnit: metricConfig.fanUnit
                 fanLabels: metricConfig.fanLabels

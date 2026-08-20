@@ -1,11 +1,11 @@
 import QtQuick
 import org.kde.ksysguard.sensors as Sensors
-import org.kde.kitemmodels as KItemModels
+import "../models/MetricDefinitions.js" as MetricDefinitions
 
 Item {
     id: root
-    property bool _dbg: { console.warn("[KVitals] NetworkSensors: constructing..."); return true; }
 
+    property var discovery: null
     property int updateInterval: 2000
     property string networkInterface: "auto"
     property string networkUnit: "bytes"
@@ -26,7 +26,7 @@ Item {
         return _activeIface;
     }
 
-    // Interface discovery — SensorTreeModel (metadata only, no polling)
+    // Interface discovery via HardwareDiscovery
     property string _activeIface: ""
     property var _discoveredIfaces: []
 
@@ -39,49 +39,30 @@ Item {
         onTriggered: root._bootReady = true
     }
 
-    Sensors.SensorTreeModel { id: sensorTree }
-
-    KItemModels.KDescendantsProxyModel {
-        id: flatSensors
-        model: sensorTree
-    }
-
     function _refreshInterfaces() {
+        if (!discovery) return;
         var found = [];
-        for (var row = 0; row < flatSensors.rowCount(); row++) {
-            var idx = flatSensors.index(row, 0);
-            var sid = flatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
-            if (!sid) continue;
-            var match = sid.match(/^network\/([^/]+)\/download$/);
+        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.NETWORK_IFACE : /^network\/([^/]+)\/download$/;
+        var ids = discovery.queryIds(pattern);
+        for (var i = 0; i < ids.length; i++) {
+            var match = ids[i].match(pattern);
             if (!match) continue;
             var iface = match[1];
             if (iface === "all" || iface === "lo") continue;
             if (found.indexOf(iface) < 0) found.push(iface);
         }
-        console.debug("[KVitals] NetworkSensors: discovered ifaces = " + JSON.stringify(found));
         if (JSON.stringify(found) !== JSON.stringify(_discoveredIfaces))
             _discoveredIfaces = found;
     }
 
-    property bool _discoveryDirty: false
-
-    Timer {
-        id: discoveryTimer
-        interval: 500
-        repeat: false
-        running: _discoveryDirty
-        onTriggered: { _discoveryDirty = false; root._refreshInterfaces(); }
-    }
-
     Connections {
-        target: flatSensors
-        function onRowsInserted() { root._discoveryDirty = true; }
-        function onRowsRemoved()  { root._discoveryDirty = true; }
-        function onModelReset()   { root._discoveryDirty = true; }
+        target: discovery
+        function onRevisionChanged() { root._refreshInterfaces(); }
     }
+
+    onDiscoveryChanged: _refreshInterfaces()
 
     Component.onCompleted: {
-        console.warn("[KVitals] NetworkSensors: ready.");
         _refreshInterfaces();
     }
 
@@ -122,15 +103,15 @@ Item {
                                             Sensors.SensorDataModel.Value);
             if (val && typeof val === "string" && val.length > 0) {
                 if (_activeIface !== iface) {
-                    console.warn("[KVitals] NetworkSensors: active IP iface → " + iface + " (" + val + ")");
+                    console.debug("[KVitals] NetworkSensors: active IP iface: " + iface + " (" + val + ")");
                     _activeIface = iface;
                 }
                 return;
             }
         }
-        // No interface has an address — clear so the metric hides cleanly.
+        // No interface has an address - clear so the metric hides cleanly
         if (_activeIface !== "") {
-            console.warn("[KVitals] NetworkSensors: no active IP iface, clearing.");
+            console.debug("[KVitals] NetworkSensors: no active IP iface, clearing.");
             _activeIface = "";
         }
     }

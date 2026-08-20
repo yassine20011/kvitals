@@ -1,6 +1,15 @@
+// ViewHelpers transforms the generic metrics list from MetricStore into
+// view-specific presentation items. Neither CompactView nor FullView should
+// contain grouping or ordering logic; that belongs here.
 .pragma library
 
-// Builds presentation items for CompactView from generic runtime metrics
+// buildCompactItems groups metrics by display order and returns a flat list of
+// compact panel items. Each item is one of:
+//   { icon, label, value, color, key }            - single-value row
+//   { icon, label, segments, color, key }          - multi-value row (net, disk, fans)
+//
+// Multi-device groups (e.g. two GPUs) get one item per device. Single-device
+// groups with multiple sub-metrics get a segments array.
 function buildCompactItems(metricsList, orderedKeys) {
     if (!metricsList || metricsList.length === 0) return [];
     var visible = metricsList.filter(function(m) {
@@ -86,7 +95,9 @@ function buildCompactItems(metricsList, orderedKeys) {
     return items;
 }
 
-// Builds presentation items for FullView from generic runtime metrics
+// buildPopupItems returns one row per visible metric in order. Each item is:
+//   { label, value, color, icon, chartKey, chartMax }
+// icon may be a string or a two-element array when a secondary icon is present.
 function buildPopupItems(metricsList, orderedKeys) {
     if (!metricsList || metricsList.length === 0) return [];
     var visible = metricsList.filter(function(m) {

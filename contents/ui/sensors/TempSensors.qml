@@ -1,11 +1,11 @@
 import QtQuick
 import org.kde.ksysguard.sensors as Sensors
-import org.kde.kitemmodels as KItemModels
+import "../models/MetricDefinitions.js" as MetricDefinitions
 
 Item {
     id: root
-    property bool _dbg: { console.warn("[KVitals] TempSensors: constructing..."); return true; }
 
+    property var discovery: null
     property int updateInterval: 2000
     property string tempUnit: "C"
 
@@ -71,24 +71,22 @@ Item {
         enabled: root.ramTempExists
     }
 
-    // SPD5118 discovery via sensor tree
-    Sensors.SensorTreeModel { id: sensorTree }
-    KItemModels.KDescendantsProxyModel { id: flatSensors; model: sensorTree }
-
+    // SPD5118 and chipset discovery via HardwareDiscovery
     function refreshDiscovered() {
+        if (!discovery) return;
         var ramCandidates = [];
         var chipsetCandidates = [];
-        var newRows = flatSensors.rowCount();
+        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.TEMP_LMSENSORS : /^lmsensors\/(.+)\/temp\d+$/;
+        var sensors = discovery.query(pattern);
 
-        for (var row = 0; row < newRows; row++) {
-            var idx = flatSensors.index(row, 0);
-            var sensorId = flatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
+        for (var i = 0; i < sensors.length; i++) {
+            var sensorId = sensors[i].id;
             if (!sensorId || sensorId.length === 0) continue;
 
             // Skip CPU core temps and GPU temps
             if (/^(cpu|gpu)\//.test(sensorId)) continue;
 
-            var match = sensorId.match(/^lmsensors\/(.+)\/temp\d+$/);
+            var match = sensorId.match(pattern);
             if (!match) continue;
 
             var adapter = match[1];
@@ -104,9 +102,8 @@ Item {
             // GPU sensors (amdgpu, nvidia) are on PCI → "-pci-".
             // Intel coretemp is an exception: it uses "-isa-" too,
             // so we exclude it explicitly.
-            // This is hardware-agnostic: no blacklist of specific drivers.
             if (/-isa-/.test(adapter) && !/^coretemp/i.test(adapter)) {
-                var label = flatSensors.data(idx, Qt.DisplayRole) || "";
+                var label = sensors[i].name || "";
                 chipsetCandidates.push({ id: sensorId, adapter: adapter, label: label });
             }
         }
@@ -119,18 +116,10 @@ Item {
         if (!ramStillValid) _ramSensorId = "";
 
         if (_ramSensorId.length === 0 && ramCandidates.length > 0) {
-            var newRamId = ramCandidates[0].id;
-            console.warn("[KVitals] TempSensors: ramSensorId selected: " + newRamId);
-            _ramSensorId = newRamId;
+            _ramSensorId = ramCandidates[0].id;
         }
 
         // Chipset sensor discovery — prefer ISA/LPC bus (Super I/O).
-        // PCI candidates (k10temp, amdgpu, etc.) are deliberately ignored:
-        // they report CPU/GPU package temps, not chipset temps.
-        // When multiple ISA channels exist on the same adapter (typical for
-        // nct6775-family: SYSTIN=temp1, CPUTIN=temp2, AUXTIN*=temp3+),
-        // prefer candidates whose label doesn't indicate a CPU-adjacent or
-        // auxiliary sensor. The Qt::DisplayRole exposes the lm-sensors label.
         if (chipsetCandidates.length > 0) {
             var best = chipsetCandidates[0];
             if (chipsetCandidates.length > 1) {
@@ -141,41 +130,21 @@ Item {
                 if (filtered.length > 0) best = filtered[0];
             }
             if (_systemSensorId !== best.id) {
-                console.warn("[KVitals] TempSensors: chipset sensor selected: "
-                    + best.id + " (" + best.adapter + ") label=" + best.label);
                 _systemSensorId = best.id;
             }
-        } else if (newRows > 0) {
-            if (_systemSensorId.length > 0) {
-                console.warn("[KVitals] TempSensors: chipset sensor lost, reverting to CPU fallback");
-            }
+        } else if (discovery.count > 0) {
             _systemSensorId = "";
         }
     }
 
-    property bool _discoveryDirty: false
-
-    Timer {
-        id: discoveryTimer
-        interval: 500
-        repeat: false
-        running: _discoveryDirty
-        onTriggered: {
-            _discoveryDirty = false;
-            root.refreshDiscovered();
-        }
-    }
-
     Connections {
-        target: flatSensors
-        function onRowsInserted()    { root._discoveryDirty = true; }
-        function onRowsRemoved()     { root._discoveryDirty = true; }
-        function onModelReset()      { root._discoveryDirty = true; }
-        function onDataChanged()     { root._discoveryDirty = true; }
+        target: discovery
+        function onRevisionChanged() { root.refreshDiscovered(); }
     }
+
+    onDiscoveryChanged: refreshDiscovered()
 
     Component.onCompleted: {
-        console.warn("[KVitals] TempSensors: ready.");
         refreshDiscovered();
     }
 }

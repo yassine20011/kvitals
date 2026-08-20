@@ -3,7 +3,6 @@ import org.kde.ksysguard.sensors as Sensors
 
 Item {
     id: root
-    property bool _dbg: { console.warn("[KVitals] UptimeSensors: constructing..."); return true; }
 
     property int updateInterval: 2000
 
@@ -29,9 +28,5 @@ Item {
         id: uptimeSensor
         sensorId: "os/system/uptime"
         updateRateLimit: root.updateInterval
-    }
-
-    Component.onCompleted: {
-        console.warn("[KVitals] UptimeSensors: ready.");
     }
 }

@@ -3,7 +3,6 @@ import org.kde.ksysguard.sensors as Sensors
 
 Item {
     id: root
-    property bool _dbg: { console.warn("[KVitals] MemorySensors: constructing..."); return true; }
 
     property int updateInterval: 2000
 
@@ -32,9 +31,5 @@ Item {
         id: ramTotalSensor
         sensorId: "memory/physical/total"
         updateRateLimit: root.updateInterval
-    }
-
-    Component.onCompleted: {
-        console.warn("[KVitals] MemorySensors: ready.");
     }
 }

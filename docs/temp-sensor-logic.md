@@ -96,10 +96,4 @@ switches to a chipset sensor.
 - `sysIsFallback = true` when System Temperature falls back to CPU
 - The "No chipset temp sensor detected" label in settings is controlled by
   `Plasmoid.configuration._tempFallbackActive`
-- Changes to the sensor tree (e.g., hot-plugging a hwmon module) trigger
-  `refreshDiscovered()` via `onRowsInserted`/`onRowsRemoved`/`onModelReset`
-  signals from `KDescendantsProxyModel`
-
-## Branch State
-
-Current branch: `fans-v2`, rebased on `feat/metrics-restructure`.
+- Changes to the sensor tree trigger `refreshDiscovered()` via `discovery.onRevisionChanged`

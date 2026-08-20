@@ -29,22 +29,23 @@ CPU: 26% · 3.2GHz  |  RAM: 8.8/39.0G  |  TEMP: 58°C  |  🔋BAT: 78% · 20W  |
 
 Here is what you can track and customize:
 
-- **CPU**: Track usage percentage and frequency in a single panel entry with customizable CPU labels.
-- **RAM**: View used and total memory, with support for custom RAM labels.
-- **Temperature**: Automatic detection of CPU, system motherboard, and RAM temperatures with separate thresholds.
-- **GPU**: Monitor usage, VRAM, and temperature. Toggle multiple GPUs independently with custom labels like iGPU or dGPU.
-- **Fan speed**: Monitor fan RPM and percentage with stable numbering and individual sparklines.
-- **Battery and power**: Automatically detects battery interfaces with an option to display power draw in watts.
-- **Network**: Track download and upload speeds, active IP address, and interface auto-detection.
-- **Disk I/O and temperature**: Per-drive read/write rates and temperature monitoring with hotplug drive detection.
-- **Sparkline charts**: Expanded popup panel displays 60-sample history graphs for all active metrics.
-- **Visibility controls**: Choose where each metric appears (panel and popup, panel only, popup only, or disabled).
-- **Popup pin mode**: Pin the expanded popup view open while working in other windows.
-- **Display modes**: Choose between text, icons, or icons and text, with horizontal or vertical panel layouts.
-- **Color customization**: Set font, label, and icon colors, with threshold sliders for warning and critical states.
+- **CPU**: Usage percentage, frequency, and temperature in a single panel entry with a custom label.
+- **RAM**: Used/total memory (percentage and absolute), with optional DDR5 temperature via the `spd5118` driver.
+- **System temperature**: Auto-detects the chipset/motherboard sensor from lmsensors. Falls back to CPU average if no ISA-bus sensor is found.
+- **GPU**: Usage, VRAM, and temperature. Supports multiple GPUs independently with custom labels (iGPU, dGPU, etc.).
+- **Fan speed**: Per-fan RPM and percentage with stable numbering and individual sparklines.
+- **Battery and power**: Automatically detects battery interfaces with an option to show power draw in watts.
+- **Network**: Download and upload speeds, local IP address display, and interface auto-detection.
+- **Disk I/O and temperature**: Per-drive read/write rates and temperature monitoring with hotplug detection.
+- **System uptime**: Live uptime pulled from `os/system/uptime`.
+- **Sparkline charts**: Expanded popup shows a 60-sample history graph for all active metrics.
+- **Visibility controls**: Choose where each metric appears — panel and popup, panel only, popup only, or disabled entirely.
+- **Popup pin mode**: Keep the expanded popup open while working in other windows.
+- **Display modes**: Text, icons, or icons and text, in horizontal or vertical panel layouts.
+- **Color customization**: Font, label, and icon colors with per-metric threshold sliders for warning and critical states.
 - **Custom ordering**: Drag and drop metrics to rearrange them.
-- **Appearance**: Search system fonts and select icons from your installed theme or bundled fallback icons.
-- **Resource efficiency**: Disabling a sensor stops all subscriptions, adding zero background overhead.
+- **Appearance**: Search system fonts and pick icons from your installed theme or bundled fallback icons.
+- **Resource efficiency**: Disabling a sensor stops all subscriptions — zero background overhead.
 
 ## Requirements
 
