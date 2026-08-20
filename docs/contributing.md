@@ -38,7 +38,7 @@ Thanks for your interest in contributing to KVitals!
 For adding a sub-metric to an existing sensor group (the most common addition):
 
 1. **Find sensor ID**: Identify the sensor path in `ksystemstats` using `kstatsviewer` or `qdbus org.kde.ksystemstats1 /org/kde/ksystemstats1 org.kde.ksystemstats1.allSensors`.
-2. **Metric definition**: Add the metric entry to `DEFINITIONS` in `contents/ui/models/MetricDefinitions.js` (and optionally to `GROUPS[group].defaultSubMetrics`).
+2. **Metric definition**: Add the metric entry to `DEFINITIONS` in `contents/ui/models/MetricDefinitions.js`. If the sub-metric should be enabled by default on new installs, add its key to `GROUPS[group].defaultSubMetrics` in `MetricDefinitions.js` and update the static `<default>` in `contents/config/main.xml`.
 3. **Sensor module**: Subscribe to the sensor and expose the numeric or formatted property in `contents/ui/sensors/<Group>Sensors.qml`.
 4. **Metric store**: Push the metric in `contents/ui/models/MetricStore.qml` using `_createMetric("group.subKey", { ... })`.
 5. **Config UI**: Add `{ key: "subKey", label: i18n("...") }` to `metricMeta[group].subs` in `contents/ui/configMetrics.qml`.

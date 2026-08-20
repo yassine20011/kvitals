@@ -342,7 +342,7 @@ The data pipeline separates hardware polling, metric definitions, configuration,
 
 This is the standard workflow for adding new readings to an existing module (such as adding Swap to Memory, Power to Battery, or VRAM to GPU).
 
-Because the sensor module, configuration bindings, and loader wiring already exist, you do not need to modify `HardwareDiscovery.qml`, `sensors/qmldir`, `main.qml`, `MetricConfig.qml`, or the view components (`CompactView.qml`, `FullView.qml`).
+For optional sub-metrics (disabled by default until selected by the user in settings), you do not need to modify `HardwareDiscovery.qml`, `sensors/qmldir`, `main.qml`, `MetricConfig.qml`, or the view components (`CompactView.qml`, `FullView.qml`).
 
 1. **Register in `MetricDefinitions.js` (`contents/ui/models/MetricDefinitions.js`)**:
    Add a definition object under `DEFINITIONS["<group>.<subKey>"]`:
@@ -359,7 +359,6 @@ Because the sensor module, configuration bindings, and loader wiring already exi
        thresholdKey: "ram"
    }
    ```
-   If the sub-metric should be enabled by default for new installs, add its key to `GROUPS[group].defaultSubMetrics`.
 
 2. **Poll and format in the sensor module (`contents/ui/sensors/<Group>Sensors.qml`)**:
    Subscribe to the required sensor path (via `Sensors.Sensor` or `Sensors.SensorDataModel`) and expose reactive value properties (a numeric scalar and/or formatted string):
@@ -385,6 +384,11 @@ Because the sensor module, configuration bindings, and loader wiring already exi
    { key: "swap", label: i18n("Swap") }
    ```
    The configuration page dynamically creates the toggle checkbox and serializes the choice to `cfg_<group>SubMetrics`.
+
+5. **(Optional) Enable by default for new installations**:
+   If the new sub-metric should be enabled out of the box on fresh installations:
+   - Add the key to `GROUPS[group].defaultSubMetrics` in `contents/ui/models/MetricDefinitions.js` (which serves as the source of truth for `MetricConfig.qml` and `configMetrics.qml`).
+   - Update the static `<default>` value for `<group>SubMetrics` in `contents/config/main.xml` (required by KDE's KConfig schema).
 
 Views remain sensor-agnostic. `ViewHelpers.js` groups and routes the metric to `CompactView` and `FullView` automatically.
 

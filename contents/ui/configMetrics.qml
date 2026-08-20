@@ -15,12 +15,12 @@ KCM.SimpleKCM {
     // ── cfg_ bindings ──────────────────────────────────────────────────────
 
     property bool cfg_cpuEnabled
-    property string cfg_cpuSubMetrics: "usage,freq,temp"
+    property string cfg_cpuSubMetrics: MetricDefinitions.GROUPS.cpu.defaultSubMetrics
     property string cfg_cpuLabel: "CPU"
     property string cfg_cpuVisibility: "both"
 
     property bool cfg_ramEnabled
-    property string cfg_ramSubMetrics: "percentage"
+    property string cfg_ramSubMetrics: MetricDefinitions.GROUPS.ram.defaultSubMetrics
     property string cfg_ramLabel: "RAM"
     property bool cfg_ramWidgetShowBoth: false
     property string cfg_ramVisibility: "both"
@@ -30,24 +30,24 @@ KCM.SimpleKCM {
     property string cfg_tempVisibility: "both"
 
     property bool cfg_gpuEnabled
-    property string cfg_gpuSubMetrics: "usage,vram,temp"
+    property string cfg_gpuSubMetrics: MetricDefinitions.GROUPS.gpu.defaultSubMetrics
     property string cfg_gpuSelection: ""
     property string cfg_gpuLabels: ""
     property string cfg_gpuVisibility: "both"
 
     property bool cfg_batEnabled
-    property string cfg_batSubMetrics: "percentage,power"
+    property string cfg_batSubMetrics: MetricDefinitions.GROUPS.bat.defaultSubMetrics
     property string cfg_batVisibility: "both"
 
     property bool cfg_netEnabled
-    property string cfg_netSubMetrics: "down,up"
+    property string cfg_netSubMetrics: MetricDefinitions.GROUPS.net.defaultSubMetrics
     property string cfg_netLabel: "NET"
     property string cfg_networkInterface: "auto"
     property bool cfg_showNetworkIp: false
     property string cfg_netVisibility: "both"
 
     property bool cfg_diskEnabled
-    property string cfg_diskSubMetrics: "read,write"
+    property string cfg_diskSubMetrics: MetricDefinitions.GROUPS.disk.defaultSubMetrics
     property string cfg_diskLabel: "DSK"
     property string cfg_diskLabels: ""
     property string cfg_diskVisibility: "both"
@@ -321,7 +321,7 @@ KCM.SimpleKCM {
         if (cfg_gpuSubMetrics && cfg_gpuSubMetrics.indexOf(":") < 0) {
             return cfg_gpuSubMetrics.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
         }
-        return ["usage", "vram", "temp"];
+        return MetricDefinitions.GROUPS.gpu.defaultSubMetrics.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
     }
 
     function toggleGpuSubMetric(gpuId, subKey, checked) {
@@ -332,7 +332,7 @@ KCM.SimpleKCM {
                 map[gid] = getGpuActiveSubMetrics(gid);
             }
         }
-        var subs = map[gpuId] ? map[gpuId].slice() : ["usage", "vram", "temp"];
+        var subs = map[gpuId] ? map[gpuId].slice() : getGpuActiveSubMetrics(gpuId);
         if (checked) {
             if (subs.indexOf(subKey) < 0) subs.push(subKey);
         } else {
