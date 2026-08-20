@@ -48,7 +48,7 @@ To add an entirely new hardware category (such as NPU or Cooler), see the module
 ### Adding a New Setting
 
 1. Add the entry to `contents/config/main.xml` with a default value.
-2. Add the UI control to the appropriate config tab (`configGeneral.qml`, `configMetrics.qml`, `configIcons.qml`, or `configColors.qml`).
+2. Add the matching `cfg_<key>` property and UI control to the appropriate config tab (`configGeneral.qml`, `configMetrics.qml`, `configIcons.qml`, or `configColors.qml`) so the KCM can load and persist the value.
 3. Expose the value in `contents/ui/models/MetricConfig.qml` (for metric settings) or read it in `contents/ui/main.qml` (for general presentation settings).
 
 ## Pull Requests
