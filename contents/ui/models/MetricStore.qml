@@ -192,6 +192,37 @@ Item {
             }
         }
 
+        // Swap
+        if (cfg.isGroupEnabled("swap") && s.swap) {
+            list.push(_createMetric("swap.percent", {
+                value: s.swap.swapPercentage,
+                displayValue: s.swap.swapPercentValue,
+                label: cfg.swapLabel,
+                status: !isNaN(s.swap.swapPercentage) ? "ready" : (s.swap.swapAvailable ? "loading" : "unavailable")
+            }));
+
+            list.push(_createMetric("swap.used", {
+                value: s.swap.swapUsedRaw,
+                displayValue: s.swap.swapUsedValue,
+                label: cfg.swapLabel + " Used",
+                status: !isNaN(s.swap.swapUsedRaw) ? "ready" : (s.swap.swapAvailable ? "loading" : "unavailable")
+            }));
+
+            list.push(_createMetric("swap.free", {
+                value: s.swap.swapFreeRaw,
+                displayValue: s.swap.swapFreeValue,
+                label: cfg.swapLabel + " Free",
+                status: !isNaN(s.swap.swapFreeRaw) ? "ready" : (s.swap.swapAvailable ? "loading" : "unavailable")
+            }));
+
+            list.push(_createMetric("swap.total", {
+                value: s.swap.swapTotalRaw,
+                displayValue: s.swap.swapTotalValue,
+                label: cfg.swapLabel + " Total",
+                status: !isNaN(s.swap.swapTotalRaw) ? "ready" : (s.swap.swapAvailable ? "loading" : "unavailable")
+            }));
+        }
+
         // System Temperature
         if (cfg.isGroupEnabled("temp") && s.temp && s.temp.tempValue && s.temp.tempValue !== "--") {
             list.push(_createMetric("temp.system", {

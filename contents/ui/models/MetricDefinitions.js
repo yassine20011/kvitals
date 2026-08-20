@@ -16,6 +16,12 @@ var GROUPS = {
         defaultIcon: "nvidia-ram-symbolic",
         defaultSubMetrics: "percentage"
     },
+    swap: {
+        id: "swap",
+        defaultLabel: "SWAP",
+        defaultIcon: "nvidia-ram-symbolic",
+        defaultSubMetrics: "percent,used"
+    },
     temp: {
         id: "temp",
         defaultLabel: "System",
@@ -62,7 +68,7 @@ var GROUPS = {
 
 // Canonical display order. MetricConfig uses this list to fill any gaps left
 // by a partial metricOrder setting.
-var ALL_GROUP_KEYS = ["cpu", "ram", "temp", "gpu", "bat", "net", "disk", "fan", "uptime"];
+var ALL_GROUP_KEYS = ["cpu", "ram", "swap", "temp", "gpu", "bat", "net", "disk", "fan", "uptime"];
 
 // Canonical discovery patterns for dynamic hardware devices
 var PATTERNS = {
@@ -168,6 +174,47 @@ var DEFINITIONS = {
         thresholdType: "normal",
         thresholdKey: "ramTemp",
         secondaryIcon: "temperature-normal"
+    },
+    "swap.percent": {
+        id: "swap.percent",
+        group: "swap",
+        subKey: "percent",
+        sensorId: "memory/swap/usedPercent",
+        label: "Usage",
+        chartKey: "swap",
+        chartMax: 100,
+        thresholdType: "normal",
+        thresholdKey: "swap"
+    },
+    "swap.used": {
+        id: "swap.used",
+        group: "swap",
+        subKey: "used",
+        sensorId: "memory/swap/used",
+        label: "Used",
+        chartKey: "",
+        chartMax: 0,
+        thresholdType: "none"
+    },
+    "swap.free": {
+        id: "swap.free",
+        group: "swap",
+        subKey: "free",
+        sensorId: "memory/swap/free",
+        label: "Free",
+        chartKey: "",
+        chartMax: 0,
+        thresholdType: "none"
+    },
+    "swap.total": {
+        id: "swap.total",
+        group: "swap",
+        subKey: "total",
+        sensorId: "memory/swap/total",
+        label: "Total",
+        chartKey: "",
+        chartMax: 0,
+        thresholdType: "none"
     },
     "temp.system": {
         id: "temp.system",

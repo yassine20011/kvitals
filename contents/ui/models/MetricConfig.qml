@@ -33,6 +33,7 @@ QtObject {
     // skipped by MetricStore and hidden from the config metrics page.
     readonly property bool cpuEnabled:    Plasmoid.configuration.cpuEnabled
     readonly property bool ramEnabled:    Plasmoid.configuration.ramEnabled
+    readonly property bool swapEnabled:   Plasmoid.configuration.swapEnabled
     readonly property bool tempEnabled:   Plasmoid.configuration.tempEnabled
     readonly property bool gpuEnabled:    Plasmoid.configuration.gpuEnabled
     readonly property bool batEnabled:    Plasmoid.configuration.batEnabled
@@ -45,6 +46,7 @@ QtObject {
         switch (group) {
         case "cpu":    return cpuEnabled;
         case "ram":    return ramEnabled;
+        case "swap":   return swapEnabled;
         case "temp":   return tempEnabled;
         case "gpu":    return gpuEnabled;
         case "bat":    return batEnabled;
@@ -59,6 +61,7 @@ QtObject {
     // Sub-metric comma-separated lists
     readonly property string cpuSubMetrics:  Plasmoid.configuration.cpuSubMetrics  || Defs.GROUPS.cpu.defaultSubMetrics
     readonly property string ramSubMetrics:  Plasmoid.configuration.ramSubMetrics  || Defs.GROUPS.ram.defaultSubMetrics
+    readonly property string swapSubMetrics: Plasmoid.configuration.swapSubMetrics || Defs.GROUPS.swap.defaultSubMetrics
     readonly property string gpuSubMetrics:  Plasmoid.configuration.gpuSubMetrics  || Defs.GROUPS.gpu.defaultSubMetrics
     readonly property string batSubMetrics:  Plasmoid.configuration.batSubMetrics  || Defs.GROUPS.bat.defaultSubMetrics
     readonly property string netSubMetrics:  Plasmoid.configuration.netSubMetrics  || Defs.GROUPS.net.defaultSubMetrics
@@ -68,6 +71,7 @@ QtObject {
     // or "both". isMetricVisible() enforces this per sub-metric.
     readonly property string cpuVisibility:    Plasmoid.configuration.cpuVisibility    || "both"
     readonly property string ramVisibility:    Plasmoid.configuration.ramVisibility    || "both"
+    readonly property string swapVisibility:   Plasmoid.configuration.swapVisibility   || "both"
     readonly property string tempVisibility:   Plasmoid.configuration.tempVisibility   || "both"
     readonly property string gpuVisibility:    Plasmoid.configuration.gpuVisibility    || "both"
     readonly property string batVisibility:    Plasmoid.configuration.batVisibility    || "both"
@@ -80,6 +84,7 @@ QtObject {
         switch (group) {
         case "cpu":    return cpuVisibility;
         case "ram":    return ramVisibility;
+        case "swap":   return swapVisibility;
         case "temp":   return tempVisibility;
         case "gpu":    return gpuVisibility;
         case "bat":    return batVisibility;
@@ -96,6 +101,7 @@ QtObject {
         switch (group) {
         case "cpu":  str = cpuSubMetrics; break;
         case "ram":  str = ramSubMetrics; break;
+        case "swap": str = swapSubMetrics; break;
         case "gpu":  str = gpuSubMetrics; break;
         case "bat":  str = batSubMetrics; break;
         case "net":  str = netSubMetrics; break;
@@ -147,6 +153,7 @@ QtObject {
     // Labels
     readonly property string cpuLabel:  Plasmoid.configuration.cpuLabel  || "CPU"
     readonly property string ramLabel:  Plasmoid.configuration.ramLabel  || "RAM"
+    readonly property string swapLabel: Plasmoid.configuration.swapLabel || "SWAP"
     readonly property string tempLabel: Plasmoid.configuration.tempLabel || "System"
     readonly property string netLabel:  Plasmoid.configuration.netLabel  || "NET"
     readonly property string diskLabel: Plasmoid.configuration.diskLabel || "DSK"
@@ -159,6 +166,7 @@ QtObject {
         switch (group) {
         case "cpu":    return cpuLabel;
         case "ram":    return ramLabel;
+        case "swap":   return swapLabel;
         case "temp":   return tempLabel;
         case "gpu":    return "GPU";
         case "bat":    return "BAT";
@@ -173,6 +181,7 @@ QtObject {
     // Icons
     readonly property string cpuIcon:     resolveIcon(Plasmoid.configuration.cpuIcon || "am-cpu-symbolic")
     readonly property string ramIcon:     resolveIcon(Plasmoid.configuration.ramIcon || "nvidia-ram-symbolic")
+    readonly property string swapIcon:    resolveIcon(Plasmoid.configuration.swapIcon || "nvidia-ram-symbolic")
     readonly property string tempIcon:    resolveIcon(Plasmoid.configuration.tempIcon || "temperature-normal")
     readonly property string gpuIcon:     resolveIcon(Plasmoid.configuration.gpuIcon || "gpu-symbolic")
     readonly property string batteryIcon: resolveIcon(Plasmoid.configuration.batteryIcon || "battery-good")
@@ -186,6 +195,7 @@ QtObject {
         switch (group) {
         case "cpu":    return cpuIcon;
         case "ram":    return ramIcon;
+        case "swap":   return swapIcon;
         case "temp":   return tempIcon;
         case "gpu":    return gpuIcon;
         case "bat":    return batteryIcon;
@@ -212,6 +222,8 @@ QtObject {
     readonly property int systemCriticalThreshold:  Plasmoid.configuration.systemCriticalThreshold  || 85
     readonly property int ramWarningThreshold:      Plasmoid.configuration.ramWarningThreshold      || 70
     readonly property int ramCriticalThreshold:     Plasmoid.configuration.ramCriticalThreshold     || 90
+    readonly property int swapWarningThreshold:     Plasmoid.configuration.swapWarningThreshold     || 70
+    readonly property int swapCriticalThreshold:    Plasmoid.configuration.swapCriticalThreshold    || 90
     readonly property int ramTempWarningThreshold:  Plasmoid.configuration.ramTempWarningThreshold  || 60
     readonly property int ramTempCriticalThreshold: Plasmoid.configuration.ramTempCriticalThreshold || 85
     readonly property int gpuWarningThreshold:      Plasmoid.configuration.gpuWarningThreshold      || 70

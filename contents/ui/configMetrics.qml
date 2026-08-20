@@ -25,6 +25,11 @@ KCM.SimpleKCM {
     property bool cfg_ramWidgetShowBoth: false
     property string cfg_ramVisibility: "both"
 
+    property bool cfg_swapEnabled
+    property string cfg_swapSubMetrics: MetricDefinitions.GROUPS.swap.defaultSubMetrics
+    property string cfg_swapLabel: "SWAP"
+    property string cfg_swapVisibility: "both"
+
     property bool cfg_tempEnabled
     property string cfg_tempLabel: "System"
     property string cfg_tempVisibility: "both"
@@ -60,13 +65,14 @@ KCM.SimpleKCM {
     property bool cfg_uptimeEnabled
     property string cfg_uptimeVisibility: "both"
 
-    property string cfg_metricOrder: "cpu,ram,temp,gpu,bat,net,disk,fan,uptime"
+    property string cfg_metricOrder: "cpu,ram,swap,temp,gpu,bat,net,disk,fan,uptime"
     property string cfg_batteryDevice
 
     // ── Icon bindings (from configIcons.qml, shared across config pages) ───
 
     property string cfg_cpuIcon:     "am-cpu-symbolic"
     property string cfg_ramIcon:     "nvidia-ram-symbolic"
+    property string cfg_swapIcon:    "nvidia-ram-symbolic"
     property string cfg_tempIcon:    "temperature-normal"
     property string cfg_gpuIcon:     "gpu-symbolic"
     property string cfg_batteryIcon: "battery-good"
@@ -78,7 +84,7 @@ KCM.SimpleKCM {
 
     // ── Category metadata ──────────────────────────────────────────────────
 
-    readonly property var allKeys: ["cpu", "ram", "temp", "gpu", "bat", "net", "disk", "fan", "uptime"]
+    readonly property var allKeys: ["cpu", "ram", "swap", "temp", "gpu", "bat", "net", "disk", "fan", "uptime"]
 
     function resolveIcon(name) {
         switch (name) {
@@ -98,6 +104,7 @@ KCM.SimpleKCM {
         switch (key) {
             case "cpu":    name = cfg_cpuIcon; break;
             case "ram":    name = cfg_ramIcon; break;
+            case "swap":   name = cfg_swapIcon; break;
             case "temp":   name = cfg_tempIcon; break;
             case "gpu":    name = cfg_gpuIcon; break;
             case "bat":    name = cfg_batteryIcon; break;
@@ -120,6 +127,12 @@ KCM.SimpleKCM {
             {key: "percentage", label: i18n("Percentage")},
             {key: "used",       label: i18n("Used / Total")},
             {key: "temp",       label: i18n("Temperature (DDR5)")}
+        ]},
+        "swap": { label: i18n("Swap"),             subs: [
+            {key: "percent", label: i18n("Usage (%)")},
+            {key: "used",    label: i18n("Used")},
+            {key: "free",    label: i18n("Free")},
+            {key: "total",   label: i18n("Total")}
         ]},
         "temp": { label: i18n("Temperature"),      subs: []},
         "gpu":  { label: i18n("GPU"),              subs: [
@@ -152,6 +165,7 @@ KCM.SimpleKCM {
         switch (key) {
             case "cpu":  str = cfg_cpuSubMetrics;  break;
             case "ram":  str = cfg_ramSubMetrics;  break;
+            case "swap": str = cfg_swapSubMetrics; break;
             case "gpu":  str = cfg_gpuSubMetrics;  break;
             case "bat":  str = cfg_batSubMetrics;  break;
             case "net":  str = cfg_netSubMetrics;  break;
@@ -165,6 +179,7 @@ KCM.SimpleKCM {
         switch (key) {
             case "cpu":    return cfg_cpuEnabled;
             case "ram":    return cfg_ramEnabled;
+            case "swap":   return cfg_swapEnabled;
             case "temp":   return cfg_tempEnabled;
             case "gpu":    return cfg_gpuEnabled;
             case "bat":    return cfg_batEnabled;
@@ -180,6 +195,7 @@ KCM.SimpleKCM {
         switch (key) {
             case "cpu":    cfg_cpuEnabled    = val; break;
             case "ram":    cfg_ramEnabled    = val; break;
+            case "swap":   cfg_swapEnabled   = val; break;
             case "temp":   cfg_tempEnabled   = val; break;
             case "gpu":    cfg_gpuEnabled    = val; break;
             case "bat":    cfg_batEnabled    = val; break;
@@ -194,6 +210,7 @@ KCM.SimpleKCM {
         switch (key) {
             case "cpu":    return cfg_cpuVisibility;
             case "ram":    return cfg_ramVisibility;
+            case "swap":   return cfg_swapVisibility;
             case "temp":   return cfg_tempVisibility;
             case "gpu":    return cfg_gpuVisibility;
             case "bat":    return cfg_batVisibility;
@@ -209,6 +226,7 @@ KCM.SimpleKCM {
         switch (key) {
             case "cpu":    cfg_cpuVisibility    = val; break;
             case "ram":    cfg_ramVisibility    = val; break;
+            case "swap":   cfg_swapVisibility   = val; break;
             case "temp":   cfg_tempVisibility   = val; break;
             case "gpu":    cfg_gpuVisibility    = val; break;
             case "bat":    cfg_batVisibility    = val; break;
@@ -233,6 +251,7 @@ KCM.SimpleKCM {
         switch (key) {
             case "cpu":  cfg_cpuSubMetrics  = str; break;
             case "ram":  cfg_ramSubMetrics  = str; break;
+            case "swap": cfg_swapSubMetrics = str; break;
             case "gpu":  cfg_gpuSubMetrics  = str; break;
             case "bat":  cfg_batSubMetrics  = str; break;
             case "net":  cfg_netSubMetrics  = str; break;
@@ -589,6 +608,7 @@ KCM.SimpleKCM {
                             // Label field
                             RowLayout {
                                 visible: catDelegate.key === "cpu" || catDelegate.key === "ram" ||
+                                         catDelegate.key === "swap" ||
                                          catDelegate.key === "net" || catDelegate.key === "disk"
                                 spacing: Kirigami.Units.smallSpacing
                                 Label { text: i18n("Label:"); opacity: 0.8 }
@@ -598,6 +618,7 @@ KCM.SimpleKCM {
                                         switch (catDelegate.key) {
                                             case "cpu":  return cfg_cpuLabel;
                                             case "ram":  return cfg_ramLabel;
+                                            case "swap": return cfg_swapLabel;
                                             case "net":  return cfg_netLabel;
                                             case "disk": return cfg_diskLabel;
                                         }
@@ -609,6 +630,7 @@ KCM.SimpleKCM {
                                         switch (catDelegate.key) {
                                             case "cpu":  cfg_cpuLabel  = v; break;
                                             case "ram":  cfg_ramLabel  = v; break;
+                                            case "swap": cfg_swapLabel = v; break;
                                             case "net":  cfg_netLabel  = v; break;
                                             case "disk": cfg_diskLabel = v; break;
                                         }

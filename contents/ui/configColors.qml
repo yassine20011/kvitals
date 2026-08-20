@@ -24,6 +24,8 @@ KCM.SimpleKCM {
     property alias cfg_systemCriticalThreshold: systemCritSlider.value
     property alias cfg_ramWarningThreshold: ramWarnSlider.value
     property alias cfg_ramCriticalThreshold: ramCritSlider.value
+    property alias cfg_swapWarningThreshold: swapWarnSlider.value
+    property alias cfg_swapCriticalThreshold: swapCritSlider.value
     property alias cfg_ramTempWarningThreshold: ramTempWarnSlider.value
     property alias cfg_ramTempCriticalThreshold: ramTempCritSlider.value
     property alias cfg_gpuWarningThreshold: gpuWarnSlider.value
@@ -480,6 +482,20 @@ KCM.SimpleKCM {
             }
             Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: ramWarnSlider.value >= ramCritSlider.value ? cfg_criticalColor : "transparent" }
 
+            // --- Swap Usage ---
+            Label { text: i18n("Swap Usage") }
+            RowLayout {
+                Layout.fillWidth: true
+                Slider { id: swapWarnSlider; from: 10; to: 100; stepSize: 5; value: 70; Layout.fillWidth: true }
+                Label { text: Math.round(swapWarnSlider.value) + "%"; Layout.preferredWidth: 40 }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Slider { id: swapCritSlider; from: 10; to: 100; stepSize: 5; value: 90; Layout.fillWidth: true }
+                Label { text: Math.round(swapCritSlider.value) + "%"; Layout.preferredWidth: 40 }
+            }
+            Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: swapWarnSlider.value >= swapCritSlider.value ? cfg_criticalColor : "transparent" }
+
             // --- RAM Temperature ---
             Label { text: i18n("RAM Temp") }
             RowLayout {
@@ -586,6 +602,7 @@ KCM.SimpleKCM {
                 tempWarnSlider.value = 60; tempCritSlider.value = 85
                 systemWarnSlider.value = 60; systemCritSlider.value = 85
                 ramWarnSlider.value = 70;  ramCritSlider.value = 90
+                swapWarnSlider.value = 70; swapCritSlider.value = 90
                 ramTempWarnSlider.value = 60; ramTempCritSlider.value = 85
                 gpuWarnSlider.value = 70;  gpuCritSlider.value = 90
                 gpuTempWarnSlider.value = 60; gpuTempCritSlider.value = 85
