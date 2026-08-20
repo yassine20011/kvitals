@@ -20,7 +20,7 @@ All notable changes to KVitals will be documented in this file.
 
 ### Fixed
 
-- **Memory and Subscription Leaks**: Ensured disabling a metric category terminates its underlying `ksystemstats` subscriptions immediately.
+- **Disk Subscription Cleanup**: Ensured disabling the disk metric category terminates its underlying `ksystemstats` subscriptions immediately.
 - **Multi-GPU Selection State**: Fixed GPU filter parsing to support selective monitoring and power-saving suspension of discrete GPUs on hybrid laptops.
 
 ## [2.13.1] - 2026-07-31
