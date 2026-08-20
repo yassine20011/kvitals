@@ -18,7 +18,7 @@ Item {
     property string tempUnit: "C"
 
     // Global GPU sub-metric visibility e.g. "usage,vram,temp" or "usage,temp"
-    property string gpuSubMetrics: "usage,vram,temp"
+    property string gpuSubMetrics: MetricDefinitions.GROUPS.gpu.defaultSubMetrics
 
     // Legacy per-GPU sub-metric visibility (fallback compatibility)
     property string gpuMetrics: ""
@@ -69,24 +69,25 @@ Item {
 
     // Parse sub-metrics string e.g. "gpu0:usage,vram,temp|gpu1:usage,temp" or global "usage,vram,temp"
     function parseGpuSubMetrics(str, gpuId) {
-        if (!str || str.length === 0) return ["usage", "vram", "temp"];
+        var defaultList = MetricDefinitions.GROUPS.gpu.defaultSubMetrics.split(",").map(function(s){ return s.trim(); });
+        if (!str || str.length === 0) return defaultList;
         if (str.indexOf(":") >= 0) {
             var pairs = str.split("|");
             for (var i = 0; i < pairs.length; i++) {
                 var sep = pairs[i].indexOf(":");
                 if (sep > 0 && pairs[i].substring(0, sep) === gpuId) {
                     var subs = pairs[i].substring(sep + 1).split(",").map(function(s){ return s.trim(); }).filter(function(m){
-                        return m === "usage" || m === "vram" || m === "temp";
+                        return m.length > 0;
                     });
-                    return subs.length > 0 ? subs : ["usage", "vram", "temp"];
+                    return subs.length > 0 ? subs : defaultList;
                 }
             }
-            return ["usage", "vram", "temp"];
+            return defaultList;
         }
-        var list = str.split(",").map(function(s){ return s.trim(); }).filter(function(m){
-            return m === "usage" || m === "vram" || m === "temp";
+        var list = str.split(",").map(function(s){ return s.trim(); }).filter(function(s){
+            return s.length > 0;
         });
-        return list.length > 0 ? list : ["usage", "vram", "temp"];
+        return list.length > 0 ? list : defaultList;
     }
 
     function refreshDiscovered() {

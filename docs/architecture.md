@@ -70,7 +70,7 @@ A `QtObject` that wraps every `Plasmoid.configuration` value and provides typed 
 - Sub-metric selection per group and `isSubMetricEnabled(group, subKey)`
 - Visibility target per group (`"compact"`, `"widget"`, `"both"`) and `isMetricVisible(group, subKey, view)`
 - Labels, icons, and threshold values with fallback defaults
-- `orderedKeys` — the final display order, filled from the user's `metricOrder` setting with any missing groups appended from `MetricDefinitions.ALL_GROUP_KEYS`
+- `orderedKeys`: The final display order, filled from the user's `metricOrder` setting with any missing groups appended from `MetricDefinitions.ALL_GROUP_KEYS`.
 
 ### `MetricStore.qml`
 
@@ -334,15 +334,115 @@ ui/configColors.qml      <- font color, warning/critical colors, thresholds
 
 All values flow through `MetricConfig.qml`. Nothing in the sensor or view layer reads `Plasmoid.configuration` directly.
 
-## Adding a new sensor
+## Adding new metrics or hardware categories
 
-1. Create `contents/ui/sensors/NewSensor.qml` exposing formatted value properties.
-2. Register it in `sensors/qmldir`.
-3. Add an entry (or entries) to `MetricDefinitions.DEFINITIONS` and `GROUPS`.
-4. Add config entries to `config/main.xml` and expose them in `MetricConfig.qml`.
-5. Instantiate the sensor in `main.qml` and pass it to `MetricStore` via `sensors`.
-6. Add a metric push block in `MetricStore.metrics` for the new group.
-7. Add toggle checkboxes in `configMetrics.qml`.
+The data pipeline separates hardware polling, metric definitions, configuration, and presentation. How you add telemetry depends on whether you are extending an existing hardware category or introducing an entirely new one.
+
+### Workflow A: Adding a sub-metric to an existing group
+
+This is the standard workflow for adding new readings to an existing module (such as adding Swap to Memory, Power to Battery, or VRAM to GPU).
+
+For optional sub-metrics (disabled by default until selected by the user in settings), you do not need to modify `HardwareDiscovery.qml`, `sensors/qmldir`, `main.qml`, `MetricConfig.qml`, or the view components (`CompactView.qml`, `FullView.qml`).
+
+1. **Register in `MetricDefinitions.js` (`contents/ui/models/MetricDefinitions.js`)**:
+   Add a definition object under `DEFINITIONS["<group>.<subKey>"]`:
+   ```javascript
+   "ram.swap": {
+       id: "ram.swap",
+       group: "ram",
+       subKey: "swap",
+       sensorId: "memory/swap/used",
+       label: "Swap Usage",
+       chartKey: "swap",
+       chartMax: 100,
+       thresholdType: "normal",
+       thresholdKey: "ram"
+   }
+   ```
+
+2. **Poll and format in the sensor module (`contents/ui/sensors/<Group>Sensors.qml`)**:
+   Subscribe to the required sensor path (via `Sensors.Sensor` or `Sensors.SensorDataModel`) and expose reactive value properties (a numeric scalar and/or formatted string):
+   ```qml
+   readonly property real swapPercentage: ...
+   readonly property string swapValue: ...
+   ```
+
+3. **Aggregate in `MetricStore.qml` (`contents/ui/models/MetricStore.qml`)**:
+   In the `metrics` property getter, push the normalized metric into the list using `_createMetric`:
+   ```qml
+   list.push(_createMetric("ram.swap", {
+       value: s.memory.swapPercentage,
+       displayValue: s.memory.swapValue,
+       status: !isNaN(s.memory.swapPercentage) ? "ready" : "loading"
+   }));
+   ```
+   `_createMetric` automatically verifies the Metric Contract, checks visibility via `MetricConfig.isMetricVisible()`, resolves threshold colors, and handles sparkline history buffering.
+
+4. **Add UI toggle in `configMetrics.qml` (`contents/ui/configMetrics.qml`)**:
+   Add the sub-metric entry to `metricMeta[group].subs`:
+   ```javascript
+   { key: "swap", label: i18n("Swap") }
+   ```
+   The configuration page dynamically creates the toggle checkbox and serializes the choice to `cfg_<group>SubMetrics`.
+
+5. **(Optional) Enable by default for new installations**:
+   If the new sub-metric should be enabled out of the box on fresh installations:
+   - Add the key to `GROUPS[group].defaultSubMetrics` in `contents/ui/models/MetricDefinitions.js` (which serves as the source of truth for `MetricConfig.qml` and `configMetrics.qml`).
+   - Update the static `<default>` value for `<group>SubMetrics` in `contents/config/main.xml` (required by KDE's KConfig schema).
+
+Views remain sensor-agnostic. `ViewHelpers.js` groups and routes the metric to `CompactView` and `FullView` automatically.
+
+---
+
+### Workflow B: Adding a new hardware category / sensor module
+
+Adding an entirely new category (such as NPU or Liquid Cooler) requires creating a dedicated sensor module and registering it across the architecture layers.
+
+`HardwareDiscovery.qml` is generic and maintains a single `SensorTreeModel` query cache for the entire widget. You do not need to modify `HardwareDiscovery.qml` unless you need a new generic topology query method.
+
+1. **Sensor layer (`contents/ui/sensors/`)**:
+   - Create `contents/ui/sensors/NewSensors.qml`. Accept the shared `discovery` property, query required sensors, and expose clean numeric and string properties.
+   - Register the new component in `contents/ui/sensors/qmldir`:
+     ```
+     NewSensors 1.0 NewSensors.qml
+     ```
+   - In `contents/ui/main.qml`, instantiate `NewSensors` inside the `sensorLoader.sourceComponent` Item and expose an alias:
+     ```qml
+     property alias newGroup: _newGroup
+     NewSensors {
+         id: _newGroup
+         discovery: _discovery
+         updateInterval: metricConfig.updateInterval
+     }
+     ```
+
+2. **Catalog and models layer (`contents/ui/models/`)**:
+   - In `MetricDefinitions.js`:
+     - Add group metadata to `GROUPS` (id, defaultLabel, defaultIcon, defaultSubMetrics).
+     - Add group ID to `ALL_GROUP_KEYS`.
+     - If the hardware relies on dynamic discovery patterns, add regex to `PATTERNS`.
+     - Add metric definitions to `DEFINITIONS`.
+   - In `contents/config/main.xml`:
+     - Add entries for `<group>Enabled`, `<group>SubMetrics`, `<group>Visibility`, `<group>Label`, `<group>Icon`, and optional thresholds.
+   - In `MetricConfig.qml`:
+     - Expose typed configuration properties: `readonly property bool newGroupEnabled: Plasmoid.configuration.newGroupEnabled`, etc.
+     - Add cases to `isGroupEnabled()`, `getGroupVisibility()`, `isSubMetricEnabled()`, `getGroupLabel()`, and `getGroupIcon()`.
+   - In `MetricStore.qml`:
+     - Add a block in `metrics` pushing `_createMetric("<group>.<subKey>", { ... })` objects.
+
+3. **Configuration UI layer (`contents/ui/`)**:
+   - In `configMetrics.qml`:
+     - Add `cfg_<group>*` properties.
+     - Add group ID to `allKeys`.
+     - Add category definition to `metricMeta`.
+     - Add switch cases to `iconFor()`, `subMetrics()`, `isEnabled()`, `setEnabled()`, `visibilityFor()`, `setVisibility()`, and `toggleSubMetric()`.
+   - In `configIcons.qml`:
+     - Add `cfg_<group>Icon` property, an `IconDialog`, a row in `FormLayout`, and a reset entry in the reset button handler.
+   - In `configColors.qml` (if quantitative thresholds apply):
+     - Add threshold properties, sliders in the grid, and reset entries.
+
+4. **Views layer (`contents/ui/CompactView.qml`, `contents/ui/FullView.qml`)**:
+   - No view modifications required. `ViewHelpers.js` processes `MetricStore.metrics` and formats the compact panel items and popup rows automatically.
 
 ## Project structure
 

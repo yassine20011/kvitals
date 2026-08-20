@@ -57,12 +57,12 @@ QtObject {
     }
 
     // Sub-metric comma-separated lists
-    readonly property string cpuSubMetrics:  Plasmoid.configuration.cpuSubMetrics  || "usage,freq,temp"
-    readonly property string ramSubMetrics:  Plasmoid.configuration.ramSubMetrics  || "percentage"
-    readonly property string gpuSubMetrics:  Plasmoid.configuration.gpuSubMetrics  || "usage,vram,temp"
-    readonly property string batSubMetrics:  Plasmoid.configuration.batSubMetrics  || "percentage,power"
-    readonly property string netSubMetrics:  Plasmoid.configuration.netSubMetrics  || "down,up"
-    readonly property string diskSubMetrics: Plasmoid.configuration.diskSubMetrics || "read,write"
+    readonly property string cpuSubMetrics:  Plasmoid.configuration.cpuSubMetrics  || Defs.GROUPS.cpu.defaultSubMetrics
+    readonly property string ramSubMetrics:  Plasmoid.configuration.ramSubMetrics  || Defs.GROUPS.ram.defaultSubMetrics
+    readonly property string gpuSubMetrics:  Plasmoid.configuration.gpuSubMetrics  || Defs.GROUPS.gpu.defaultSubMetrics
+    readonly property string batSubMetrics:  Plasmoid.configuration.batSubMetrics  || Defs.GROUPS.bat.defaultSubMetrics
+    readonly property string netSubMetrics:  Plasmoid.configuration.netSubMetrics  || Defs.GROUPS.net.defaultSubMetrics
+    readonly property string diskSubMetrics: Plasmoid.configuration.diskSubMetrics || Defs.GROUPS.disk.defaultSubMetrics
 
     // Where each group appears: "compact" (panel only), "widget" (popup only),
     // or "both". isMetricVisible() enforces this per sub-metric.
