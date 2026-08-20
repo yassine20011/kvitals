@@ -30,11 +30,26 @@ Item {
         return chartHistory[key];
     }
 
-    // Appends val to the chartKey ring buffer. Returns false without writing if
-    // val is not a finite non-negative number.
+    // Normalizes input to a finite numeric scalar or NaN sentinel
+    function _normalizeValue(val) {
+        if (typeof val === "number" && isFinite(val) && !isNaN(val))
+            return val;
+        return NaN;
+    }
+
+    // Normalizes input to string
+    function _normalizeString(val, fallback) {
+        if (typeof val === "string")
+            return val;
+        if (val !== undefined && val !== null)
+            return String(val);
+        return fallback !== undefined ? fallback : "";
+    }
+
+    // Appends val to the chartKey ring buffer. Rejects non-finite numbers.
     function _pushHistory(key, val) {
-        if (!key) return false;
-        if (typeof val !== "number" || isNaN(val) || val < 0) return false;
+        if (!key || typeof key !== "string") return false;
+        if (typeof val !== "number" || isNaN(val) || !isFinite(val)) return false;
         if (!chartHistory[key]) chartHistory[key] = [];
         chartHistory[key].push(val);
         if (chartHistory[key].length > maxChartPoints) chartHistory[key].shift();
@@ -51,7 +66,7 @@ Item {
             var changed = false;
             for (var i = 0; i < list.length; i++) {
                 var m = list[i];
-                if (m.hasChart && m.chartKey && typeof m.value === "number") {
+                if (m.hasChart && m.chartKey && typeof m.value === "number" && isFinite(m.value) && !isNaN(m.value)) {
                     if (root._pushHistory(m.chartKey, m.value))
                         changed = true;
                 }
@@ -60,11 +75,9 @@ Item {
         }
     }
 
-    // _resolveMetricColor picks a color based on the numeric value and the
-    // metric's threshold settings. Returns baseTextColor when threshold colors
-    // are off, the type is "none", or the value is not a number.
+    // Resolves color based on numeric value and threshold settings
     function _resolveMetricColor(numVal, thresholdType, thresholdKey) {
-        if (!root.config || !root.config.enableThresholdColors || thresholdType === "none" || isNaN(numVal))
+        if (!root.config || !root.config.enableThresholdColors || thresholdType === "none" || typeof numVal !== "number" || isNaN(numVal) || !isFinite(numVal))
             return root.baseTextColor;
 
         var warn = root.config.getWarningThreshold(thresholdKey);
@@ -74,51 +87,51 @@ Item {
         return Utils.resolveColor(numVal, warn, crit, root.config.warningColor, root.config.criticalColor, root.baseTextColor, inverted);
     }
 
-    // _createMetric builds one metric object from a DEFINITIONS entry and a set
-    // of runtime overrides from the sensor layer. Override fields always win.
-    //
-    // The returned object shape is the metric "struct" used everywhere else:
-    //   id, defId, group, subKey, deviceId, deviceName
-    //   label, groupLabel, subLabel, prefix
-    //   icon, secondaryIcon
-    //   value (numeric), displayValue (string), popupDisplay, rawString
-    //   color, status
-    //   chartKey, chartMax, hasChart
-    //   visibleInCompact, visibleInPopup
+    // Constructs a normalized metric object conforming to the Metric Contract
     function _createMetric(defId, overrides) {
+        overrides = overrides || {};
         var def = Defs.DEFINITIONS[defId] || {};
         var cfg = root.config;
-        var group = overrides.group || def.group;
-        var subKey = overrides.subKey || def.subKey;
-        var rawVal = overrides.value !== undefined ? overrides.value : NaN;
+        var group = _normalizeString(overrides.group || def.group, "");
+        var subKey = _normalizeString(overrides.subKey || def.subKey, "");
+        var rawVal = _normalizeValue(overrides.value);
         var threshType = def.thresholdType || "none";
         var threshKey = def.thresholdKey || group;
         var clr = overrides.color !== undefined ? overrides.color : _resolveMetricColor(rawVal, threshType, threshKey);
         var defIcon = def.iconOverrideKey ? cfg[def.iconOverrideKey] : cfg.getGroupIcon(group);
 
-        var devId = overrides.deviceId || "";
+        var displayVal = _normalizeString(overrides.displayValue, "");
+        var popupDisplay = _normalizeString(overrides.popupDisplay, displayVal);
+        var rawStr = _normalizeString(overrides.rawString, displayVal);
+        var chartKey = overrides.chartKey !== undefined ? _normalizeString(overrides.chartKey, "") : (def.chartKey || "");
+        var chartMax = typeof overrides.chartMax === "number" && isFinite(overrides.chartMax) ? overrides.chartMax : (def.chartMax || 0);
+        var hasChart = Boolean(chartKey && chartKey.length > 0);
+
+        var devId = _normalizeString(overrides.deviceId, "");
+        var devName = _normalizeString(overrides.deviceName, "");
+
         return {
-            id: overrides.id || def.id,
+            id: _normalizeString(overrides.id, def.id || defId),
             defId: defId,
             group: group,
             subKey: subKey,
             deviceId: devId,
-            deviceName: overrides.deviceName || "",
-            label: overrides.label || (group === "ram" && subKey === "percentage" ? cfg.ramLabel : (cfg.getGroupLabel(group) + " " + def.label)),
-            groupLabel: overrides.groupLabel || cfg.getGroupLabel(group),
-            subLabel: overrides.subLabel !== undefined ? overrides.subLabel : (def.prefix || ""),
-            prefix: overrides.prefix !== undefined ? overrides.prefix : (def.prefix || ""),
+            deviceName: devName,
+            label: _normalizeString(overrides.label, (group === "ram" && subKey === "percentage" ? cfg.ramLabel : (cfg.getGroupLabel(group) + " " + def.label))),
+            groupLabel: _normalizeString(overrides.groupLabel, cfg.getGroupLabel(group)),
+            subLabel: _normalizeString(overrides.subLabel !== undefined ? overrides.subLabel : (def.prefix || ""), ""),
+            prefix: _normalizeString(overrides.prefix !== undefined ? overrides.prefix : (def.prefix || ""), ""),
             icon: overrides.icon || defIcon,
             secondaryIcon: overrides.secondaryIcon !== undefined ? overrides.secondaryIcon : (def.secondaryIcon ? cfg.tempIcon : ""),
             value: rawVal,
-            displayValue: overrides.displayValue || "",
-            popupDisplay: overrides.popupDisplay || overrides.displayValue || "",
-            rawString: overrides.rawString || overrides.displayValue || "",
+            displayValue: displayVal,
+            popupDisplay: popupDisplay,
+            rawString: rawStr,
             color: clr,
-            status: overrides.status || "ready",
-            chartKey: overrides.chartKey !== undefined ? overrides.chartKey : (def.chartKey || ""),
-            chartMax: overrides.chartMax !== undefined ? overrides.chartMax : (def.chartMax || 0),
-            hasChart: def.chartKey && def.chartKey.length > 0,
+            status: _normalizeString(overrides.status, "ready"),
+            chartKey: chartKey,
+            chartMax: chartMax,
+            hasChart: hasChart,
             visibleInCompact: cfg.isMetricVisible(group, subKey, "compact", devId),
             visibleInPopup: cfg.isMetricVisible(group, subKey, "widget", devId)
         };

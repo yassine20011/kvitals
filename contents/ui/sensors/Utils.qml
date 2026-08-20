@@ -100,7 +100,7 @@ QtObject {
 
     function resolveColor(numericValue, warningThreshold, criticalThreshold,
                           warningColor, criticalColor, baseColor, inverted) {
-        if (isNaN(numericValue))
+        if (typeof numericValue !== "number" || isNaN(numericValue) || !isFinite(numericValue))
             return baseColor;
         if (inverted) {
             if (numericValue <= criticalThreshold) return criticalColor;
