@@ -64,6 +64,7 @@ PlasmoidItem {
             property alias discovery: _discovery
             property alias cpu:       _cpu
             property alias memory:    _memory
+            property alias swap:      _swap
             property alias temp:      _temp
             property alias gpu:       _gpu
             property alias battery:   _battery
@@ -83,6 +84,11 @@ PlasmoidItem {
 
             MemorySensors {
                 id: _memory
+                updateInterval: metricConfig.updateInterval
+            }
+
+            SwapSensors {
+                id: _swap
                 updateInterval: metricConfig.updateInterval
             }
 

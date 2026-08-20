@@ -26,6 +26,7 @@ KCM.SimpleKCM {
 
     property string cfg_cpuIcon: "am-cpu-symbolic"
     property string cfg_ramIcon: "nvidia-ram-symbolic"
+    property string cfg_swapIcon: "nvidia-ram-symbolic"
     property string cfg_tempIcon: "temperature-normal"
     property string cfg_gpuIcon: "gpu-symbolic"
     property string cfg_batteryIcon: "battery-good"
@@ -42,6 +43,10 @@ KCM.SimpleKCM {
     KIconThemes.IconDialog {
         id: ramIconDialog
         onIconNameChanged: if (iconName) cfg_ramIcon = iconName
+    }
+    KIconThemes.IconDialog {
+        id: swapIconDialog
+        onIconNameChanged: if (iconName) cfg_swapIcon = iconName
     }
     KIconThemes.IconDialog {
         id: tempIconDialog
@@ -89,6 +94,12 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: i18n("RAM:")
             Kirigami.Icon { source: resolveIcon(cfg_ramIcon); isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
             Button { text: i18n("Change..."); onClicked: ramIconDialog.open(); icon.name: "document-edit" }
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Swap:")
+            Kirigami.Icon { source: resolveIcon(cfg_swapIcon); isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
+            Button { text: i18n("Change..."); onClicked: swapIconDialog.open(); icon.name: "document-edit" }
         }
 
         RowLayout {
@@ -146,6 +157,7 @@ KCM.SimpleKCM {
             onClicked: {
                 cfg_cpuIcon = "am-cpu-symbolic";
                 cfg_ramIcon = "nvidia-ram-symbolic";
+                cfg_swapIcon = "nvidia-ram-symbolic";
                 cfg_tempIcon = "temperature-normal";
                 cfg_gpuIcon = "gpu-symbolic";
                 cfg_batteryIcon = "battery-good";
