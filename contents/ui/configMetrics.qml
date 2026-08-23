@@ -15,6 +15,7 @@ KCM.SimpleKCM {
     // ── cfg_ bindings ──────────────────────────────────────────────────────
 
     property string cfg_pinnedMetrics: ""
+    property bool cfg_configMigrated: true
     property string cfg_cpuLabel: "CPU"
     property string cfg_ramLabel: "RAM"
     property string cfg_swapLabel: "SWAP"

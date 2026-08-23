@@ -20,6 +20,7 @@ KCM.SimpleKCM {
     property string cfg_networkUnit: "bytes"
     property string cfg_fanUnit: "rpm"
     property bool cfg_mergeFamilyMetrics: true
+    property bool cfg_configMigrated: true
 
     readonly property var displayModes: ["text", "icons", "icons+text", "none"]
     readonly property var displayModeLabels: [i18n("Text"), i18n("Icons"), i18n("Icons + Text"), i18n("None")]

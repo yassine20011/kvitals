@@ -158,27 +158,16 @@ PlasmoidItem {
         onTriggered: sensorLoader.active = true
     }
 
-    Timer {
-        id: migrationTimer
-        interval: 200
-        repeat: false
-        onTriggered: {
-            if (!Plasmoid.configuration.pinnedMetrics || Plasmoid.configuration.pinnedMetrics.length === 0) {
+    Connections {
+        target: sensorLoader
+        function onStatusChanged() {
+            if (sensorLoader.status === Loader.Ready && !Plasmoid.configuration.configMigrated) {
                 var hw = {
                     gpus: sensorLoader.item ? sensorLoader.item.gpu.discoveredGpus : [],
                     disks: sensorLoader.item ? sensorLoader.item.disk.discoveredDisks : [],
                     fans: sensorLoader.item ? sensorLoader.item.fans.discoveredFans : []
                 };
                 metricConfig.migrateLegacyConfig(hw);
-            }
-        }
-    }
-
-    Connections {
-        target: sensorLoader
-        function onStatusChanged() {
-            if (sensorLoader.status === Loader.Ready) {
-                migrationTimer.start();
             }
         }
     }

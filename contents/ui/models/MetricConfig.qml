@@ -17,6 +17,8 @@ QtObject {
         return name;
     }
 
+    readonly property bool configMigrated: Boolean(target && target[propertyPrefix + "configMigrated"])
+
     // Pinned metrics on Plasma panel
     readonly property string pinnedMetrics: (target && target[propertyPrefix + "pinnedMetrics"] !== undefined)
         ? target[propertyPrefix + "pinnedMetrics"]
@@ -84,8 +86,12 @@ QtObject {
     }
 
     function migrateLegacyConfig(hardware) {
+        var migProp = propertyPrefix + "configMigrated";
+        if (target && target[migProp]) return;
+
         var prop = propertyPrefix + "pinnedMetrics";
         if (target && target[prop] !== undefined && target[prop] && target[prop].length > 0) {
+            if (target && target[migProp] !== undefined) target[migProp] = true;
             return;
         }
 
@@ -111,16 +117,19 @@ QtObject {
                 if (hw.hasBattery) migrated.push("bat/percentage");
             } else if (group === "gpu") {
                 if (hw.gpus && hw.gpus.length > 0) {
-                    migrated.push("gpu:" + hw.gpus[0] + "/usage");
+                    var gid = typeof hw.gpus[0] === "object" ? hw.gpus[0].id : hw.gpus[0];
+                    migrated.push("gpu:" + gid + "/usage");
                 }
             } else if (group === "disk") {
                 if (hw.disks && hw.disks.length > 0) {
-                    migrated.push("disk:" + hw.disks[0] + "/read");
-                    migrated.push("disk:" + hw.disks[0] + "/write");
+                    var did = typeof hw.disks[0] === "object" ? hw.disks[0].id : hw.disks[0];
+                    migrated.push("disk:" + did + "/read");
+                    migrated.push("disk:" + did + "/write");
                 }
             } else if (group === "fan") {
                 if (hw.fans && hw.fans.length > 0) {
-                    migrated.push("fan:" + hw.fans[0] + "/speed");
+                    var fid = typeof hw.fans[0] === "object" ? hw.fans[0].id : hw.fans[0];
+                    migrated.push("fan:" + fid + "/speed");
                 }
             } else if (group === "uptime") {
                 migrated.push("uptime/uptime");
@@ -129,6 +138,9 @@ QtObject {
 
         if (target && target[prop] !== undefined) {
             target[prop] = migrated.join(",");
+        }
+        if (target && target[migProp] !== undefined) {
+            target[migProp] = true;
         }
     }
 
@@ -148,6 +160,7 @@ QtObject {
 
     function isGpuSelected(deviceId) {
         var raw = (target && target[propertyPrefix + "gpuSelection"]) || "";
+        if (raw === "none") return false;
         if (!raw) return true; // all enabled by default
         var list = raw.split(",").map(function(s){ return s.trim(); });
         return list.indexOf(deviceId) !== -1;
@@ -155,7 +168,14 @@ QtObject {
 
     function setGpuSelected(deviceId, enabled, allDiscoveredGpuIds) {
         var raw = (target && target[propertyPrefix + "gpuSelection"]) || "";
-        var current = raw ? raw.split(",").map(function(s){ return s.trim(); }) : (allDiscoveredGpuIds ? allDiscoveredGpuIds.slice() : []);
+        var current;
+        if (raw === "none") {
+            current = [];
+        } else if (!raw) {
+            current = allDiscoveredGpuIds ? allDiscoveredGpuIds.slice() : [];
+        } else {
+            current = raw.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+        }
         var idx = current.indexOf(deviceId);
         if (enabled && idx === -1) {
             current.push(deviceId);
@@ -164,7 +184,7 @@ QtObject {
         }
         var prop = propertyPrefix + "gpuSelection";
         if (target && target[prop] !== undefined) {
-            target[prop] = current.join(",");
+            target[prop] = current.length === 0 ? "none" : current.join(",");
         }
     }
 
