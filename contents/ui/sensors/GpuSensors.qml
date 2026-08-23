@@ -54,15 +54,21 @@ Item {
     // Step 1: Discover available GPUs via HardwareDiscovery
     // -------------------------------------------------------------------------
 
-    // Parse "gpu0:Label A|gpu1:Label B" -> { gpu0: "Label A", gpu1: "Label B" }
     function parseGpuLabels(str) {
+        if (!str) return {};
+        if (typeof str === "object") return str;
+        var trimmed = String(str).trim();
+        if (trimmed.startsWith("{")) {
+            try {
+                return JSON.parse(trimmed);
+            } catch (e) {}
+        }
         var result = {};
-        if (!str) return result;
-        var pairs = str.split("|");
+        var pairs = trimmed.split("|");
         for (var i = 0; i < pairs.length; i++) {
             var sep = pairs[i].indexOf(":");
             if (sep > 0)
-                result[pairs[i].substring(0, sep)] = pairs[i].substring(sep + 1);
+                result[pairs[i].substring(0, sep).trim()] = pairs[i].substring(sep + 1).trim();
         }
         return result;
     }

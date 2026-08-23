@@ -1,15 +1,22 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import org.kde.plasma.components as PlasmaComponents
+import org.kde.plasma.plasmoid
+import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.kirigami as Kirigami
 
 ColumnLayout {
     id: fullView
-    spacing: Kirigami.Units.smallSpacing
-    Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-    Layout.preferredHeight: Kirigami.Units.gridUnit * 14
+    spacing: 0
+    Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+    Layout.preferredHeight: Kirigami.Units.gridUnit * 22
+    Layout.minimumWidth: Kirigami.Units.gridUnit * 15
+    Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+    Layout.minimumHeight: Kirigami.Units.gridUnit * 10
+    Layout.maximumHeight: Kirigami.Units.gridUnit * 36
 
-    required property var metricsModel
+    required property var groupsModel
     required property color baseTextColor
     required property color labelColor
     required property color iconColor
@@ -18,116 +25,286 @@ ColumnLayout {
     required property int chartVersion
     required property bool pinned
     signal togglePinned()
+    signal toggleMetricPin(string metricId)
+    signal refreshRequested()
 
-    RowLayout {
-        Layout.fillWidth: true
-        Layout.bottomMargin: Kirigami.Units.smallSpacing
-        PlasmaComponents.Label {
-            text: "KVitals"
-            font.bold: true
-            font.pixelSize: Kirigami.Theme.defaultFont.pixelSize * 1.2
-            Layout.alignment: Qt.AlignHCenter
-            Layout.fillWidth: true
+    readonly property int _rowHeight: Math.round(Kirigami.Units.gridUnit * 1.6)
+    readonly property int _iconSz: Kirigami.Units.iconSizes.small
+
+    // Persistent accordion expansion state across data updates
+    property var expandedGroups: ({})
+
+    function isGroupExpanded(key) {
+        return Boolean(expandedGroups[key]);
+    }
+
+    function toggleGroup(key) {
+        var copy = Object.assign({}, expandedGroups);
+        copy[key] = !copy[key];
+        expandedGroups = copy;
+    }
+
+    function resolveIcon(name) {
+        if (!name) return "configure";
+        if (name.indexOf("-symbolic") !== -1 && name.indexOf("/") === -1) {
+            return Qt.resolvedUrl("../icons/" + name + ".svg");
         }
-        PlasmaComponents.ToolButton {
-            icon.name: fullView.pinned ? "window-unpin" : "window-pin"
-            onClicked: fullView.togglePinned()
-            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+        return name;
+    }
+
+    Plasma5Support.DataSource {
+        id: executable
+        engine: "executable"
+        connectedSources: []
+        onNewData: (sourceName, data) => disconnectSource(sourceName)
+        function exec(cmd) {
+            connectSource(cmd);
         }
     }
 
-    Repeater {
-        model: fullView.metricsModel
+    ScrollView {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        clip: true
+        contentWidth: availableWidth
+        ScrollBar.vertical.policy: ScrollBar.AlwaysOff
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
-        delegate: RowLayout {
-            id: metricRow
-            required property var modelData
+        Column {
+            width: parent.width
+            spacing: 0
 
-            Layout.fillWidth: true
-            Layout.leftMargin: Kirigami.Units.largeSpacing
-            Layout.rightMargin: Kirigami.Units.largeSpacing
+            Repeater {
+                model: fullView.groupsModel
 
-            // chartVersion appears in the binding so it re-evaluates when the
-            // history arrays (mutated in place) receive new samples.
-            readonly property var _history: fullView.chartVersion >= 0
-                && modelData.chartKey && fullView.chartHistory[modelData.chartKey]
-                ? fullView.chartHistory[modelData.chartKey] : []
-            readonly property bool _hasChart: _history.length > 1
+                delegate: Column {
+                    id: groupBlock
+                    required property var modelData
+                    required property int index
+                    width: parent.width
 
-            Row {
-                visible: !!modelData.icon
-                spacing: 1
-                Layout.alignment: Qt.AlignVCenter
-                Repeater {
-                    model: {
-                        var src = modelData.icon;
-                        if (!src) return [];
-                        return typeof src === "string" ? [src] : src;
+                    readonly property string groupKey: modelData.key
+                    readonly property bool isExpanded: fullView.isGroupExpanded(groupKey)
+
+                    // Top-level Category Header (e.g. Temperature, Memory, Processor, Storage)
+                    PlasmaComponents.ItemDelegate {
+                        id: groupRow
+                        width: parent.width
+                        height: fullView._rowHeight
+
+                        contentItem: RowLayout {
+                            spacing: Kirigami.Units.smallSpacing
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Kirigami.Icon {
+                                source: fullView.resolveIcon(groupBlock.modelData.icon)
+                                isMask: true
+                                color: fullView.iconColor
+                                implicitWidth: fullView._iconSz
+                                implicitHeight: fullView._iconSz
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            PlasmaComponents.Label {
+                                text: groupBlock.modelData.groupLabel
+                                font.bold: true
+                                color: fullView.labelColor
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            PlasmaComponents.Label {
+                                visible: !!groupBlock.modelData.aggregateValue
+                                text: groupBlock.modelData.aggregateValue || ""
+                                color: groupBlock.modelData.aggregateColor || fullView.labelColor
+                                horizontalAlignment: Text.AlignRight
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            Kirigami.Icon {
+                                source: groupBlock.isExpanded ? "arrow-up" : "arrow-right"
+                                isMask: true
+                                color: fullView.baseTextColor
+                                opacity: 0.45
+                                implicitWidth: 10
+                                implicitHeight: 10
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+                        }
+
+                        onClicked: fullView.toggleGroup(groupBlock.groupKey)
                     }
-                    delegate: Kirigami.Icon {
-                        source: modelData
-                        isMask: true
-                        color: fullView.iconColor
-                        width: Kirigami.Units.iconSizes.small
-                        height: Kirigami.Units.iconSizes.small
+
+                    // Expanded Group Sub-sections & Metric List
+                    Column {
+                        width: parent.width
+                        visible: groupBlock.isExpanded
+
+                        Repeater {
+                            model: groupBlock.modelData.sections
+
+                            delegate: Column {
+                                id: secBlock
+                                required property var modelData
+                                required property int index
+                                width: parent.width
+
+                                // Optional Sub-section header
+                                PlasmaComponents.Label {
+                                    visible: !!secBlock.modelData.sectionLabel
+                                    text: secBlock.modelData.sectionLabel || ""
+                                    font.bold: true
+                                    font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                                    color: fullView.labelColor
+                                    opacity: 0.7
+                                    leftPadding: Kirigami.Units.gridUnit
+                                    topPadding: 4
+                                    bottomPadding: 2
+                                }
+
+                                // Metric Items in this section
+                                Repeater {
+                                    model: secBlock.modelData.metrics
+
+                                    delegate: PlasmaComponents.ItemDelegate {
+                                        id: metricRow
+                                        required property var modelData
+                                        required property int index
+                                        width: parent.width
+                                        height: fullView._rowHeight
+
+                                        contentItem: RowLayout {
+                                            spacing: Kirigami.Units.smallSpacing
+                                            anchors.verticalCenter: parent.verticalCenter
+
+                                            // Pin checkmark indicator
+                                            Kirigami.Icon {
+                                                source: "dialog-ok-apply"
+                                                isMask: true
+                                                color: Kirigami.Theme.highlightColor
+                                                implicitWidth: 12
+                                                implicitHeight: 12
+                                                opacity: metricRow.modelData.isPinned ? 1.0 : 0.0
+                                                Layout.alignment: Qt.AlignVCenter
+                                                Layout.leftMargin: 4
+                                            }
+
+                                            // Metric icon
+                                            Kirigami.Icon {
+                                                source: fullView.resolveIcon(metricRow.modelData.icon)
+                                                isMask: true
+                                                color: fullView.iconColor
+                                                opacity: 0.65
+                                                implicitWidth: fullView._iconSz
+                                                implicitHeight: fullView._iconSz
+                                                Layout.alignment: Qt.AlignVCenter
+                                            }
+
+                                            // Metric Sub-label
+                                            PlasmaComponents.Label {
+                                                text: metricRow.modelData.subLabel || metricRow.modelData.label
+                                                color: fullView.labelColor
+                                                opacity: 0.8
+                                                Layout.fillWidth: true
+                                                elide: Text.ElideRight
+                                                Layout.alignment: Qt.AlignVCenter
+                                            }
+
+                                            // Metric Value
+                                            PlasmaComponents.Label {
+                                                text: metricRow.modelData.displayValue || "..."
+                                                font.bold: fullView.fontBold
+                                                color: metricRow.modelData.color || fullView.baseTextColor
+                                                horizontalAlignment: Text.AlignRight
+                                                Layout.alignment: Qt.AlignVCenter
+                                                Layout.rightMargin: Kirigami.Units.smallSpacing
+                                            }
+                                        }
+
+                                        onClicked: {
+                                            fullView.toggleMetricPin(metricRow.modelData.id);
+                                        }
+
+                                        PlasmaComponents.ToolTip {
+                                            text: metricRow.modelData.isPinned
+                                                ? i18n("Click to unpin from panel")
+                                                : i18n("Click to pin to panel")
+                                            visible: metricRow.hovered
+                                            delay: Kirigami.Units.toolTipDelay
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
 
-            PlasmaComponents.Label {
-                text: modelData.label
-                color: fullView.labelColor
-                opacity: 0.7
-                Layout.fillWidth: true
-                elide: Text.ElideRight
+            // Footer separator
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: fullView.baseTextColor
+                opacity: 0.12
             }
 
-            // Sparkline: last maxChartPoints samples, right-aligned so the
-            // newest sample is always at the right edge. Rows with a fixed
-            // range (percentages, temps: chartMax) scale to it so flat lines
-            // sit at their true level; rates scale to the window's maximum.
-            Canvas {
-                visible: metricRow._hasChart
-                Layout.preferredWidth: 80
-                Layout.preferredHeight: 24
-                Layout.alignment: Qt.AlignVCenter
-                Layout.leftMargin: Kirigami.Units.smallSpacing
+            // Footer actions
+            RowLayout {
+                width: parent.width
+                height: fullView._rowHeight
+                spacing: 0
 
-                property int _trigger: fullView.chartVersion
-                on_TriggerChanged: requestPaint()
+                Item { Layout.fillWidth: true }
 
-                onPaint: {
-                    var ctx = getContext("2d");
-                    if (!ctx) return;
-                    ctx.reset();
-
-                    var data = metricRow._history;
-                    if (data.length < 2) return;
-
-                    var maxPts = 60;
-                    var maxVal = Math.max(Math.max.apply(null, data), modelData.chartMax || 1);
-                    var step = width / (maxPts - 1);
-                    var offset = maxPts - data.length;
-                    var c = modelData.color;
-
-                    ctx.strokeStyle = Qt.rgba(c.r, c.g, c.b, 1);
-                    ctx.lineWidth = 1.5;
-                    ctx.beginPath();
-                    for (var i = 0; i < data.length; i++) {
-                        var x = (offset + i) * step;
-                        var y = height - (data[i] / maxVal) * (height - 4) - 2;
-                        if (i === 0) ctx.moveTo(x, y);
-                        else ctx.lineTo(x, y);
-                    }
-                    ctx.stroke();
+                PlasmaComponents.ToolButton {
+                    icon.name: "view-refresh-symbolic"
+                    implicitWidth: fullView._rowHeight
+                    implicitHeight: fullView._rowHeight
+                    ToolTip.text: i18n("Refresh")
+                    ToolTip.visible: hovered
+                    ToolTip.delay: Kirigami.Units.toolTipDelay
+                    onClicked: fullView.refreshRequested()
                 }
-            }
 
-            PlasmaComponents.Label {
-                text: modelData.value
-                font.bold: fullView.fontBold
-                color: modelData.color
-                horizontalAlignment: Text.AlignRight
+                PlasmaComponents.ToolButton {
+                    icon.name: "utilities-system-monitor"
+                    implicitWidth: fullView._rowHeight
+                    implicitHeight: fullView._rowHeight
+                    ToolTip.text: i18n("System Monitor")
+                    ToolTip.visible: hovered
+                    ToolTip.delay: Kirigami.Units.toolTipDelay
+                    onClicked: {
+                        executable.exec("plasma-systemmonitor || ksysguard");
+                    }
+                }
+
+                PlasmaComponents.ToolButton {
+                    icon.name: "configure"
+                    implicitWidth: fullView._rowHeight
+                    implicitHeight: fullView._rowHeight
+                    ToolTip.text: i18n("Configure KVitals...")
+                    ToolTip.visible: hovered
+                    ToolTip.delay: Kirigami.Units.toolTipDelay
+                    onClicked: {
+                        var act = Plasmoid.internalAction("configure") || Plasmoid.action("configure");
+                        if (act) {
+                            act.trigger();
+                        }
+                    }
+                }
+
+                PlasmaComponents.ToolButton {
+                    icon.name: fullView.pinned ? "window-unpin" : "window-pin"
+                    implicitWidth: fullView._rowHeight
+                    implicitHeight: fullView._rowHeight
+                    ToolTip.text: fullView.pinned ? i18n("Unpin window") : i18n("Keep window open")
+                    ToolTip.visible: hovered
+                    ToolTip.delay: Kirigami.Units.toolTipDelay
+                    onClicked: fullView.togglePinned()
+                }
+
+                Item { Layout.fillWidth: true }
             }
         }
     }

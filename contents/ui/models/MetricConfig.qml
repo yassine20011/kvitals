@@ -10,190 +10,224 @@ QtObject {
 
     // Icon fallback resolver
     function resolveIcon(name) {
-        switch (name) {
-        case "am-cpu-symbolic":
-        case "nvidia-ram-symbolic":
-        case "am-disk-utility-symbolic":
-        case "am-fan-symbolic":
-        case "gpu-symbolic":
+        if (!name) return "configure";
+        if (name.indexOf("-symbolic") !== -1 && name.indexOf("/") === -1) {
             return Qt.resolvedUrl("../../icons/" + name + ".svg");
-        default:
-            return name;
         }
+        return name;
     }
 
-    // Group enable flags
-    readonly property bool cpuEnabled:    (target && target[propertyPrefix + "cpuEnabled"] !== undefined)    ? Boolean(target[propertyPrefix + "cpuEnabled"])    : false
-    readonly property bool ramEnabled:    (target && target[propertyPrefix + "ramEnabled"] !== undefined)    ? Boolean(target[propertyPrefix + "ramEnabled"])    : false
-    readonly property bool swapEnabled:   (target && target[propertyPrefix + "swapEnabled"] !== undefined)   ? Boolean(target[propertyPrefix + "swapEnabled"])   : false
-    readonly property bool tempEnabled:   (target && target[propertyPrefix + "tempEnabled"] !== undefined)   ? Boolean(target[propertyPrefix + "tempEnabled"])   : false
-    readonly property bool gpuEnabled:    (target && target[propertyPrefix + "gpuEnabled"] !== undefined)    ? Boolean(target[propertyPrefix + "gpuEnabled"])    : false
-    readonly property bool batEnabled:    (target && target[propertyPrefix + "batEnabled"] !== undefined)    ? Boolean(target[propertyPrefix + "batEnabled"])    : false
-    readonly property bool netEnabled:    (target && target[propertyPrefix + "netEnabled"] !== undefined)    ? Boolean(target[propertyPrefix + "netEnabled"])    : false
-    readonly property bool diskEnabled:   (target && target[propertyPrefix + "diskEnabled"] !== undefined)   ? Boolean(target[propertyPrefix + "diskEnabled"])   : false
-    readonly property bool fanEnabled:    (target && target[propertyPrefix + "fanEnabled"] !== undefined)    ? Boolean(target[propertyPrefix + "fanEnabled"])    : false
-    readonly property bool uptimeEnabled: (target && target[propertyPrefix + "uptimeEnabled"] !== undefined) ? Boolean(target[propertyPrefix + "uptimeEnabled"]) : false
+    // Pinned metrics on Plasma panel
+    readonly property string pinnedMetrics: (target && target[propertyPrefix + "pinnedMetrics"] !== undefined)
+        ? target[propertyPrefix + "pinnedMetrics"]
+        : "cpu/usage,ram/percentage,temp/system,bat/percentage,net/down,net/up"
 
-    readonly property var _enabledMap: ({
-        cpu: cpuEnabled, ram: ramEnabled, swap: swapEnabled, temp: tempEnabled,
-        gpu: gpuEnabled, bat: batEnabled, net: netEnabled, disk: diskEnabled,
-        fan: fanEnabled, uptime: uptimeEnabled
-    })
-
-    function isGroupEnabled(group) {
-        return _enabledMap[group] !== undefined ? _enabledMap[group] : false;
+    readonly property var pinnedList: {
+        if (!pinnedMetrics) return [];
+        return pinnedMetrics.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
     }
 
-    function setGroupEnabled(group, val) {
-        var prop = propertyPrefix + group + "Enabled";
-        if (target && target[prop] !== undefined) {
-            target[prop] = Boolean(val);
+    readonly property var _pinnedSet: {
+        var s = new Set();
+        for (var i = 0; i < pinnedList.length; i++) {
+            s.add(pinnedList[i]);
         }
+        return s;
     }
 
-    // Sub-metric settings
-    readonly property string cpuSubMetrics:  (target && target[propertyPrefix + "cpuSubMetrics"])  || Defs.GROUPS.cpu.defaultSubMetrics
-    readonly property string ramSubMetrics:  (target && target[propertyPrefix + "ramSubMetrics"])  || Defs.GROUPS.ram.defaultSubMetrics
-    readonly property string swapSubMetrics: (target && target[propertyPrefix + "swapSubMetrics"]) || Defs.GROUPS.swap.defaultSubMetrics
-    readonly property string gpuSubMetrics:  (target && target[propertyPrefix + "gpuSubMetrics"])  || Defs.GROUPS.gpu.defaultSubMetrics
-    readonly property string batSubMetrics:  (target && target[propertyPrefix + "batSubMetrics"])  || Defs.GROUPS.bat.defaultSubMetrics
-    readonly property string netSubMetrics:  (target && target[propertyPrefix + "netSubMetrics"])  || Defs.GROUPS.net.defaultSubMetrics
-    readonly property string diskSubMetrics: (target && target[propertyPrefix + "diskSubMetrics"]) || Defs.GROUPS.disk.defaultSubMetrics
-
-    readonly property var _subMetricsMap: ({
-        cpu: cpuSubMetrics, ram: ramSubMetrics, swap: swapSubMetrics, gpu: gpuSubMetrics,
-        bat: batSubMetrics, net: netSubMetrics, disk: diskSubMetrics
-    })
-
-    function getSubMetricsString(key) {
-        if (_subMetricsMap[key] !== undefined) return _subMetricsMap[key];
-        var grp = Defs.GROUPS[key];
-        return grp ? (grp.defaultSubMetrics || "") : "";
+    function isPinned(instanceId) {
+        if (!instanceId) return false;
+        return _pinnedSet.has(instanceId);
     }
 
-    function getSubMetrics(key) {
-        var str = getSubMetricsString(key);
-        if (!str) return [];
-        return str.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
-    }
-
-    function setSubMetrics(key, values) {
-        var str = Array.isArray(values) ? values.join(",") : String(values || "");
-        var prop = propertyPrefix + key + "SubMetrics";
-        if (target && target[prop] !== undefined) {
-            target[prop] = str;
-        }
-    }
-
-    function toggleSubMetric(key, subKey, enable) {
-        var list = getSubMetrics(key);
-        if (enable) {
-            if (list.indexOf(subKey) < 0) list.push(subKey);
+    function togglePin(instanceId) {
+        if (!instanceId) return;
+        var list = pinnedList.slice();
+        var idx = list.indexOf(instanceId);
+        if (idx >= 0) {
+            list.splice(idx, 1);
         } else {
-            if (list.length <= 1) return;
-            list = list.filter(function(s){ return s !== subKey; });
+            list.push(instanceId);
         }
-        var grp = Defs.GROUPS[key];
-        if (grp && grp.subs) {
-            var canonical = grp.subs.map(function(s){ return s.key; });
-            list.sort(function(a, b){ return canonical.indexOf(a) - canonical.indexOf(b); });
-        }
-        setSubMetrics(key, list);
-    }
-
-    // Visibility settings
-    readonly property string cpuVisibility:    (target && target[propertyPrefix + "cpuVisibility"])    || "both"
-    readonly property string ramVisibility:    (target && target[propertyPrefix + "ramVisibility"])    || "both"
-    readonly property string swapVisibility:   (target && target[propertyPrefix + "swapVisibility"])   || "both"
-    readonly property string tempVisibility:   (target && target[propertyPrefix + "tempVisibility"])   || "both"
-    readonly property string gpuVisibility:    (target && target[propertyPrefix + "gpuVisibility"])    || "both"
-    readonly property string batVisibility:    (target && target[propertyPrefix + "batVisibility"])    || "both"
-    readonly property string netVisibility:    (target && target[propertyPrefix + "netVisibility"])    || "both"
-    readonly property string diskVisibility:   (target && target[propertyPrefix + "diskVisibility"])   || "both"
-    readonly property string fanVisibility:    (target && target[propertyPrefix + "fanVisibility"])    || "both"
-    readonly property string uptimeVisibility: (target && target[propertyPrefix + "uptimeVisibility"]) || "both"
-
-    readonly property var _visibilityMap: ({
-        cpu: cpuVisibility, ram: ramVisibility, swap: swapVisibility, temp: tempVisibility,
-        gpu: gpuVisibility, bat: batVisibility, net: netVisibility, disk: diskVisibility,
-        fan: fanVisibility, uptime: uptimeVisibility
-    })
-
-    function getVisibility(group) {
-        return _visibilityMap[group] || "both";
-    }
-
-    function getGroupVisibility(group) {
-        return getVisibility(group);
-    }
-
-    function setVisibility(group, val) {
-        var prop = propertyPrefix + group + "Visibility";
+        var prop = propertyPrefix + "pinnedMetrics";
         if (target && target[prop] !== undefined) {
-            target[prop] = val;
+            target[prop] = list.join(",");
         }
     }
 
-    function isSubMetricEnabled(group, subKey, deviceId) {
-        var str = getSubMetricsString(group);
-        if (!str) return true;
+    function setPinned(instanceId, shouldPin) {
+        if (!instanceId) return;
+        var list = pinnedList.slice();
+        var idx = list.indexOf(instanceId);
+        if (shouldPin && idx < 0) {
+            list.push(instanceId);
+        } else if (!shouldPin && idx >= 0) {
+            list.splice(idx, 1);
+        } else {
+            return;
+        }
+        var prop = propertyPrefix + "pinnedMetrics";
+        if (target && target[prop] !== undefined) {
+            target[prop] = list.join(",");
+        }
+    }
 
-        if (str.indexOf(":") >= 0) {
-            if (deviceId) {
-                var pairs = str.split("|");
-                for (var i = 0; i < pairs.length; i++) {
-                    var sep = pairs[i].indexOf(":");
-                    if (sep > 0 && pairs[i].substring(0, sep) === deviceId) {
-                        var subs = pairs[i].substring(sep + 1).split(",").map(function(s){ return s.trim(); });
-                        return subs.indexOf(subKey) >= 0;
-                    }
+    function movePinnedMetric(fromIndex, toIndex) {
+        var list = pinnedList.slice();
+        if (fromIndex < 0 || fromIndex >= list.length || toIndex < 0 || toIndex >= list.length) return;
+        var item = list.splice(fromIndex, 1)[0];
+        list.splice(toIndex, 0, item);
+        var prop = propertyPrefix + "pinnedMetrics";
+        if (target && target[prop] !== undefined) {
+            target[prop] = list.join(",");
+        }
+    }
+
+    function migrateLegacyConfig(hardware) {
+        var prop = propertyPrefix + "pinnedMetrics";
+        if (target && target[prop] !== undefined && target[prop] && target[prop].length > 0) {
+            return;
+        }
+
+        var migrated = [];
+        var allG = Defs.ALL_GROUP_KEYS;
+        var hw = hardware || {};
+
+        for (var gi = 0; gi < allG.length; gi++) {
+            var group = allG[gi];
+            var defGroup = Defs.GROUPS[group];
+            if (!defGroup) continue;
+
+            if (group === "cpu") {
+                migrated.push("cpu/usage");
+            } else if (group === "ram") {
+                migrated.push("ram/percentage");
+            } else if (group === "temp") {
+                migrated.push("temp/system");
+            } else if (group === "net") {
+                migrated.push("net/down");
+                migrated.push("net/up");
+            } else if (group === "bat") {
+                if (hw.hasBattery) migrated.push("bat/percentage");
+            } else if (group === "gpu") {
+                if (hw.gpus && hw.gpus.length > 0) {
+                    migrated.push("gpu:" + hw.gpus[0] + "/usage");
                 }
+            } else if (group === "disk") {
+                if (hw.disks && hw.disks.length > 0) {
+                    migrated.push("disk:" + hw.disks[0] + "/read");
+                    migrated.push("disk:" + hw.disks[0] + "/write");
+                }
+            } else if (group === "fan") {
+                if (hw.fans && hw.fans.length > 0) {
+                    migrated.push("fan:" + hw.fans[0] + "/speed");
+                }
+            } else if (group === "uptime") {
+                migrated.push("uptime/uptime");
             }
-            var allPairs = str.split("|");
-            for (var j = 0; j < allPairs.length; j++) {
-                var pSep = allPairs[j].indexOf(":");
-                var pSubs = (pSep > 0 ? allPairs[j].substring(pSep + 1) : allPairs[j]).split(",").map(function(s){ return s.trim(); });
-                if (pSubs.indexOf(subKey) >= 0) return true;
-            }
-            return false;
         }
 
-        return str.split(",").map(function(s){ return s.trim(); }).indexOf(subKey) >= 0;
-    }
-
-    function isMetricVisible(group, subKey, view, deviceId) {
-        if (!isGroupEnabled(group)) return false;
-        var vis = getGroupVisibility(group);
-        if (vis !== "both" && vis !== view) return false;
-
-        if (view === "widget" && group === "ram" && ramWidgetShowBoth) {
-            if (subKey === "percentage" || subKey === "used") return true;
+        if (target && target[prop] !== undefined) {
+            target[prop] = migrated.join(",");
         }
-
-        return isSubMetricEnabled(group, subKey, deviceId);
     }
 
-    // Labels
-    readonly property string cpuLabel:   (target && target[propertyPrefix + "cpuLabel"])   || "CPU"
-    readonly property string ramLabel:   (target && target[propertyPrefix + "ramLabel"])   || "RAM"
-    readonly property string swapLabel:  (target && target[propertyPrefix + "swapLabel"])  || "SWAP"
-    readonly property string tempLabel:  (target && target[propertyPrefix + "tempLabel"])  || "System"
-    readonly property string netLabel:   (target && target[propertyPrefix + "netLabel"])   || "NET"
-    readonly property string diskLabel:  (target && target[propertyPrefix + "diskLabel"])  || "DSK"
-    readonly property string fanLabel:   (target && target[propertyPrefix + "fanLabel"])   || "FAN"
-    readonly property string gpuLabels:  (target && target[propertyPrefix + "gpuLabels"])  || ""
-    readonly property string diskLabels: (target && target[propertyPrefix + "diskLabels"]) || ""
-    readonly property string fanLabels:  (target && target[propertyPrefix + "fanLabels"])  || ""
+    // Dynamic Hardware Group Labels
+    function parseGpuLabels() {
+        return _parseJsonSafe((target && target[propertyPrefix + "gpuLabels"]) || "{}");
+    }
+
+    function saveGpuLabel(deviceId, label) {
+        var map = parseGpuLabels();
+        map[deviceId] = label;
+        var prop = propertyPrefix + "gpuLabels";
+        if (target && target[prop] !== undefined) {
+            target[prop] = JSON.stringify(map);
+        }
+    }
+
+    function isGpuSelected(deviceId) {
+        var raw = (target && target[propertyPrefix + "gpuSelection"]) || "";
+        if (!raw) return true; // all enabled by default
+        var list = raw.split(",").map(function(s){ return s.trim(); });
+        return list.indexOf(deviceId) !== -1;
+    }
+
+    function setGpuSelected(deviceId, enabled, allDiscoveredGpuIds) {
+        var raw = (target && target[propertyPrefix + "gpuSelection"]) || "";
+        var current = raw ? raw.split(",").map(function(s){ return s.trim(); }) : (allDiscoveredGpuIds ? allDiscoveredGpuIds.slice() : []);
+        var idx = current.indexOf(deviceId);
+        if (enabled && idx === -1) {
+            current.push(deviceId);
+        } else if (!enabled && idx !== -1) {
+            current.splice(idx, 1);
+        }
+        var prop = propertyPrefix + "gpuSelection";
+        if (target && target[prop] !== undefined) {
+            target[prop] = current.join(",");
+        }
+    }
+
+    function parseDiskLabels() {
+        return _parseJsonSafe((target && target[propertyPrefix + "diskLabels"]) || "{}");
+    }
+
+    function saveDiskLabel(deviceId, label) {
+        var map = parseDiskLabels();
+        map[deviceId] = label;
+        var prop = propertyPrefix + "diskLabels";
+        if (target && target[prop] !== undefined) {
+            target[prop] = JSON.stringify(map);
+        }
+    }
+
+    function parseFanLabels() {
+        return _parseJsonSafe((target && target[propertyPrefix + "fanLabels"]) || "{}");
+    }
+
+    function saveFanLabel(deviceId, label) {
+        var map = parseFanLabels();
+        map[deviceId] = label;
+        var prop = propertyPrefix + "fanLabels";
+        if (target && target[prop] !== undefined) {
+            target[prop] = JSON.stringify(map);
+        }
+    }
+
+    function _parseJsonSafe(str) {
+        if (!str) return {};
+        if (typeof str === "object") return str;
+        var trimmed = String(str).trim();
+        if (trimmed.startsWith("{")) {
+            try {
+                return JSON.parse(trimmed);
+            } catch (e) {}
+        }
+        var res = {};
+        trimmed.split("|").forEach(function(pair) {
+            var sep = pair.indexOf(":");
+            if (sep > 0) res[pair.substring(0, sep).trim()] = pair.substring(sep + 1).trim();
+        });
+        return res;
+    }
+
+    // Static Group Labels
+    readonly property string cpuLabel:  (target && target[propertyPrefix + "cpuLabel"])  || "CPU"
+    readonly property string ramLabel:  (target && target[propertyPrefix + "ramLabel"])  || "RAM"
+    readonly property string swapLabel: (target && target[propertyPrefix + "swapLabel"]) || "SWAP"
+    readonly property string tempLabel: (target && target[propertyPrefix + "tempLabel"]) || "System"
+    readonly property string netLabel:  (target && target[propertyPrefix + "netLabel"])  || "NET"
+    readonly property string diskLabel: (target && target[propertyPrefix + "diskLabel"]) || "DSK"
+    readonly property string fanLabel:  (target && target[propertyPrefix + "fanLabel"])  || "FAN"
+    readonly property string batLabel:  (target && target[propertyPrefix + "batLabel"])  || "BAT"
 
     readonly property var _labelMap: ({
         cpu: cpuLabel, ram: ramLabel, swap: swapLabel, temp: tempLabel,
-        net: netLabel, disk: diskLabel, fan: fanLabel
+        net: netLabel, disk: diskLabel, fan: fanLabel, bat: batLabel, uptime: "Uptime"
     })
 
     function getGroupLabel(group) {
-        if (_labelMap[group] !== undefined) return _labelMap[group];
-        var grp = Defs.GROUPS[group];
-        return grp ? grp.defaultLabel : group.toUpperCase();
+        return _labelMap[group] || (group ? group.toUpperCase() : "");
     }
 
     function setGroupLabel(group, val) {
@@ -204,17 +238,17 @@ QtObject {
     }
 
     // Icons
-    readonly property string cpuIcon:     resolveIcon((target && target[propertyPrefix + "cpuIcon"])     || "am-cpu-symbolic")
-    readonly property string ramIcon:     resolveIcon((target && target[propertyPrefix + "ramIcon"])     || "nvidia-ram-symbolic")
-    readonly property string swapIcon:    resolveIcon((target && target[propertyPrefix + "swapIcon"])    || "nvidia-ram-symbolic")
-    readonly property string tempIcon:    resolveIcon((target && target[propertyPrefix + "tempIcon"])    || "temperature-normal")
+    readonly property string cpuIcon:     resolveIcon((target && target[propertyPrefix + "cpuIcon"])     || "cpu-symbolic")
+    readonly property string ramIcon:     resolveIcon((target && target[propertyPrefix + "ramIcon"])     || "memory-symbolic")
+    readonly property string swapIcon:    resolveIcon((target && target[propertyPrefix + "swapIcon"])    || "memory-symbolic")
+    readonly property string tempIcon:    resolveIcon((target && target[propertyPrefix + "tempIcon"])    || "temperature-symbolic")
     readonly property string gpuIcon:     resolveIcon((target && target[propertyPrefix + "gpuIcon"])     || "gpu-symbolic")
-    readonly property string batteryIcon: resolveIcon((target && target[propertyPrefix + "batteryIcon"]) || "battery-good")
-    readonly property string powerIcon:   resolveIcon((target && target[propertyPrefix + "powerIcon"])   || "battery-charging-60")
-    readonly property string networkIcon: resolveIcon((target && target[propertyPrefix + "networkIcon"]) || "network-wireless")
-    readonly property string diskIcon:    resolveIcon((target && target[propertyPrefix + "diskIcon"])    || "am-disk-utility-symbolic")
-    readonly property string fanIcon:     resolveIcon((target && target[propertyPrefix + "fanIcon"])     || "am-fan-symbolic")
-    readonly property string uptimeIcon:  resolveIcon((target && target[propertyPrefix + "uptimeIcon"])  || "clock")
+    readonly property string batteryIcon: resolveIcon((target && target[propertyPrefix + "batteryIcon"]) || "battery-symbolic")
+    readonly property string powerIcon:   resolveIcon((target && target[propertyPrefix + "powerIcon"])   || "voltage-symbolic")
+    readonly property string networkIcon: resolveIcon((target && target[propertyPrefix + "networkIcon"]) || "network-symbolic")
+    readonly property string diskIcon:    resolveIcon((target && target[propertyPrefix + "diskIcon"])    || "storage-symbolic")
+    readonly property string fanIcon:     resolveIcon((target && target[propertyPrefix + "fanIcon"])     || "fan-symbolic")
+    readonly property string uptimeIcon:  resolveIcon((target && target[propertyPrefix + "uptimeIcon"])  || "system-symbolic")
 
     readonly property var _iconMap: ({
         cpu: cpuIcon, ram: ramIcon, swap: swapIcon, temp: tempIcon, gpu: gpuIcon,
@@ -223,31 +257,6 @@ QtObject {
 
     function getGroupIcon(group) {
         return _iconMap[group] || "";
-    }
-
-    // Generic group descriptor
-    function getGroup(key) {
-        var grp = Defs.GROUPS[key] || {};
-        return {
-            id: key,
-            name: grp.name || grp.defaultLabel || key,
-            defaultLabel: grp.defaultLabel || key.toUpperCase(),
-            label: getGroupLabel(key),
-            icon: getGroupIcon(key),
-            enabled: isGroupEnabled(key),
-            visibility: getVisibility(key),
-            subMetrics: getSubMetrics(key),
-            subs: grp.subs || [],
-            hasSubs: Boolean(grp.subs && grp.subs.length > 0)
-        };
-    }
-
-    function setGroup(key, patch) {
-        if (!patch || typeof patch !== "object") return;
-        if (patch.enabled !== undefined) setGroupEnabled(key, patch.enabled);
-        if (patch.visibility !== undefined) setVisibility(key, patch.visibility);
-        if (patch.label !== undefined) setGroupLabel(key, patch.label);
-        if (patch.subMetrics !== undefined) setSubMetrics(key, patch.subMetrics);
     }
 
     // Threshold colors
@@ -300,13 +309,17 @@ QtObject {
     readonly property string networkUnit:         (target && target[propertyPrefix + "networkUnit"])       || "bytes"
     readonly property string fanUnit:             (target && target[propertyPrefix + "fanUnit"])           || "rpm"
     readonly property int fanMaxRpm:              (target && target[propertyPrefix + "fanMaxRpm"])         || 2000
-    readonly property bool ramWidgetShowBoth:     Boolean(target && target[propertyPrefix + "ramWidgetShowBoth"])
     readonly property string batteryDevice:       (target && target[propertyPrefix + "batteryDevice"])     || "auto"
     readonly property string networkInterface:    (target && target[propertyPrefix + "networkInterface"])  || "auto"
     readonly property bool showNetworkIp:         Boolean(target && target[propertyPrefix + "showNetworkIp"])
     readonly property string gpuSelection:        (target && target[propertyPrefix + "gpuSelection"])      || ""
+    readonly property string gpuLabels:           (target && target[propertyPrefix + "gpuLabels"])          || ""
+    readonly property string diskLabels:          (target && target[propertyPrefix + "diskLabels"])         || ""
+    readonly property string fanLabels:           (target && target[propertyPrefix + "fanLabels"])          || ""
+    readonly property string gpuSubMetrics:       (target && target[propertyPrefix + "gpuSubMetrics"])      || "usage,vram,temp"
+    readonly property string diskSubMetrics:      (target && target[propertyPrefix + "diskSubMetrics"])     || "read,write"
 
-    // Order
+    // Group order in popup catalogue
     readonly property string metricOrder: (target && target[propertyPrefix + "metricOrder"]) || "cpu,ram,temp,gpu,bat,net,disk,fan,uptime"
     readonly property var orderedKeys: {
         var all = Defs.ALL_GROUP_KEYS;
@@ -325,171 +338,6 @@ QtObject {
         var prop = propertyPrefix + "metricOrder";
         if (target && target[prop] !== undefined) {
             target[prop] = keys.join(",");
-        }
-    }
-
-    // Isolated device-specific configuration helpers: GPU
-    function parseGpuLabels() {
-        var str = gpuLabels;
-        var result = {};
-        if (!str) return result;
-        str.split("|").forEach(function(pair) {
-            var sep = pair.indexOf(":");
-            if (sep > 0) result[pair.substring(0, sep)] = pair.substring(sep + 1);
-        });
-        return result;
-    }
-
-    function saveGpuLabel(gpuId, label) {
-        var labels = parseGpuLabels();
-        var trimmed = (label || "").trim();
-        if (trimmed.length > 0) labels[gpuId] = trimmed;
-        else delete labels[gpuId];
-        var parts = [];
-        for (var id in labels) parts.push(id + ":" + labels[id]);
-        var prop = propertyPrefix + "gpuLabels";
-        if (target && target[prop] !== undefined) {
-            target[prop] = parts.join("|");
-        }
-    }
-
-    function isGpuSelected(gpuId) {
-        if (!gpuSelection || gpuSelection === "") return true;
-        if (gpuSelection === "none") return false;
-        return gpuSelection.split(",").indexOf(gpuId) >= 0;
-    }
-
-    function setGpuSelected(gpuId, checked, allGpuIds) {
-        var ids;
-        if (!gpuSelection || gpuSelection === "") {
-            ids = (allGpuIds || []).slice();
-        } else if (gpuSelection === "none") {
-            ids = [];
-        } else {
-            ids = gpuSelection.split(",").filter(function(s){ return s.length > 0; });
-        }
-        if (checked) {
-            if (ids.indexOf(gpuId) < 0) ids.push(gpuId);
-        } else {
-            ids = ids.filter(function(id){ return id !== gpuId; });
-        }
-        var all = allGpuIds || [];
-        var allSelected = all.length > 0 && all.every(function(id){ return ids.indexOf(id) >= 0; });
-        var val = "";
-        if (allSelected)           val = "";
-        else if (ids.length === 0) val = "none";
-        else                       val = ids.join(",");
-
-        var prop = propertyPrefix + "gpuSelection";
-        if (target && target[prop] !== undefined) {
-            target[prop] = val;
-        }
-    }
-
-    function parseGpuSubMetricsMap() {
-        var str = gpuSubMetrics;
-        var result = {};
-        if (!str) return result;
-        if (str.indexOf(":") >= 0) {
-            str.split("|").forEach(function(pair) {
-                var sep = pair.indexOf(":");
-                if (sep > 0) {
-                    var gid = pair.substring(0, sep);
-                    var subs = pair.substring(sep + 1).split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
-                    result[gid] = subs;
-                }
-            });
-        }
-        return result;
-    }
-
-    function getGpuSubMetrics(gpuId) {
-        var map = parseGpuSubMetricsMap();
-        if (map[gpuId] && map[gpuId].length > 0) {
-            return map[gpuId];
-        }
-        if (gpuSubMetrics && gpuSubMetrics.indexOf(":") < 0) {
-            return gpuSubMetrics.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
-        }
-        return Defs.GROUPS.gpu.defaultSubMetrics.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
-    }
-
-    function toggleGpuSubMetric(gpuId, subKey, checked, allGpuIds) {
-        var map = parseGpuSubMetricsMap();
-        var all = allGpuIds || [gpuId];
-        for (var i = 0; i < all.length; i++) {
-            var gid = all[i];
-            if (!map[gid]) {
-                map[gid] = getGpuSubMetrics(gid);
-            }
-        }
-        var subs = map[gpuId] ? map[gpuId].slice() : getGpuSubMetrics(gpuId);
-        if (checked) {
-            if (subs.indexOf(subKey) < 0) subs.push(subKey);
-        } else {
-            if (subs.length > 1) {
-                subs = subs.filter(function(s){ return s !== subKey; });
-            }
-        }
-        map[gpuId] = subs;
-
-        var parts = [];
-        for (var id in map) {
-            parts.push(id + ":" + map[id].join(","));
-        }
-        var prop = propertyPrefix + "gpuSubMetrics";
-        if (target && target[prop] !== undefined) {
-            target[prop] = parts.join("|");
-        }
-    }
-
-    // Isolated device-specific configuration helpers: Disk
-    function parseDiskLabels() {
-        var str = diskLabels;
-        var result = {};
-        if (!str) return result;
-        str.split("|").forEach(function(pair) {
-            var sep = pair.indexOf(":");
-            if (sep > 0) result[pair.substring(0, sep)] = pair.substring(sep + 1);
-        });
-        return result;
-    }
-
-    function saveDiskLabel(diskId, label) {
-        var labels = parseDiskLabels();
-        var trimmed = (label || "").trim();
-        if (trimmed.length > 0) labels[diskId] = trimmed;
-        else delete labels[diskId];
-        var parts = [];
-        for (var id in labels) parts.push(id + ":" + labels[id]);
-        var prop = propertyPrefix + "diskLabels";
-        if (target && target[prop] !== undefined) {
-            target[prop] = parts.join("|");
-        }
-    }
-
-    // Isolated device-specific configuration helpers: Fan
-    function parseFanLabels() {
-        var str = fanLabels;
-        var result = Object.create(null);
-        if (!str) return result;
-        str.split("|").forEach(function(pair) {
-            var sep = pair.indexOf(":");
-            if (sep > 0) result[pair.substring(0, sep)] = pair.substring(sep + 1);
-        });
-        return result;
-    }
-
-    function saveFanLabel(fanId, label) {
-        var labels = parseFanLabels();
-        var trimmed = (label || "").replace(/\|/g, "").trim();
-        if (trimmed.length > 0) labels[fanId] = trimmed;
-        else delete labels[fanId];
-        var parts = [];
-        for (var id in labels) parts.push(id + ":" + labels[id]);
-        var prop = propertyPrefix + "fanLabels";
-        if (target && target[prop] !== undefined) {
-            target[prop] = parts.join("|");
         }
     }
 }

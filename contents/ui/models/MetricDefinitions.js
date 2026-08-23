@@ -8,7 +8,7 @@ var GROUPS = {
         id: "cpu",
         name: "CPU",
         defaultLabel: "CPU",
-        defaultIcon: "am-cpu-symbolic",
+        defaultIcon: "cpu-symbolic",
         defaultSubMetrics: "usage,freq,temp",
         subs: [
             { key: "usage", label: "Usage" },
@@ -20,7 +20,7 @@ var GROUPS = {
         id: "ram",
         name: "RAM",
         defaultLabel: "RAM",
-        defaultIcon: "nvidia-ram-symbolic",
+        defaultIcon: "memory-symbolic",
         defaultSubMetrics: "percentage",
         subs: [
             { key: "percentage", label: "Percentage" },
@@ -32,7 +32,7 @@ var GROUPS = {
         id: "swap",
         name: "Swap",
         defaultLabel: "SWAP",
-        defaultIcon: "nvidia-ram-symbolic",
+        defaultIcon: "memory-symbolic",
         defaultSubMetrics: "percent,used",
         subs: [
             { key: "percent", label: "Usage (%)" },
@@ -45,7 +45,7 @@ var GROUPS = {
         id: "temp",
         name: "Temperature",
         defaultLabel: "System",
-        defaultIcon: "temperature-normal",
+        defaultIcon: "temperature-symbolic",
         defaultSubMetrics: "temp",
         subs: []
     },
@@ -65,7 +65,7 @@ var GROUPS = {
         id: "bat",
         name: "Battery",
         defaultLabel: "BAT",
-        defaultIcon: "battery-good",
+        defaultIcon: "battery-symbolic",
         defaultSubMetrics: "percentage,power",
         subs: [
             { key: "percentage", label: "Percentage" },
@@ -76,7 +76,7 @@ var GROUPS = {
         id: "net",
         name: "Network",
         defaultLabel: "NET",
-        defaultIcon: "network-wireless",
+        defaultIcon: "network-symbolic",
         defaultSubMetrics: "down,up",
         subs: [
             { key: "down", label: "Download" },
@@ -88,7 +88,7 @@ var GROUPS = {
         id: "disk",
         name: "Disk",
         defaultLabel: "DSK",
-        defaultIcon: "am-disk-utility-symbolic",
+        defaultIcon: "storage-symbolic",
         defaultSubMetrics: "read,write",
         subs: [
             { key: "read",  label: "Read" },
@@ -100,17 +100,19 @@ var GROUPS = {
         id: "fan",
         name: "Fan",
         defaultLabel: "FAN",
-        defaultIcon: "am-fan-symbolic",
+        defaultIcon: "fan-symbolic",
         defaultSubMetrics: "speed",
         subs: []
     },
     uptime: {
         id: "uptime",
-        name: "System Uptime",
+        name: "Uptime",
         defaultLabel: "UPTIME",
-        defaultIcon: "clock",
+        defaultIcon: "system-symbolic",
         defaultSubMetrics: "uptime",
-        subs: []
+        subs: [
+            { key: "uptime", label: "Uptime" }
+        ]
     }
 };
 
@@ -188,7 +190,7 @@ var DEFINITIONS = {
         group: "ram",
         subKey: "percentage",
         sensorId: "memory/physical/used",
-        label: "Usage",
+        label: "Percentage",
         chartKey: "ram",
         chartMax: 100,
         thresholdType: "normal",
@@ -201,7 +203,7 @@ var DEFINITIONS = {
         group: "ram",
         subKey: "used",
         sensorId: "memory/physical/used",
-        label: "Usage",
+        label: "Used / Total",
         chartKey: "",
         chartMax: 0,
         thresholdType: "none"
@@ -228,7 +230,7 @@ var DEFINITIONS = {
         group: "swap",
         subKey: "percent",
         sensorId: "memory/swap/usedPercent",
-        label: "Usage",
+        label: "Usage (%)",
         chartKey: "swap",
         chartMax: 100,
         thresholdType: "normal",
@@ -314,7 +316,7 @@ var DEFINITIONS = {
         group: "bat",
         subKey: "percentage",
         sensorPattern: "power/{id}/chargePercentage",
-        label: "Battery",
+        label: "Percentage",
         chartKey: "bat",
         chartMax: 100,
         thresholdType: "inverted",
@@ -331,15 +333,13 @@ var DEFINITIONS = {
         thresholdType: "none",
         iconOverrideKey: "powerIcon"
     },
-    // prefix on net/disk entries is copied to subLabel by _createMetric so the
-    // direction arrow appears in the label column, not prepended to the value.
     "net.down": {
         id: "net.down",
         group: "net",
         subKey: "down",
         sensorPattern: "network/{id}/download",
         label: "Download",
-        prefix: "↓",
+        icon: "network-download-symbolic",
         chartKey: "netDown",
         chartMax: 0,
         thresholdType: "none"
@@ -350,7 +350,7 @@ var DEFINITIONS = {
         subKey: "up",
         sensorPattern: "network/{id}/upload",
         label: "Upload",
-        prefix: "↑",
+        icon: "network-upload-symbolic",
         chartKey: "netUp",
         chartMax: 0,
         thresholdType: "none"
@@ -361,6 +361,7 @@ var DEFINITIONS = {
         subKey: "ip",
         sensorPattern: "network/{id}/ipv4withPrefixLength",
         label: "Local IP",
+        icon: "network-symbolic",
         chartKey: "",
         chartMax: 0,
         thresholdType: "none"
@@ -371,7 +372,7 @@ var DEFINITIONS = {
         subKey: "read",
         sensorPattern: "disk/{id}/read",
         label: "Read",
-        prefix: "↓",
+        icon: "network-download-symbolic",
         chartKey: "",
         chartMax: 0,
         thresholdType: "none"
@@ -382,7 +383,7 @@ var DEFINITIONS = {
         subKey: "write",
         sensorPattern: "disk/{id}/write",
         label: "Write",
-        prefix: "↑",
+        icon: "network-upload-symbolic",
         chartKey: "",
         chartMax: 0,
         thresholdType: "none"
@@ -416,9 +417,16 @@ var DEFINITIONS = {
         group: "uptime",
         subKey: "uptime",
         sensorId: "os/system/uptime",
-        label: "System Uptime",
+        label: "Uptime",
         chartKey: "",
         chartMax: 0,
         thresholdType: "none"
     }
 };
+
+function buildInstanceId(group, deviceId, subKey) {
+    if (deviceId && typeof deviceId === "string" && deviceId.length > 0) {
+        return group + ":" + deviceId + "/" + subKey;
+    }
+    return group + "/" + subKey;
+}

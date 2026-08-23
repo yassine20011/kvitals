@@ -29,6 +29,7 @@ PlasmoidItem {
     property real labelOpacity:  Plasmoid.configuration.labelOpacity
     property real separatorOpacity: Plasmoid.configuration.separatorOpacity
     property int effectiveFontSize: fontSize > 0 ? fontSize : -1
+    property bool mergeFamilyMetrics: Plasmoid.configuration.mergeFamilyMetrics !== undefined ? Plasmoid.configuration.mergeFamilyMetrics : true
 
     property bool useIcons: displayMode === "icons" || displayMode === "icons+text"
     property bool useText:  displayMode === "text"  || displayMode === "icons+text"
@@ -128,7 +129,7 @@ PlasmoidItem {
                 id: _disk
                 discovery: _discovery
                 updateInterval: metricConfig.updateInterval
-                enabled: metricConfig.diskEnabled
+                enabled: true
                 tempUnit: metricConfig.tempUnit
                 networkUnit: metricConfig.networkUnit
                 diskLabels: metricConfig.diskLabels
@@ -157,6 +158,31 @@ PlasmoidItem {
         onTriggered: sensorLoader.active = true
     }
 
+    Timer {
+        id: migrationTimer
+        interval: 200
+        repeat: false
+        onTriggered: {
+            if (!Plasmoid.configuration.pinnedMetrics || Plasmoid.configuration.pinnedMetrics.length === 0) {
+                var hw = {
+                    gpus: sensorLoader.item ? sensorLoader.item.gpu.discoveredGpus : [],
+                    disks: sensorLoader.item ? sensorLoader.item.disk.discoveredDisks : [],
+                    fans: sensorLoader.item ? sensorLoader.item.fans.discoveredFans : []
+                };
+                metricConfig.migrateLegacyConfig(hw);
+            }
+        }
+    }
+
+    Connections {
+        target: sensorLoader
+        function onStatusChanged() {
+            if (sensorLoader.status === Loader.Ready) {
+                migrationTimer.start();
+            }
+        }
+    }
+
     Binding {
         target: Plasmoid.configuration
         property: "_tempFallbackActive"
@@ -175,9 +201,36 @@ PlasmoidItem {
         sensorActivationTimer.start();
     }
 
+    // Pre-computed model caches — rebuilt once per MetricStore tick, not per binding consumer.
+    property var _compactItems: []
+    property var _popupGroups: []
+
+    onMergeFamilyMetricsChanged: {
+        root._compactItems = ViewHelpers.buildCompactItems(metricStore.metrics, metricConfig.pinnedList, root.mergeFamilyMetrics);
+    }
+
+    Connections {
+        target: metricStore
+        function onMetricsChanged() {
+            root._compactItems = ViewHelpers.buildCompactItems(metricStore.metrics, metricConfig.pinnedList, root.mergeFamilyMetrics);
+            root._popupGroups  = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+        }
+    }
+
+    Connections {
+        target: metricConfig
+        function onPinnedListChanged() {
+            root._compactItems = ViewHelpers.buildCompactItems(metricStore.metrics, metricConfig.pinnedList, root.mergeFamilyMetrics);
+            root._popupGroups  = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+        }
+        function onOrderedKeysChanged() {
+            root._popupGroups = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+        }
+    }
+
     // Representations
     compactRepresentation: CompactView {
-        metricsModel: ViewHelpers.buildCompactItems(metricStore.metrics, metricConfig.orderedKeys)
+        metricsModel: root._compactItems
         layoutType: root.layoutType
         useIcons: root.useIcons
         useText: root.useText
@@ -194,7 +247,7 @@ PlasmoidItem {
     }
 
     fullRepresentation: FullView {
-        metricsModel: ViewHelpers.buildPopupItems(metricStore.metrics, metricConfig.orderedKeys)
+        groupsModel: root._popupGroups
         baseTextColor: root.baseTextColor
         labelColor: root.resolvedLabelColor
         iconColor: root.resolvedIconColor
@@ -203,6 +256,14 @@ PlasmoidItem {
         chartVersion: metricStore.chartVersion
         pinned: root.pinned
         onTogglePinned: root.pinned = !root.pinned
+        onToggleMetricPin: function(metricId) {
+            metricConfig.togglePin(metricId);
+        }
+        onRefreshRequested: {
+            if (sensorLoader.item && sensorLoader.item.discovery) {
+                sensorLoader.item.discovery.rescan();
+            }
+        }
     }
 
     toolTipMainText: "KVitals"

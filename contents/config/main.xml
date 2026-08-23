@@ -4,6 +4,11 @@
       xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
     <kcfgfile name=""/>
     <group name="General">
+        <!-- Pinned metrics on Plasma panel -->
+        <entry name="pinnedMetrics" type="String">
+            <default>cpu/usage,ram/percentage,temp/system,bat/percentage,net/down,net/up</default>
+        </entry>
+
         <!-- Category toggles -->
         <entry name="cpuEnabled" type="Bool">
             <default>true</default>
@@ -132,7 +137,7 @@
 
         <!-- Display -->
         <entry name="displayMode" type="String">
-            <default>text</default>
+            <default>icons</default>
         </entry>
         <entry name="layoutType" type="String">
             <default>horizontal</default>
@@ -140,40 +145,43 @@
         <entry name="iconSize" type="Int">
             <default>12</default>
         </entry>
+        <entry name="mergeFamilyMetrics" type="Bool">
+            <default>true</default>
+        </entry>
 
         <!-- Icons -->
         <entry name="cpuIcon" type="String">
-            <default>am-cpu-symbolic</default>
+            <default>cpu-symbolic</default>
         </entry>
         <entry name="ramIcon" type="String">
-            <default>nvidia-ram-symbolic</default>
+            <default>memory-symbolic</default>
         </entry>
         <entry name="swapIcon" type="String">
-            <default>nvidia-ram-symbolic</default>
+            <default>memory-symbolic</default>
         </entry>
         <entry name="tempIcon" type="String">
-            <default>temperature-normal</default>
+            <default>temperature-symbolic</default>
         </entry>
         <entry name="gpuIcon" type="String">
             <default>gpu-symbolic</default>
         </entry>
         <entry name="batteryIcon" type="String">
-            <default>battery-good</default>
+            <default>battery-symbolic</default>
         </entry>
         <entry name="powerIcon" type="String">
-            <default>battery-charging-60</default>
+            <default>voltage-symbolic</default>
         </entry>
         <entry name="networkIcon" type="String">
-            <default>network-wireless</default>
+            <default>network-symbolic</default>
         </entry>
         <entry name="diskIcon" type="String">
-            <default>am-disk-utility-symbolic</default>
+            <default>storage-symbolic</default>
         </entry>
         <entry name="fanIcon" type="String">
-            <default>am-fan-symbolic</default>
+            <default>fan-symbolic</default>
         </entry>
         <entry name="uptimeIcon" type="String">
-            <default>clock</default>
+            <default>system-symbolic</default>
         </entry>
 
         <!-- Font -->
