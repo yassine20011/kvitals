@@ -119,9 +119,12 @@ KCM.SimpleKCM {
 
     readonly property var metricMeta: ({
         "cpu":  { label: i18n("CPU"),              subs: [
-            {key: "usage", label: i18n("Usage")},
-            {key: "freq",  label: i18n("Frequency")},
-            {key: "temp",  label: i18n("Temperature")}
+            {key: "usage",  label: i18n("Usage")},
+            {key: "freq",   label: i18n("Frequency")},
+            {key: "temp",   label: i18n("Temperature")},
+            {key: "load1",  label: i18n("Load (1m)")},
+            {key: "load5",  label: i18n("Load (5m)")},
+            {key: "load15", label: i18n("Load (15m)")}
         ]},
         "ram":  { label: i18n("RAM"),              subs: [
             {key: "percentage", label: i18n("Percentage")},
@@ -138,11 +141,14 @@ KCM.SimpleKCM {
         "gpu":  { label: i18n("GPU"),              subs: [
             {key: "usage", label: i18n("Usage")},
             {key: "vram",  label: i18n("VRAM")},
-            {key: "temp",  label: i18n("Temperature")}
+            {key: "temp",  label: i18n("Temperature")},
+            {key: "freq",  label: i18n("Frequency")},
+            {key: "power", label: i18n("Power")}
         ]},
         "bat":  { label: i18n("Battery"),          subs: [
             {key: "percentage", label: i18n("Percentage")},
-            {key: "power",      label: i18n("Power consumption")}
+            {key: "power",      label: i18n("Power consumption")},
+            {key: "health",     label: i18n("Health")}
         ]},
         "net":  { label: i18n("Network"),          subs: [
             {key: "down", label: i18n("Download")},
@@ -152,6 +158,8 @@ KCM.SimpleKCM {
         "disk": { label: i18n("Disk"),             subs: [
             {key: "read",  label: i18n("Read")},
             {key: "write", label: i18n("Write")},
+            {key: "usage", label: i18n("Usage (%)")},
+            {key: "space", label: i18n("Space (Used/Total)")},
             {key: "temp",  label: i18n("Temperature")}
         ]},
         "fan":  { label: i18n("Fan"),              subs: []},
@@ -832,6 +840,20 @@ KCM.SimpleKCM {
                                                     checked: parent.activeGpuSubs.indexOf("temp") >= 0
                                                     enabled: !(checked && parent.activeGpuSubs.length <= 1)
                                                     onToggled: metricsPage.toggleGpuSubMetric(gpuDelegate.modelData.id, "temp", checked)
+                                                }
+
+                                                CheckBox {
+                                                    text: i18n("Frequency")
+                                                    checked: parent.activeGpuSubs.indexOf("freq") >= 0
+                                                    enabled: !(checked && parent.activeGpuSubs.length <= 1)
+                                                    onToggled: metricsPage.toggleGpuSubMetric(gpuDelegate.modelData.id, "freq", checked)
+                                                }
+
+                                                CheckBox {
+                                                    text: i18n("Power")
+                                                    checked: parent.activeGpuSubs.indexOf("power") >= 0
+                                                    enabled: !(checked && parent.activeGpuSubs.length <= 1)
+                                                    onToggled: metricsPage.toggleGpuSubMetric(gpuDelegate.modelData.id, "power", checked)
                                                 }
                                             }
                                         }

@@ -159,6 +159,30 @@ Item {
                 }));
             }
 
+            if (s.cpu.cpuLoad1Value && s.cpu.cpuLoad1Value !== "...") {
+                list.push(_createMetric("cpu.load1", {
+                    value: s.cpu.cpuLoad1Raw,
+                    displayValue: s.cpu.cpuLoad1Value,
+                    status: !isNaN(s.cpu.cpuLoad1Raw) ? "ready" : "loading"
+                }));
+            }
+
+            if (s.cpu.cpuLoad5Value && s.cpu.cpuLoad5Value !== "...") {
+                list.push(_createMetric("cpu.load5", {
+                    value: s.cpu.cpuLoad5Raw,
+                    displayValue: s.cpu.cpuLoad5Value,
+                    status: !isNaN(s.cpu.cpuLoad5Raw) ? "ready" : "loading"
+                }));
+            }
+
+            if (s.cpu.cpuLoad15Value && s.cpu.cpuLoad15Value !== "...") {
+                list.push(_createMetric("cpu.load15", {
+                    value: s.cpu.cpuLoad15Raw,
+                    displayValue: s.cpu.cpuLoad15Value,
+                    status: !isNaN(s.cpu.cpuLoad15Raw) ? "ready" : "loading"
+                }));
+            }
+
             if (s.temp && s.temp.cpuTempValue && s.temp.cpuTempValue !== "--") {
                 list.push(_createMetric("cpu.temp", {
                     value: s.temp.cpuTempNumericValue,
@@ -270,6 +294,25 @@ Item {
                             status: !isNaN(gd.tempNumber) ? "ready" : "unavailable"
                         }));
                     }
+                    if (gd.freq) {
+                        list.push(_createMetric("gpu.freq", {
+                            id: "gpu:" + gd.id + ".freq",
+                            deviceId: gd.id, deviceName: gpuName,
+                            label: gpuName + " Frequency", groupLabel: gpuName,
+                            value: gd.freqNumber, displayValue: gd.freq,
+                            status: !isNaN(gd.freqNumber) ? "ready" : "loading"
+                        }));
+                    }
+                    if (gd.power) {
+                        list.push(_createMetric("gpu.power", {
+                            id: "gpu:" + gd.id + ".power",
+                            deviceId: gd.id, deviceName: gpuName,
+                            label: gpuName + " Power", groupLabel: gpuName,
+                            value: gd.powerNumber, displayValue: gd.power,
+                            chartKey: "gpuPower:" + gd.id,
+                            status: !isNaN(gd.powerNumber) ? "ready" : "loading"
+                        }));
+                    }
                 }
             }
         }
@@ -287,6 +330,14 @@ Item {
                 list.push(_createMetric("bat.power", {
                     displayValue: s.battery.powerValue,
                     status: "ready"
+                }));
+            }
+            if (s.battery.batHealthValue) {
+                list.push(_createMetric("bat.health", {
+                    value: s.battery.batHealthNumericValue,
+                    displayValue: s.battery.batHealthValue,
+                    label: cfg.getGroupLabel("bat") + " Health",
+                    status: !isNaN(s.battery.batHealthNumericValue) ? "ready" : "loading"
                 }));
             }
         }
@@ -344,6 +395,24 @@ Item {
                     displayValue: s.disk.diskWriteValue,
                     label: cfg.diskLabel + " ↑",
                     status: "ready"
+                }));
+            }
+
+            if (s.disk.diskUsedPercentValue) {
+                list.push(_createMetric("disk.usage", {
+                    value: s.disk.diskUsedPercentRaw,
+                    displayValue: s.disk.diskUsedPercentValue,
+                    label: cfg.diskLabel + " Usage",
+                    status: !isNaN(s.disk.diskUsedPercentRaw) ? "ready" : "loading"
+                }));
+            }
+
+            if (s.disk.diskSpaceValue) {
+                list.push(_createMetric("disk.space", {
+                    value: s.disk.diskUsedRaw,
+                    displayValue: s.disk.diskSpaceValue,
+                    label: cfg.diskLabel + " Space",
+                    status: !isNaN(s.disk.diskUsedRaw) ? "ready" : "loading"
                 }));
             }
 

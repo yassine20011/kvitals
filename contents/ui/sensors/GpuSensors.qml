@@ -143,6 +143,8 @@ Item {
                 ids.push("gpu/" + g + "/totalVram");
             }
             if (m.indexOf("temp")  >= 0) ids.push("gpu/" + g + "/temperature");
+            if (m.indexOf("freq")  >= 0) ids.push("gpu/" + g + "/coreFrequency");
+            if (m.indexOf("power") >= 0) ids.push("gpu/" + g + "/power");
         }
         return ids;
     }
@@ -189,6 +191,8 @@ Item {
             var showU = m.indexOf("usage") >= 0;
             var showV = m.indexOf("vram")  >= 0;
             var showT = m.indexOf("temp")  >= 0;
+            var showF = m.indexOf("freq")  >= 0;
+            var showP = m.indexOf("power") >= 0;
 
             // Resolve display name: custom label > default name > fallback
             var hwName = "GPU " + (i + 1);
@@ -197,10 +201,12 @@ Item {
             }
             var name = customLabels[g] || hwName;
 
-            var uVal  = showU ? _modelValue("gpu/" + g + "/usage")       : NaN;
-            var vuVal = showV ? _modelValue("gpu/" + g + "/usedVram")     : NaN;
-            var vtVal = showV ? _modelValue("gpu/" + g + "/totalVram")    : NaN;
-            var tVal  = showT ? _modelValue("gpu/" + g + "/temperature")  : NaN;
+            var uVal  = showU ? _modelValue("gpu/" + g + "/usage")         : NaN;
+            var vuVal = showV ? _modelValue("gpu/" + g + "/usedVram")       : NaN;
+            var vtVal = showV ? _modelValue("gpu/" + g + "/totalVram")      : NaN;
+            var tVal  = showT ? _modelValue("gpu/" + g + "/temperature")    : NaN;
+            var fVal  = showF ? _modelValue("gpu/" + g + "/coreFrequency")  : NaN;
+            var pVal  = showP ? _modelValue("gpu/" + g + "/power")          : NaN;
 
             var uStr = !isNaN(uVal) ? Math.round(uVal).toString().padStart(3) + "%" : "";
             var vStr = "";
@@ -208,11 +214,19 @@ Item {
                 vStr = Utils.formatBytes(vuVal) + "/" + Utils.formatBytes(vtVal) + "G";
             // tVal === 0 is ksystemstats' null sentinel for iGPU (no hwmon node)
             var tStr = (!isNaN(tVal) && tVal > 0) ? Utils.formatTemp(tVal, tempUnit) : "";
+            var fStr = "";
+            if (!isNaN(fVal) && fVal > 0) {
+                if (fVal >= 1000) fStr = (fVal / 1000).toFixed(2) + " GHz";
+                else fStr = Math.round(fVal) + " MHz";
+            }
+            var pStr = (!isNaN(pVal) && pVal > 0) ? pVal.toFixed(1) + "W" : "";
 
             newList.push({ id: g, name: name,
-                           usage: uStr, vram: vStr, temp: tStr,
+                           usage: uStr, vram: vStr, temp: tStr, freq: fStr, power: pStr,
                            usageNumber: !isNaN(uVal) ? uVal : NaN,
-                           tempNumber:  (!isNaN(tVal) && tVal > 0) ? tVal : NaN });
+                           tempNumber:  (!isNaN(tVal) && tVal > 0) ? tVal : NaN,
+                           freqNumber:  (!isNaN(fVal) && fVal > 0) ? fVal : NaN,
+                           powerNumber: (!isNaN(pVal) && pVal > 0) ? pVal : NaN });
 
             if (!isNaN(uVal)) { totalUsage += uVal; usageCount++; }
             if (!isNaN(vuVal) && !isNaN(vtVal) && vtVal > 0 && vuVal >= 0) {

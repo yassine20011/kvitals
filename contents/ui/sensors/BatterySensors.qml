@@ -29,6 +29,17 @@ Item {
         return sign + watts.toFixed(1) + "W";
     }
 
+    readonly property real batHealthNumericValue: {
+        if (batHealthSensor.status !== Sensors.Sensor.Ready || batHealthSensor.value == null)
+            return NaN;
+        return batHealthSensor.value;
+    }
+
+    readonly property string batHealthValue: {
+        if (isNaN(batHealthNumericValue)) return "";
+        return Math.round(batHealthNumericValue) + "%";
+    }
+
     // --- Dynamic battery sensor discovery ---
 
     property string discoveredBatId: ""
@@ -62,6 +73,11 @@ Item {
     property string batRateSensorId: {
         var base = (batteryDevice && batteryDevice !== "auto") ? batteryDevice : discoveredBatId;
         return base ? ("power/" + base + "/chargeRate") : "";
+    }
+
+    property string batHealthSensorId: {
+        var base = (batteryDevice && batteryDevice !== "auto") ? batteryDevice : discoveredBatId;
+        return base ? ("power/" + base + "/health") : "";
     }
 
     property var batteryCandidates: [
@@ -213,6 +229,12 @@ Item {
     Sensors.Sensor {
         id: batRateSensor
         sensorId: root.batRateSensorId
+        updateRateLimit: root.updateInterval > 5000 ? root.updateInterval : 5000
+    }
+
+    Sensors.Sensor {
+        id: batHealthSensor
+        sensorId: root.batHealthSensorId
         updateRateLimit: root.updateInterval > 5000 ? root.updateInterval : 5000
     }
 }

@@ -135,6 +135,36 @@ var DEFINITIONS = {
         thresholdKey: "temp",
         secondaryIcon: "temperature-normal"
     },
+    "cpu.load1": {
+        id: "cpu.load1",
+        group: "cpu",
+        subKey: "load1",
+        sensorId: "cpu/loadaverages/loadaverage1",
+        label: "Load (1m)",
+        chartKey: "cpuLoad1",
+        chartMax: 0,
+        thresholdType: "none"
+    },
+    "cpu.load5": {
+        id: "cpu.load5",
+        group: "cpu",
+        subKey: "load5",
+        sensorId: "cpu/loadaverages/loadaverage5",
+        label: "Load (5m)",
+        chartKey: "cpuLoad5",
+        chartMax: 0,
+        thresholdType: "none"
+    },
+    "cpu.load15": {
+        id: "cpu.load15",
+        group: "cpu",
+        subKey: "load15",
+        sensorId: "cpu/loadaverages/loadaverage15",
+        label: "Load (15m)",
+        chartKey: "cpuLoad15",
+        chartMax: 0,
+        thresholdType: "none"
+    },
     "ram.percentage": {
         id: "ram.percentage",
         group: "ram",
@@ -261,6 +291,26 @@ var DEFINITIONS = {
         thresholdKey: "gpuTemp",
         secondaryIcon: "temperature-normal"
     },
+    "gpu.freq": {
+        id: "gpu.freq",
+        group: "gpu",
+        subKey: "freq",
+        sensorPattern: "gpu/{id}/coreFrequency",
+        label: "Frequency",
+        chartKey: "",
+        chartMax: 0,
+        thresholdType: "none"
+    },
+    "gpu.power": {
+        id: "gpu.power",
+        group: "gpu",
+        subKey: "power",
+        sensorPattern: "gpu/{id}/power",
+        label: "Power",
+        chartKey: "gpuPower",
+        chartMax: 0,
+        thresholdType: "none"
+    },
     "bat.percentage": {
         id: "bat.percentage",
         group: "bat",
@@ -282,6 +332,17 @@ var DEFINITIONS = {
         chartMax: 0,
         thresholdType: "none",
         iconOverrideKey: "powerIcon"
+    },
+    "bat.health": {
+        id: "bat.health",
+        group: "bat",
+        subKey: "health",
+        sensorPattern: "power/{id}/health",
+        label: "Health",
+        chartKey: "",
+        chartMax: 100,
+        thresholdType: "inverted",
+        thresholdKey: "battery"
     },
     // prefix on net/disk entries is copied to subLabel by _createMetric so the
     // direction arrow appears in the label column, not prepended to the value.
@@ -335,6 +396,27 @@ var DEFINITIONS = {
         sensorPattern: "disk/{id}/write",
         label: "Write",
         prefix: "↑",
+        chartKey: "",
+        chartMax: 0,
+        thresholdType: "none"
+    },
+    "disk.usage": {
+        id: "disk.usage",
+        group: "disk",
+        subKey: "usage",
+        sensorId: "disk/all/usedPercent",
+        label: "Usage",
+        chartKey: "diskUsage",
+        chartMax: 100,
+        thresholdType: "normal",
+        thresholdKey: "disk"
+    },
+    "disk.space": {
+        id: "disk.space",
+        group: "disk",
+        subKey: "space",
+        sensorId: "disk/all/used",
+        label: "Space",
         chartKey: "",
         chartMax: 0,
         thresholdType: "none"

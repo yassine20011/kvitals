@@ -232,6 +232,8 @@ QtObject {
     readonly property int gpuTempCriticalThreshold: Plasmoid.configuration.gpuTempCriticalThreshold || 85
     readonly property int batteryWarningThreshold:  Plasmoid.configuration.batteryWarningThreshold  || 30
     readonly property int batteryCriticalThreshold: Plasmoid.configuration.batteryCriticalThreshold || 15
+    readonly property int diskWarningThreshold:     Plasmoid.configuration.diskWarningThreshold     || 80
+    readonly property int diskCriticalThreshold:    Plasmoid.configuration.diskCriticalThreshold    || 90
     readonly property int diskTempWarningThreshold: Plasmoid.configuration.diskTempWarningThreshold || 45
     readonly property int diskTempCriticalThreshold: Plasmoid.configuration.diskTempCriticalThreshold || 60
 
