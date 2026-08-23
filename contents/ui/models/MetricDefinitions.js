@@ -6,63 +6,113 @@
 var GROUPS = {
     cpu: {
         id: "cpu",
+        name: "CPU",
         defaultLabel: "CPU",
         defaultIcon: "am-cpu-symbolic",
-        defaultSubMetrics: "usage,freq,temp"
+        defaultSubMetrics: "usage,freq,temp",
+        subs: [
+            { key: "usage", label: "Usage" },
+            { key: "freq",  label: "Frequency" },
+            { key: "temp",  label: "Temperature" }
+        ]
     },
     ram: {
         id: "ram",
+        name: "RAM",
         defaultLabel: "RAM",
         defaultIcon: "nvidia-ram-symbolic",
-        defaultSubMetrics: "percentage"
+        defaultSubMetrics: "percentage",
+        subs: [
+            { key: "percentage", label: "Percentage" },
+            { key: "used",       label: "Used / Total" },
+            { key: "temp",       label: "Temperature (DDR5)" }
+        ]
     },
     swap: {
         id: "swap",
+        name: "Swap",
         defaultLabel: "SWAP",
         defaultIcon: "nvidia-ram-symbolic",
-        defaultSubMetrics: "percent,used"
+        defaultSubMetrics: "percent,used",
+        subs: [
+            { key: "percent", label: "Usage (%)" },
+            { key: "used",    label: "Used" },
+            { key: "free",    label: "Free" },
+            { key: "total",   label: "Total" }
+        ]
     },
     temp: {
         id: "temp",
+        name: "Temperature",
         defaultLabel: "System",
         defaultIcon: "temperature-normal",
-        defaultSubMetrics: "temp"
+        defaultSubMetrics: "temp",
+        subs: []
     },
     gpu: {
         id: "gpu",
+        name: "GPU",
         defaultLabel: "GPU",
         defaultIcon: "gpu-symbolic",
-        defaultSubMetrics: "usage,vram,temp"
+        defaultSubMetrics: "usage,vram,temp",
+        subs: [
+            { key: "usage", label: "Usage" },
+            { key: "vram",  label: "VRAM" },
+            { key: "temp",  label: "Temperature" },
+            { key: "freq",  label: "Frequency" },
+            { key: "power", label: "Power" }
+        ]
     },
     bat: {
         id: "bat",
+        name: "Battery",
         defaultLabel: "BAT",
         defaultIcon: "battery-good",
-        defaultSubMetrics: "percentage,power"
+        defaultSubMetrics: "percentage,power",
+        subs: [
+            { key: "percentage", label: "Percentage" },
+            { key: "power",      label: "Power consumption" }
+        ]
     },
     net: {
         id: "net",
+        name: "Network",
         defaultLabel: "NET",
         defaultIcon: "network-wireless",
-        defaultSubMetrics: "down,up"
+        defaultSubMetrics: "down,up",
+        subs: [
+            { key: "down", label: "Download" },
+            { key: "up",   label: "Upload" },
+            { key: "ip",   label: "IP address" }
+        ]
     },
     disk: {
         id: "disk",
+        name: "Disk",
         defaultLabel: "DSK",
         defaultIcon: "am-disk-utility-symbolic",
-        defaultSubMetrics: "read,write"
+        defaultSubMetrics: "read,write",
+        subs: [
+            { key: "read",  label: "Read" },
+            { key: "write", label: "Write" },
+            { key: "temp",  label: "Temperature" }
+        ]
     },
     fan: {
         id: "fan",
+        name: "Fan",
         defaultLabel: "FAN",
         defaultIcon: "am-fan-symbolic",
-        defaultSubMetrics: "speed"
+        defaultSubMetrics: "speed",
+        subs: []
     },
     uptime: {
         id: "uptime",
+        name: "System Uptime",
         defaultLabel: "UPTIME",
         defaultIcon: "clock",
-        defaultSubMetrics: "uptime"
+        defaultSubMetrics: "uptime",
+        subs: []
     }
 };
 

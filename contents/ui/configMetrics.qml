@@ -82,198 +82,14 @@ KCM.SimpleKCM {
     property string cfg_fanIcon:     "am-fan-symbolic"
     property string cfg_uptimeIcon:  "clock"
 
-    // ── Category metadata ──────────────────────────────────────────────────
-
-    readonly property var allKeys: ["cpu", "ram", "swap", "temp", "gpu", "bat", "net", "disk", "fan", "uptime"]
-
-    function resolveIcon(name) {
-        switch (name) {
-        case "am-cpu-symbolic":
-        case "nvidia-ram-symbolic":
-        case "am-disk-utility-symbolic":
-        case "am-fan-symbolic":
-        case "gpu-symbolic":
-            return Qt.resolvedUrl("../icons/" + name + ".svg");
-        default:
-            return name;
-        }
+    // Metric configuration adapter targeting KCM properties
+    MetricConfig {
+        id: metricConfig
+        target: metricsPage
+        propertyPrefix: "cfg_"
     }
 
-    function iconFor(key) {
-        var name;
-        switch (key) {
-            case "cpu":    name = cfg_cpuIcon; break;
-            case "ram":    name = cfg_ramIcon; break;
-            case "swap":   name = cfg_swapIcon; break;
-            case "temp":   name = cfg_tempIcon; break;
-            case "gpu":    name = cfg_gpuIcon; break;
-            case "bat":    name = cfg_batteryIcon; break;
-            case "net":    name = cfg_networkIcon; break;
-            case "disk":   name = cfg_diskIcon; break;
-            case "fan":    name = cfg_fanIcon; break;
-            case "uptime": name = cfg_uptimeIcon; break;
-            default: return "help-about";
-        }
-        return resolveIcon(name);
-    }
-
-    readonly property var metricMeta: ({
-        "cpu":  { label: i18n("CPU"),              subs: [
-            {key: "usage", label: i18n("Usage")},
-            {key: "freq",  label: i18n("Frequency")},
-            {key: "temp",  label: i18n("Temperature")}
-        ]},
-        "ram":  { label: i18n("RAM"),              subs: [
-            {key: "percentage", label: i18n("Percentage")},
-            {key: "used",       label: i18n("Used / Total")},
-            {key: "temp",       label: i18n("Temperature (DDR5)")}
-        ]},
-        "swap": { label: i18n("Swap"),             subs: [
-            {key: "percent", label: i18n("Usage (%)")},
-            {key: "used",    label: i18n("Used")},
-            {key: "free",    label: i18n("Free")},
-            {key: "total",   label: i18n("Total")}
-        ]},
-        "temp": { label: i18n("Temperature"),      subs: []},
-        "gpu":  { label: i18n("GPU"),              subs: [
-            {key: "usage", label: i18n("Usage")},
-            {key: "vram",  label: i18n("VRAM")},
-            {key: "temp",  label: i18n("Temperature")}
-        ]},
-        "bat":  { label: i18n("Battery"),          subs: [
-            {key: "percentage", label: i18n("Percentage")},
-            {key: "power",      label: i18n("Power consumption")}
-        ]},
-        "net":  { label: i18n("Network"),          subs: [
-            {key: "down", label: i18n("Download")},
-            {key: "up",   label: i18n("Upload")},
-            {key: "ip",   label: i18n("IP address")}
-        ]},
-        "disk": { label: i18n("Disk"),             subs: [
-            {key: "read",  label: i18n("Read")},
-            {key: "write", label: i18n("Write")},
-            {key: "temp",  label: i18n("Temperature")}
-        ]},
-        "fan":  { label: i18n("Fan"),              subs: []},
-        "uptime": { label: i18n("System Uptime"),  subs: []}
-    })
-
-    // ── Sub-metric helpers ─────────────────────────────────────────────────
-
-    function subMetrics(key) {
-        var str;
-        switch (key) {
-            case "cpu":  str = cfg_cpuSubMetrics;  break;
-            case "ram":  str = cfg_ramSubMetrics;  break;
-            case "swap": str = cfg_swapSubMetrics; break;
-            case "gpu":  str = cfg_gpuSubMetrics;  break;
-            case "bat":  str = cfg_batSubMetrics;  break;
-            case "net":  str = cfg_netSubMetrics;  break;
-            case "disk": str = cfg_diskSubMetrics; break;
-            default:     str = "";
-        }
-        return str ? str.split(",").filter(function(s){ return s.length > 0; }) : [];
-    }
-
-    function isEnabled(key) {
-        switch (key) {
-            case "cpu":    return cfg_cpuEnabled;
-            case "ram":    return cfg_ramEnabled;
-            case "swap":   return cfg_swapEnabled;
-            case "temp":   return cfg_tempEnabled;
-            case "gpu":    return cfg_gpuEnabled;
-            case "bat":    return cfg_batEnabled;
-            case "net":    return cfg_netEnabled;
-            case "disk":   return cfg_diskEnabled;
-            case "fan":    return cfg_fanEnabled;
-            case "uptime": return cfg_uptimeEnabled;
-        }
-        return false;
-    }
-
-    function setEnabled(key, val) {
-        switch (key) {
-            case "cpu":    cfg_cpuEnabled    = val; break;
-            case "ram":    cfg_ramEnabled    = val; break;
-            case "swap":   cfg_swapEnabled   = val; break;
-            case "temp":   cfg_tempEnabled   = val; break;
-            case "gpu":    cfg_gpuEnabled    = val; break;
-            case "bat":    cfg_batEnabled    = val; break;
-            case "net":    cfg_netEnabled    = val; break;
-            case "disk":   cfg_diskEnabled   = val; break;
-            case "fan":    cfg_fanEnabled    = val; break;
-            case "uptime": cfg_uptimeEnabled = val; break;
-        }
-    }
-
-    function visibilityFor(key) {
-        switch (key) {
-            case "cpu":    return cfg_cpuVisibility;
-            case "ram":    return cfg_ramVisibility;
-            case "swap":   return cfg_swapVisibility;
-            case "temp":   return cfg_tempVisibility;
-            case "gpu":    return cfg_gpuVisibility;
-            case "bat":    return cfg_batVisibility;
-            case "net":    return cfg_netVisibility;
-            case "disk":   return cfg_diskVisibility;
-            case "fan":    return cfg_fanVisibility;
-            case "uptime": return cfg_uptimeVisibility;
-        }
-        return "both";
-    }
-
-    function setVisibility(key, val) {
-        switch (key) {
-            case "cpu":    cfg_cpuVisibility    = val; break;
-            case "ram":    cfg_ramVisibility    = val; break;
-            case "swap":   cfg_swapVisibility   = val; break;
-            case "temp":   cfg_tempVisibility   = val; break;
-            case "gpu":    cfg_gpuVisibility    = val; break;
-            case "bat":    cfg_batVisibility    = val; break;
-            case "net":    cfg_netVisibility    = val; break;
-            case "disk":   cfg_diskVisibility   = val; break;
-            case "fan":    cfg_fanVisibility    = val; break;
-            case "uptime": cfg_uptimeVisibility = val; break;
-        }
-    }
-
-    function toggleSubMetric(key, sub, enable) {
-        var list = subMetrics(key);
-        if (enable) {
-            if (list.indexOf(sub) < 0) list.push(sub);
-        } else {
-            if (list.length <= 1) return;
-            list = list.filter(function(s){ return s !== sub; });
-        }
-        var canonical = metricMeta[key].subs.map(function(s){ return s.key; });
-        list.sort(function(a, b){ return canonical.indexOf(a) - canonical.indexOf(b); });
-        var str = list.join(",");
-        switch (key) {
-            case "cpu":  cfg_cpuSubMetrics  = str; break;
-            case "ram":  cfg_ramSubMetrics  = str; break;
-            case "swap": cfg_swapSubMetrics = str; break;
-            case "gpu":  cfg_gpuSubMetrics  = str; break;
-            case "bat":  cfg_batSubMetrics  = str; break;
-            case "net":  cfg_netSubMetrics  = str; break;
-            case "disk": cfg_diskSubMetrics = str; break;
-        }
-    }
-
-    // ── Ordering ───────────────────────────────────────────────────────────
-
-    readonly property var currentOrder: {
-        var keys = cfg_metricOrder.split(",").map(function(k){ return k.trim(); })
-            .filter(function(k){ return k.length > 0 && metricMeta[k] !== undefined; });
-        allKeys.forEach(function(k){ if (keys.indexOf(k) < 0) keys.push(k); });
-        return keys;
-    }
-
-    function moveMetric(fromIndex, toIndex) {
-        var keys = currentOrder.slice();
-        var item = keys.splice(fromIndex, 1)[0];
-        keys.splice(toIndex, 0, item);
-        cfg_metricOrder = keys.join(",");
-    }
+    readonly property var currentOrder: metricConfig.orderedKeys
 
     // Sensor discovery (GPU, Disk, Fan) via HardwareDiscovery
     HardwareDiscovery {
@@ -294,80 +110,6 @@ KCM.SimpleKCM {
         return found;
     }
 
-    // GPU label helpers
-    function parseGpuLabels(str) {
-        var result = {};
-        if (!str) return result;
-        str.split("|").forEach(function(pair) {
-            var sep = pair.indexOf(":");
-            if (sep > 0) result[pair.substring(0, sep)] = pair.substring(sep + 1);
-        });
-        return result;
-    }
-
-    function saveGpuLabel(gpuId, label) {
-        var labels = parseGpuLabels(cfg_gpuLabels);
-        var trimmed = (label || "").trim();
-        if (trimmed.length > 0) labels[gpuId] = trimmed;
-        else delete labels[gpuId];
-        var parts = [];
-        for (var id in labels) parts.push(id + ":" + labels[id]);
-        cfg_gpuLabels = parts.join("|");
-    }
-
-    // GPU sub-metric helpers
-    function parseGpuSubMetricsMap(str) {
-        var result = {};
-        if (!str) return result;
-        if (str.indexOf(":") >= 0) {
-            str.split("|").forEach(function(pair) {
-                var sep = pair.indexOf(":");
-                if (sep > 0) {
-                    var gid = pair.substring(0, sep);
-                    var subs = pair.substring(sep + 1).split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
-                    result[gid] = subs;
-                }
-            });
-        }
-        return result;
-    }
-
-    function getGpuActiveSubMetrics(gpuId) {
-        var map = parseGpuSubMetricsMap(cfg_gpuSubMetrics);
-        if (map[gpuId] && map[gpuId].length > 0) {
-            return map[gpuId];
-        }
-        if (cfg_gpuSubMetrics && cfg_gpuSubMetrics.indexOf(":") < 0) {
-            return cfg_gpuSubMetrics.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
-        }
-        return MetricDefinitions.GROUPS.gpu.defaultSubMetrics.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
-    }
-
-    function toggleGpuSubMetric(gpuId, subKey, checked) {
-        var map = parseGpuSubMetricsMap(cfg_gpuSubMetrics);
-        for (var i = 0; i < discoveredGpus.length; i++) {
-            var gid = discoveredGpus[i].id;
-            if (!map[gid]) {
-                map[gid] = getGpuActiveSubMetrics(gid);
-            }
-        }
-        var subs = map[gpuId] ? map[gpuId].slice() : getGpuActiveSubMetrics(gpuId);
-        if (checked) {
-            if (subs.indexOf(subKey) < 0) subs.push(subKey);
-        } else {
-            if (subs.length > 1) {
-                subs = subs.filter(function(s){ return s !== subKey; });
-            }
-        }
-        map[gpuId] = subs;
-
-        var parts = [];
-        for (var id in map) {
-            parts.push(id + ":" + map[id].join(","));
-        }
-        cfg_gpuSubMetrics = parts.join("|");
-    }
-
     // Disk discovery
     readonly property var discoveredDisks: {
         var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_READ : /^disk\/(nvme\d+n\d+|sd[a-z]+)\/read$/;
@@ -382,27 +124,6 @@ KCM.SimpleKCM {
         return found;
     }
 
-    // Disk label helpers
-    function parseDiskLabels(str) {
-        var result = {};
-        if (!str) return result;
-        str.split("|").forEach(function(pair) {
-            var sep = pair.indexOf(":");
-            if (sep > 0) result[pair.substring(0, sep)] = pair.substring(sep + 1);
-        });
-        return result;
-    }
-
-    function saveDiskLabel(diskId, label) {
-        var labels = parseDiskLabels(cfg_diskLabels);
-        var trimmed = (label || "").trim();
-        if (trimmed.length > 0) labels[diskId] = trimmed;
-        else delete labels[diskId];
-        var parts = [];
-        for (var id in labels) parts.push(id + ":" + labels[id]);
-        cfg_diskLabels = parts.join("|");
-    }
-
     // Fan discovery
     readonly property var discoveredFans: {
         var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.FAN : /^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i;
@@ -411,12 +132,7 @@ KCM.SimpleKCM {
         return ids.map(function(id, i) { return { id: id, name: "Fan " + (i + 1) }; });
     }
 
-    // --- Fan max-RPM capability check ---
-    // The "Max RPM for percentage" fallback is dead config when every
-    // discovered fan already reports its own max — only show it when at
-    // least one fan doesn't. Defaults to true (shown) until we've actually
-    // checked, so it doesn't appear to silently vanish for people who need it.
-
+    // Fan max-RPM capability check
     property bool fanMaxFallbackNeeded: true
 
     Sensors.SensorDataModel {
@@ -442,32 +158,7 @@ KCM.SimpleKCM {
         fanMaxFallbackNeeded = false;
     }
 
-    // --- Fan label helpers ---
-
-    function parseFanLabels(str) {
-        var result = Object.create(null);
-        if (!str) return result;
-        str.split("|").forEach(function(pair) {
-            var sep = pair.indexOf(":");
-            if (sep > 0) result[pair.substring(0, sep)] = pair.substring(sep + 1);
-        });
-        return result;
-    }
-
-    function saveFanLabel(fanId, label) {
-        var labels = parseFanLabels(cfg_fanLabels);
-        // "|" is the record separator in the stored string — strip it from
-        // user input so a label containing it can't corrupt the mapping
-        // (colons are fine: parseFanLabels only splits on the first one).
-        var trimmed = (label || "").replace(/\|/g, "").trim();
-        if (trimmed.length > 0) labels[fanId] = trimmed;
-        else delete labels[fanId];
-        var parts = [];
-        for (var id in labels) parts.push(id + ":" + labels[id]);
-        cfg_fanLabels = parts.join("|");
-    }
-
-    // --- Network interface discovery ---
+    // Network interface discovery
     property var ifaceList: ["auto"]
     Plasma5Support.DataSource {
         id: ifaceSource
@@ -484,9 +175,6 @@ KCM.SimpleKCM {
             metricsPage.ifaceList = ifaces;
         }
     }
-
-    // GPU sub-metric helpers (per-device, stored in gpuSubMetrics globally)
-    // gpuSubMetrics applies to all GPUs uniformly (simplification from per-GPU gpuMetrics)
 
     // UI
 
@@ -520,9 +208,9 @@ KCM.SimpleKCM {
                     Layout.fillWidth: true
 
                     readonly property string key: modelData
-                    readonly property var meta: metricsPage.metricMeta[key] || {}
-                    readonly property bool catEnabled: metricsPage.isEnabled(key)
-                    readonly property var activeSubs: metricsPage.subMetrics(key)
+                    readonly property var meta: MetricDefinitions.GROUPS[key] || {}
+                    readonly property bool catEnabled: metricConfig.isGroupEnabled(key)
+                    readonly property var activeSubs: metricConfig.getSubMetrics(key)
                     readonly property bool hasSubs: meta.subs && meta.subs.length > 0
 
                     // ── Category row ────────────────────────────────────────
@@ -531,7 +219,7 @@ KCM.SimpleKCM {
                         spacing: Kirigami.Units.smallSpacing
 
                         Kirigami.Icon {
-                            source: metricsPage.iconFor(catDelegate.key)
+                            source: metricConfig.getGroupIcon(catDelegate.key)
                             isMask: true
                             implicitWidth: Kirigami.Units.iconSizes.smallMedium
                             implicitHeight: Kirigami.Units.iconSizes.smallMedium
@@ -540,9 +228,9 @@ KCM.SimpleKCM {
 
                         CheckBox {
                             id: enabledCheck
-                            text: meta.label || key
+                            text: i18n(meta.name || meta.defaultLabel || key)
                             checked: catDelegate.catEnabled
-                            onToggled: metricsPage.setEnabled(key, checked)
+                            onToggled: metricConfig.setGroupEnabled(key, checked)
                             Layout.fillWidth: true
                         }
 
@@ -550,14 +238,14 @@ KCM.SimpleKCM {
                             id: visibilityCombo
                             model: [i18n("All"), i18n("Popup"), i18n("Compact")]
                             currentIndex: {
-                                var v = metricsPage.visibilityFor(catDelegate.key);
+                                var v = metricConfig.getVisibility(catDelegate.key);
                                 if (v === "widget") return 1;
                                 if (v === "compact") return 2;
                                 return 0;
                             }
                             onActivated: {
                                 var vals = ["both", "widget", "compact"];
-                                metricsPage.setVisibility(catDelegate.key, vals[index]);
+                                metricConfig.setVisibility(catDelegate.key, vals[index]);
                             }
                             implicitWidth: Kirigami.Units.gridUnit * 8
                             ToolTip.text: i18n("All=widget+compact, Popup=full view only, Compact=panel only")
@@ -573,7 +261,7 @@ KCM.SimpleKCM {
                             enabled: index > 0
                             implicitWidth: Kirigami.Units.gridUnit * 2
                             implicitHeight: Kirigami.Units.gridUnit * 2
-                            onClicked: metricsPage.moveMetric(index, index - 1)
+                            onClicked: metricConfig.moveMetric(index, index - 1)
                             ToolTip.text: i18n("Move up")
                             ToolTip.visible: hovered
                             ToolTip.delay: Kirigami.Units.toolTipDelay
@@ -584,7 +272,7 @@ KCM.SimpleKCM {
                             enabled: index < metricsPage.currentOrder.length - 1
                             implicitWidth: Kirigami.Units.gridUnit * 2
                             implicitHeight: Kirigami.Units.gridUnit * 2
-                            onClicked: metricsPage.moveMetric(index, index + 1)
+                            onClicked: metricConfig.moveMetric(index, index + 1)
                             ToolTip.text: i18n("Move down")
                             ToolTip.visible: hovered
                             ToolTip.delay: Kirigami.Units.toolTipDelay
@@ -592,8 +280,6 @@ KCM.SimpleKCM {
                     }
 
                     // ── Sub-metric toggles ─────────────────────────────────
-                    // Only shown for categories that have sub-metrics defined
-
                     Loader {
                         active: catDelegate.hasSubs && catDelegate.catEnabled
                         visible: active
@@ -614,27 +300,9 @@ KCM.SimpleKCM {
                                 Label { text: i18n("Label:"); opacity: 0.8 }
                                 TextField {
                                     implicitWidth: Kirigami.Units.gridUnit * 12
-                                    text: {
-                                        switch (catDelegate.key) {
-                                            case "cpu":  return cfg_cpuLabel;
-                                            case "ram":  return cfg_ramLabel;
-                                            case "swap": return cfg_swapLabel;
-                                            case "net":  return cfg_netLabel;
-                                            case "disk": return cfg_diskLabel;
-                                        }
-                                        return "";
-                                    }
-                                    placeholderText: catDelegate.meta.label
-                                    onTextEdited: {
-                                        var v = text.trim() || catDelegate.meta.label;
-                                        switch (catDelegate.key) {
-                                            case "cpu":  cfg_cpuLabel  = v; break;
-                                            case "ram":  cfg_ramLabel  = v; break;
-                                            case "swap": cfg_swapLabel = v; break;
-                                            case "net":  cfg_netLabel  = v; break;
-                                            case "disk": cfg_diskLabel = v; break;
-                                        }
-                                    }
+                                    text: metricConfig.getGroupLabel(catDelegate.key)
+                                    placeholderText: catDelegate.meta.defaultLabel || ""
+                                    onTextEdited: metricConfig.setGroupLabel(catDelegate.key, text.trim() || (catDelegate.meta.defaultLabel || ""))
                                 }
                             }
 
@@ -649,21 +317,16 @@ KCM.SimpleKCM {
 
                                     delegate: CheckBox {
                                         required property var modelData
-                                        text: modelData.label
+                                        text: i18n(modelData.label)
                                         checked: catDelegate.activeSubs.indexOf(modelData.key) >= 0
                                         enabled: {
-                                            // DDR5 temp: grey out when sensor not detected
-                                            // (can still uncheck, but not check)
                                             if (catDelegate.key === "ram" && modelData.key === "temp"
                                                 && !Plasmoid.configuration._ramTempDetected)
                                                 return checked;
                                             return !(checked && catDelegate.activeSubs.length <= 1);
                                         }
                                         onToggled: {
-                                            metricsPage.toggleSubMetric(catDelegate.key, modelData.key, checked);
-                                            // Manually touching Percentage/Used releases the
-                                            // popup-only "show both" override so the button
-                                            // can be used again.
+                                            metricConfig.toggleSubMetric(catDelegate.key, modelData.key, checked);
                                             if (catDelegate.key === "ram"
                                                 && (modelData.key === "percentage" || modelData.key === "used"))
                                                 cfg_ramWidgetShowBoth = false;
@@ -672,25 +335,18 @@ KCM.SimpleKCM {
                                 }
                             }
 
-                            // RAM: popup-only override to show both Percentage and Used/Total
-                            // in the widget window without changing which one is checked here
-                            // (that choice still governs the compact panel on its own).
+                            // RAM popup override button
                             Button {
                                 visible: catDelegate.key === "ram"
                                 text: i18n("Show both in popup window")
                                 checkable: true
                                 checked: cfg_ramWidgetShowBoth
-                                // Greyed out only when both are already individually
-                                // selected — togglable if just % , just Used/Total, or neither.
                                 enabled: !(catDelegate.activeSubs.indexOf("percentage") >= 0
                                     && catDelegate.activeSubs.indexOf("used") >= 0)
                                 onToggled: cfg_ramWidgetShowBoth = checked
                             }
 
-                            // DDR5 temperature hint — only relevant once the user has
-                            // enabled the sub-metric and the sensor genuinely isn't there;
-                            // it used to show whenever the checkbox was checked, which was
-                            // confusing on hardware where the sensor IS detected and working.
+                            // DDR5 temperature hint
                             Label {
                                 visible: catDelegate.key === "ram" && catDelegate.activeSubs.indexOf("temp") >= 0
                                     && !Plasmoid.configuration._ramTempDetected
@@ -700,8 +356,6 @@ KCM.SimpleKCM {
                                 wrapMode: Text.WordWrap
                                 Layout.maximumWidth: Kirigami.Units.gridUnit * 24
                             }
-
-                            // ── Category-specific inline settings ──────────
 
                             // Network: interface selector
                             RowLayout {
@@ -726,7 +380,7 @@ KCM.SimpleKCM {
                                 }
                             }
 
-                            // GPU: per-device selection
+                            // GPU: per-device selection and sub-metrics
                             ColumnLayout {
                                 visible: catDelegate.key === "gpu"
                                 spacing: Kirigami.Units.smallSpacing
@@ -758,34 +412,14 @@ KCM.SimpleKCM {
                                         Layout.fillWidth: true
                                         Layout.leftMargin: Kirigami.Units.smallSpacing
 
-                                        property bool _gpuEnabled: {
-                                            if (!cfg_gpuSelection || cfg_gpuSelection === "") return true;
-                                            if (cfg_gpuSelection === "none") return false;
-                                            return cfg_gpuSelection.split(",").indexOf(modelData.id) >= 0;
-                                        }
+                                        property bool _gpuEnabled: metricConfig.isGpuSelected(modelData.id)
 
                                         CheckBox {
                                             text: gpuDelegate.modelData.name
                                             checked: gpuDelegate._gpuEnabled
                                             onToggled: {
-                                                var ids;
-                                                if (!cfg_gpuSelection || cfg_gpuSelection === "") {
-                                                    ids = gpuSelectorRepeater.model.map(function(g){ return g.id; });
-                                                } else if (cfg_gpuSelection === "none") {
-                                                    ids = [];
-                                                } else {
-                                                    ids = cfg_gpuSelection.split(",").filter(function(s){ return s.length > 0; });
-                                                }
-                                                if (checked) {
-                                                    if (ids.indexOf(modelData.id) < 0) ids.push(modelData.id);
-                                                } else {
-                                                    ids = ids.filter(function(id){ return id !== modelData.id; });
-                                                }
                                                 var allIds = gpuSelectorRepeater.model.map(function(g){ return g.id; });
-                                                var allSelected = allIds.every(function(id){ return ids.indexOf(id) >= 0; });
-                                                if (allSelected)           cfg_gpuSelection = "";
-                                                else if (ids.length === 0) cfg_gpuSelection = "none";
-                                                else                       cfg_gpuSelection = ids.join(",");
+                                                metricConfig.setGpuSelected(modelData.id, checked, allIds);
                                             }
                                         }
 
@@ -800,9 +434,9 @@ KCM.SimpleKCM {
                                                 Label { text: i18n("Label:"); opacity: 0.8 }
                                                 TextField {
                                                     implicitWidth: Kirigami.Units.gridUnit * 12
-                                                    text: metricsPage.parseGpuLabels(cfg_gpuLabels)[gpuDelegate.modelData.id] || ""
+                                                    text: metricConfig.parseGpuLabels()[gpuDelegate.modelData.id] || ""
                                                     placeholderText: gpuDelegate.modelData.name
-                                                    onTextEdited: metricsPage.saveGpuLabel(gpuDelegate.modelData.id, text)
+                                                    onTextEdited: metricConfig.saveGpuLabel(gpuDelegate.modelData.id, text)
                                                 }
                                             }
 
@@ -811,27 +445,21 @@ KCM.SimpleKCM {
                                                 spacing: Kirigami.Units.largeSpacing
                                                 Layout.fillWidth: true
 
-                                                property var activeGpuSubs: metricsPage.getGpuActiveSubMetrics(gpuDelegate.modelData.id)
+                                                property var activeGpuSubs: metricConfig.getGpuSubMetrics(gpuDelegate.modelData.id)
 
-                                                CheckBox {
-                                                    text: i18n("Usage")
-                                                    checked: parent.activeGpuSubs.indexOf("usage") >= 0
-                                                    enabled: !(checked && parent.activeGpuSubs.length <= 1)
-                                                    onToggled: metricsPage.toggleGpuSubMetric(gpuDelegate.modelData.id, "usage", checked)
-                                                }
+                                                Repeater {
+                                                    model: catDelegate.meta.subs
 
-                                                CheckBox {
-                                                    text: i18n("VRAM")
-                                                    checked: parent.activeGpuSubs.indexOf("vram") >= 0
-                                                    enabled: !(checked && parent.activeGpuSubs.length <= 1)
-                                                    onToggled: metricsPage.toggleGpuSubMetric(gpuDelegate.modelData.id, "vram", checked)
-                                                }
-
-                                                CheckBox {
-                                                    text: i18n("Temperature")
-                                                    checked: parent.activeGpuSubs.indexOf("temp") >= 0
-                                                    enabled: !(checked && parent.activeGpuSubs.length <= 1)
-                                                    onToggled: metricsPage.toggleGpuSubMetric(gpuDelegate.modelData.id, "temp", checked)
+                                                    delegate: CheckBox {
+                                                        required property var modelData
+                                                        text: i18n(modelData.label)
+                                                        checked: parent.activeGpuSubs.indexOf(modelData.key) >= 0
+                                                        enabled: !(checked && parent.activeGpuSubs.length <= 1)
+                                                        onToggled: {
+                                                            var allIds = metricsPage.discoveredGpus.map(function(g){ return g.id; });
+                                                            metricConfig.toggleGpuSubMetric(gpuDelegate.modelData.id, modelData.key, checked, allIds);
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
@@ -877,9 +505,9 @@ KCM.SimpleKCM {
                                         }
                                         TextField {
                                             implicitWidth: Kirigami.Units.gridUnit * 12
-                                            text: metricsPage.parseDiskLabels(cfg_diskLabels)[modelData.id] || ""
+                                            text: metricConfig.parseDiskLabels()[modelData.id] || ""
                                             placeholderText: modelData.name
-                                            onTextEdited: metricsPage.saveDiskLabel(modelData.id, text)
+                                            onTextEdited: metricConfig.saveDiskLabel(modelData.id, text)
                                         }
                                     }
                                 }
@@ -887,8 +515,7 @@ KCM.SimpleKCM {
                         }
                     }
 
-                    // ── Single-metric label fields (temp, fan, uptime) ─────
-
+                    // Single-metric label fields (temp, fan, uptime)
                     Loader {
                         active: catDelegate.key === "temp" && catDelegate.catEnabled
                         visible: active
@@ -905,13 +532,12 @@ KCM.SimpleKCM {
                                 Label { text: i18n("Label:"); opacity: 0.8 }
                                 TextField {
                                     implicitWidth: Kirigami.Units.gridUnit * 12
-                                    text: cfg_tempLabel
+                                    text: metricConfig.getGroupLabel("temp")
                                     placeholderText: i18n("System")
-                                    onTextEdited: cfg_tempLabel = text.trim() || "System"
+                                    onTextEdited: metricConfig.setGroupLabel("temp", text.trim() || "System")
                                 }
                             }
 
-                            // Fallback hint — shown when runtime detects no chipset sensor
                             Label {
                                 visible: Plasmoid.configuration._tempFallbackActive
                                 text: i18n("No chipset temp sensor detected, fallback to CPU temp sensor")
@@ -940,13 +566,12 @@ KCM.SimpleKCM {
                                 Label { text: i18n("Label:"); opacity: 0.8 }
                                 TextField {
                                     implicitWidth: Kirigami.Units.gridUnit * 12
-                                    text: cfg_fanLabel
+                                    text: metricConfig.getGroupLabel("fan")
                                     placeholderText: i18n("FAN")
-                                    onTextEdited: cfg_fanLabel = text.trim() || "FAN"
+                                    onTextEdited: metricConfig.setGroupLabel("fan", text.trim() || "FAN")
                                 }
                             }
 
-                            // Per-fan naming
                             ColumnLayout {
                                 spacing: Kirigami.Units.smallSpacing
                                 Layout.fillWidth: true
@@ -967,9 +592,9 @@ KCM.SimpleKCM {
                                         }
                                         TextField {
                                             implicitWidth: Kirigami.Units.gridUnit * 12
-                                            text: metricsPage.parseFanLabels(cfg_fanLabels)[modelData.id] || ""
+                                            text: metricConfig.parseFanLabels()[modelData.id] || ""
                                             placeholderText: modelData.name
-                                            onTextEdited: metricsPage.saveFanLabel(modelData.id, text)
+                                            onTextEdited: metricConfig.saveFanLabel(modelData.id, text)
                                         }
                                     }
                                 }
@@ -999,7 +624,8 @@ KCM.SimpleKCM {
                             }
                         }
                     }
-                    // ── Divider ────────────────────────────────────────────
+
+                    // Divider
                     Rectangle {
                         visible: index < metricsPage.currentOrder.length - 1
                         Layout.fillWidth: true
