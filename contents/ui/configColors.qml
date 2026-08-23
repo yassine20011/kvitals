@@ -34,6 +34,8 @@ KCM.SimpleKCM {
     property alias cfg_gpuTempCriticalThreshold: gpuTempCritSlider.value
     property alias cfg_batteryWarningThreshold: batWarnSlider.value
     property alias cfg_batteryCriticalThreshold: batCritSlider.value
+    property alias cfg_diskWarningThreshold: diskWarnSlider.value
+    property alias cfg_diskCriticalThreshold: diskCritSlider.value
     property alias cfg_diskTempWarningThreshold: diskTempWarnSlider.value
     property alias cfg_diskTempCriticalThreshold: diskTempCritSlider.value
 
@@ -552,6 +554,20 @@ KCM.SimpleKCM {
             }
             Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: batWarnSlider.value <= batCritSlider.value ? cfg_criticalColor : "transparent" }
 
+            // --- Disk Usage ---
+            Label { text: i18n("Disk Usage") }
+            RowLayout {
+                Layout.fillWidth: true
+                Slider { id: diskWarnSlider; from: 10; to: 100; stepSize: 5; value: 80; Layout.fillWidth: true }
+                Label { text: Math.round(diskWarnSlider.value) + "%"; Layout.preferredWidth: 40 }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Slider { id: diskCritSlider; from: 10; to: 100; stepSize: 5; value: 90; Layout.fillWidth: true }
+                Label { text: Math.round(diskCritSlider.value) + "%"; Layout.preferredWidth: 40 }
+            }
+            Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: diskWarnSlider.value >= diskCritSlider.value ? cfg_criticalColor : "transparent" }
+
             // --- Disk Temperature ---
             Label { text: i18n("Disk Temp") }
             RowLayout {
@@ -607,6 +623,7 @@ KCM.SimpleKCM {
                 gpuWarnSlider.value = 70;  gpuCritSlider.value = 90
                 gpuTempWarnSlider.value = 60; gpuTempCritSlider.value = 85
                 batWarnSlider.value = 30;  batCritSlider.value = 15
+                diskWarnSlider.value = 80; diskCritSlider.value = 90
                 diskTempWarnSlider.value = 45; diskTempCritSlider.value = 60
             }
         }
