@@ -140,6 +140,12 @@
         <entry name="iconSize" type="Int">
             <default>12</default>
         </entry>
+        <entry name="textAlignment" type="String">
+            <default>right</default>
+        </entry>
+        <entry name="textPadding" type="Int">
+            <default>0</default>
+        </entry>
 
         <!-- Icons -->
         <entry name="cpuIcon" type="String">
