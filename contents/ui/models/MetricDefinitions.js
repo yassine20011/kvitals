@@ -58,9 +58,7 @@ var GROUPS = {
         subs: [
             { key: "usage", label: "Usage" },
             { key: "vram",  label: "VRAM" },
-            { key: "temp",  label: "Temperature" },
-            { key: "freq",  label: "Frequency" },
-            { key: "power", label: "Power" }
+            { key: "temp",  label: "Temperature" }
         ]
     },
     bat: {
