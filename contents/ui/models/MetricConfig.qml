@@ -273,19 +273,25 @@ QtObject {
     readonly property int gpuTempCriticalThreshold: (target && target[propertyPrefix + "gpuTempCriticalThreshold"]) || 85
     readonly property int batteryWarningThreshold:  (target && target[propertyPrefix + "batteryWarningThreshold"])  || 30
     readonly property int batteryCriticalThreshold: (target && target[propertyPrefix + "batteryCriticalThreshold"]) || 15
+    readonly property int diskWarningThreshold:     (target && target[propertyPrefix + "diskWarningThreshold"])     || 80
+    readonly property int diskCriticalThreshold:    (target && target[propertyPrefix + "diskCriticalThreshold"])    || 90
     readonly property int diskTempWarningThreshold: (target && target[propertyPrefix + "diskTempWarningThreshold"]) || 45
     readonly property int diskTempCriticalThreshold: (target && target[propertyPrefix + "diskTempCriticalThreshold"]) || 60
 
     function getWarningThreshold(key) {
         var prop = propertyPrefix + key + "WarningThreshold";
         var val = target ? target[prop] : undefined;
-        return val !== undefined ? val : 70;
+        if (val !== undefined) return val;
+        var direct = root[key + "WarningThreshold"];
+        return direct !== undefined ? direct : 70;
     }
 
     function getCriticalThreshold(key) {
         var prop = propertyPrefix + key + "CriticalThreshold";
         var val = target ? target[prop] : undefined;
-        return val !== undefined ? val : 90;
+        if (val !== undefined) return val;
+        var direct = root[key + "CriticalThreshold"];
+        return direct !== undefined ? direct : 90;
     }
 
     // Units & hardware preferences
