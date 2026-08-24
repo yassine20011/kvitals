@@ -16,6 +16,13 @@ Item {
     readonly property string diskReadValue:  Utils.formatRate(diskReadSensor.status  === Sensors.Sensor.Ready ? diskReadSensor.value  : NaN, networkUnit)
     readonly property string diskWriteValue: Utils.formatRate(diskWriteSensor.status === Sensors.Sensor.Ready ? diskWriteSensor.value : NaN, networkUnit)
 
+    readonly property real   diskUsedPercentRaw: (diskUsedPercentSensor.status === Sensors.Sensor.Ready && diskUsedPercentSensor.value != null) ? Number(diskUsedPercentSensor.value) : NaN
+    readonly property string diskUsedPercentValue: isNaN(diskUsedPercentRaw) ? "" : Math.round(diskUsedPercentRaw) + "%"
+
+    readonly property real   diskUsedRaw: (diskUsedSensor.status === Sensors.Sensor.Ready && diskUsedSensor.value != null) ? Number(diskUsedSensor.value) : NaN
+    readonly property real   diskTotalRaw: (diskTotalSensor.status === Sensors.Sensor.Ready && diskTotalSensor.value != null) ? Number(diskTotalSensor.value) : NaN
+    readonly property string diskSpaceValue: (!isNaN(diskUsedRaw) && !isNaN(diskTotalRaw) && diskTotalRaw > 0) ? (Utils.formatBytes(diskUsedRaw) + "/" + Utils.formatBytes(diskTotalRaw) + "G") : ""
+
     readonly property real   diskTempNumber: _diskTempNum
     readonly property string diskTempValue:  isNaN(_diskTempNum) ? "" : Utils.formatTemp(_diskTempNum, tempUnit)
 
@@ -58,6 +65,27 @@ Item {
     Sensors.Sensor {
         id: diskWriteSensor
         sensorId: "disk/all/write"
+        updateRateLimit: root.updateInterval
+        enabled: root.enabled
+    }
+
+    Sensors.Sensor {
+        id: diskUsedPercentSensor
+        sensorId: "disk/all/usedPercent"
+        updateRateLimit: root.updateInterval
+        enabled: root.enabled
+    }
+
+    Sensors.Sensor {
+        id: diskUsedSensor
+        sensorId: "disk/all/used"
+        updateRateLimit: root.updateInterval
+        enabled: root.enabled
+    }
+
+    Sensors.Sensor {
+        id: diskTotalSensor
+        sensorId: "disk/all/total"
         updateRateLimit: root.updateInterval
         enabled: root.enabled
     }

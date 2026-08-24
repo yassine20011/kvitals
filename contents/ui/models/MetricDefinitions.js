@@ -11,9 +11,12 @@ var GROUPS = {
         defaultIcon: "cpu-symbolic",
         defaultSubMetrics: "usage,freq,temp",
         subs: [
-            { key: "usage", label: "Usage" },
-            { key: "freq",  label: "Frequency" },
-            { key: "temp",  label: "Temperature" }
+            { key: "usage",  label: "Usage" },
+            { key: "freq",   label: "Frequency" },
+            { key: "temp",   label: "Temperature" },
+            { key: "load1",  label: "Load (1m)" },
+            { key: "load5",  label: "Load (5m)" },
+            { key: "load15", label: "Load (15m)" }
         ]
     },
     ram: {
@@ -58,7 +61,9 @@ var GROUPS = {
         subs: [
             { key: "usage", label: "Usage" },
             { key: "vram",  label: "VRAM" },
-            { key: "temp",  label: "Temperature" }
+            { key: "temp",  label: "Temperature" },
+            { key: "freq",  label: "Frequency" },
+            { key: "power", label: "Power" }
         ]
     },
     bat: {
@@ -69,7 +74,8 @@ var GROUPS = {
         defaultSubMetrics: "percentage,power",
         subs: [
             { key: "percentage", label: "Percentage" },
-            { key: "power",      label: "Power consumption" }
+            { key: "power",      label: "Power consumption" },
+            { key: "health",     label: "Health" }
         ]
     },
     net: {
@@ -93,6 +99,8 @@ var GROUPS = {
         subs: [
             { key: "read",  label: "Read" },
             { key: "write", label: "Write" },
+            { key: "usage", label: "Usage (%)" },
+            { key: "space", label: "Space (Used/Total)" },
             { key: "temp",  label: "Temperature" }
         ]
     },
@@ -128,7 +136,7 @@ var PATTERNS = {
     FAN: /^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i,
     NETWORK_IFACE: /^network\/([^/]+)\/download$/,
     TEMP_LMSENSORS: /^lmsensors\/(.+)\/temp\d+$/,
-    BATTERY: /^power\/(?!all)([^\/]+)\/chargePercentage$/
+    BATTERY: /^power\/((?:battery_)[a-zA-Z0-9_-]+|BAT\d+|BATT\d*)\/chargePercentage$/
 };
 
 // DEFINITIONS is the source of truth for every metric.
@@ -176,6 +184,30 @@ var DEFINITIONS = {
         thresholdType: "normal",
         thresholdKey: "temp",
         secondaryIcon: "temperature-normal"
+    },
+    "cpu.load1": {
+        id: "cpu.load1",
+        group: "cpu",
+        subKey: "load1",
+        sensorId: "cpu/loadaverages/loadaverage1",
+        label: "Load (1m)",
+        thresholdType: "none"
+    },
+    "cpu.load5": {
+        id: "cpu.load5",
+        group: "cpu",
+        subKey: "load5",
+        sensorId: "cpu/loadaverages/loadaverage5",
+        label: "Load (5m)",
+        thresholdType: "none"
+    },
+    "cpu.load15": {
+        id: "cpu.load15",
+        group: "cpu",
+        subKey: "load15",
+        sensorId: "cpu/loadaverages/loadaverage15",
+        label: "Load (15m)",
+        thresholdType: "none"
     },
     "ram.percentage": {
         id: "ram.percentage",
@@ -273,6 +305,22 @@ var DEFINITIONS = {
         thresholdKey: "gpuTemp",
         secondaryIcon: "temperature-normal"
     },
+    "gpu.freq": {
+        id: "gpu.freq",
+        group: "gpu",
+        subKey: "freq",
+        sensorPattern: "gpu/{id}/coreFrequency",
+        label: "Frequency",
+        thresholdType: "none"
+    },
+    "gpu.power": {
+        id: "gpu.power",
+        group: "gpu",
+        subKey: "power",
+        sensorPattern: "gpu/{id}/power",
+        label: "Power",
+        thresholdType: "none"
+    },
     "bat.percentage": {
         id: "bat.percentage",
         group: "bat",
@@ -290,6 +338,15 @@ var DEFINITIONS = {
         label: "Power",
         thresholdType: "none",
         iconOverrideKey: "powerIcon"
+    },
+    "bat.health": {
+        id: "bat.health",
+        group: "bat",
+        subKey: "health",
+        sensorPattern: "power/{id}/health",
+        label: "Health",
+        thresholdType: "inverted",
+        thresholdKey: "battery"
     },
     "net.down": {
         id: "net.down",
@@ -334,6 +391,23 @@ var DEFINITIONS = {
         sensorPattern: "disk/{id}/write",
         label: "Write",
         icon: "network-upload-symbolic",
+        thresholdType: "none"
+    },
+    "disk.usage": {
+        id: "disk.usage",
+        group: "disk",
+        subKey: "usage",
+        sensorId: "disk/all/usedPercent",
+        label: "Usage",
+        thresholdType: "normal",
+        thresholdKey: "disk"
+    },
+    "disk.space": {
+        id: "disk.space",
+        group: "disk",
+        subKey: "space",
+        sensorId: "disk/all/used",
+        label: "Space",
         thresholdType: "none"
     },
     "disk.temp": {

@@ -128,6 +128,9 @@
         <entry name="batteryDevice" type="String">
             <default>auto</default>
         </entry>
+        <entry name="batLabel" type="String">
+            <default>BAT</default>
+        </entry>
         <entry name="gpuSelection" type="String">
             <default></default>
         </entry>

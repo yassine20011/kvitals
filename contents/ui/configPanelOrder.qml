@@ -124,7 +124,7 @@ KCM.SimpleKCM {
         // Mockup preview values
         var previewVal = "";
         if (group === "cpu") {
-            previewVal = subKey === "usage" ? "22%" : (subKey === "freq" ? "3.6 GHz" : "62°C");
+            previewVal = subKey === "usage" ? "22%" : (subKey === "freq" ? "3.6 GHz" : (subKey === "temp" ? "62°C" : (subKey === "load1" ? "1.20" : (subKey === "load5" ? "1.05" : (subKey === "load15" ? "0.95" : "22%")))));
         } else if (group === "ram") {
             previewVal = subKey === "percentage" ? "35%" : (subKey === "used" ? "8.4/32G" : "42°C");
         } else if (group === "swap") {
@@ -132,17 +132,17 @@ KCM.SimpleKCM {
         } else if (group === "temp") {
             previewVal = "62°C";
         } else if (group === "bat") {
-            previewVal = subKey === "percentage" ? "85%" : "14.2W";
+            previewVal = subKey === "percentage" ? "85%" : (subKey === "power" ? "14.2W" : (subKey === "health" ? "98%" : "85%"));
         } else if (group === "net") {
             previewVal = subKey === "down" ? "↓ 1.2MB" : (subKey === "up" ? "↑ 240KB" : "192.168.1.1");
         } else if (group === "disk") {
-            previewVal = subKey === "read" ? "↓ 45MB" : (subKey === "write" ? "↑ 12MB" : "54°C");
+            previewVal = subKey === "read" ? "↓ 45MB" : (subKey === "write" ? "↑ 12MB" : (subKey === "usage" ? "45%" : (subKey === "space" ? "220/512G" : "54°C")));
         } else if (group === "fan") {
             previewVal = "2400 RPM";
         } else if (group === "uptime") {
             previewVal = "2h 45m";
         } else if (group === "gpu") {
-            previewVal = subKey === "usage" ? "15%" : (subKey === "vram" ? "1.2/8G" : "48°C");
+            previewVal = subKey === "usage" ? "15%" : (subKey === "vram" ? "1.2/8G" : (subKey === "freq" ? "1850 MHz" : (subKey === "power" ? "65.0W" : "48°C")));
         }
 
         return {
@@ -168,7 +168,10 @@ KCM.SimpleKCM {
             items: [
                 { id: "cpu/usage", label: i18n("CPU Usage"), icon: "cpu-symbolic" },
                 { id: "cpu/freq", label: i18n("CPU Frequency"), icon: "cpu-symbolic" },
-                { id: "cpu/temp", label: i18n("CPU Temperature"), icon: "temperature-symbolic" }
+                { id: "cpu/temp", label: i18n("CPU Temperature"), icon: "temperature-symbolic" },
+                { id: "cpu/load1", label: i18n("CPU Load (1m)"), icon: "cpu-symbolic" },
+                { id: "cpu/load5", label: i18n("CPU Load (5m)"), icon: "cpu-symbolic" },
+                { id: "cpu/load15", label: i18n("CPU Load (15m)"), icon: "cpu-symbolic" }
             ]
         });
 
@@ -199,7 +202,8 @@ KCM.SimpleKCM {
             icon: "battery-symbolic",
             items: [
                 { id: "bat/percentage", label: i18n("Battery Percentage"), icon: "battery-symbolic" },
-                { id: "bat/power", label: i18n("Power Draw (W)"), icon: "voltage-symbolic" }
+                { id: "bat/power", label: i18n("Power Draw (W)"), icon: "voltage-symbolic" },
+                { id: "bat/health", label: i18n("Battery Health"), icon: "battery-symbolic" }
             ]
         });
 
@@ -227,6 +231,8 @@ KCM.SimpleKCM {
                     gpuItems.push({ id: "gpu:" + gid + "/usage", label: gName + " Usage", icon: "gpu-symbolic" });
                     gpuItems.push({ id: "gpu:" + gid + "/vram", label: gName + " VRAM", icon: "gpu-symbolic" });
                     gpuItems.push({ id: "gpu:" + gid + "/temp", label: gName + " Temp", icon: "temperature-symbolic" });
+                    gpuItems.push({ id: "gpu:" + gid + "/freq", label: gName + " Frequency", icon: "gpu-symbolic" });
+                    gpuItems.push({ id: "gpu:" + gid + "/power", label: gName + " Power", icon: "voltage-symbolic" });
                 }
             }
             cats.push({
@@ -240,7 +246,10 @@ KCM.SimpleKCM {
         var dPattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_READ : /^disk\/(nvme\d+n\d+|sd[a-z]+)\/read$/;
         var dIds = discovery.queryIds(dPattern);
         var seenDisks = {};
-        var diskItems = [];
+        var diskItems = [
+            { id: "disk/usage", label: i18n("Overall Usage (%)"), icon: "storage-symbolic" },
+            { id: "disk/space", label: i18n("Overall Space"), icon: "storage-symbolic" }
+        ];
         for (var di = 0; di < dIds.length; di++) {
             var dm = dIds[di].match(dPattern);
             if (dm && !seenDisks[dm[1]]) {

@@ -168,6 +168,13 @@ function buildPopupGroups(metricsList, orderedKeys) {
 
         var diskSections = [];
         if (diskDeviceIds.length > 1) {
+            var globalDiskItems = diskMetrics.filter(function(m) { return !m.deviceId; });
+            if (globalDiskItems.length > 0) {
+                diskSections.push({
+                    sectionLabel: "Overall",
+                    metrics: globalDiskItems
+                });
+            }
             for (var dIdx = 0; dIdx < diskDeviceIds.length; dIdx++) {
                 var dId = diskDeviceIds[dIdx];
                 var dItems = diskMetrics.filter(function(m) { return m.deviceId === dId; });
@@ -184,7 +191,7 @@ function buildPopupGroups(metricsList, orderedKeys) {
             });
         }
 
-        var diskAgg = diskMetrics[0];
+        var diskAgg = map["disk/usage"] || diskMetrics[0];
         categories.push({
             key: "storage",
             groupLabel: "Storage",
