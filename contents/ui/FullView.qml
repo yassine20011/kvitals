@@ -21,8 +21,6 @@ ColumnLayout {
     required property color labelColor
     required property color iconColor
     required property bool fontBold
-    required property var chartHistory
-    required property int chartVersion
     required property bool pinned
     signal togglePinned()
     signal toggleMetricPin(string metricId)

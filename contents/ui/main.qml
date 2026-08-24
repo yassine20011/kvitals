@@ -241,8 +241,6 @@ PlasmoidItem {
         labelColor: root.resolvedLabelColor
         iconColor: root.resolvedIconColor
         fontBold: root.fontBold
-        chartHistory: metricStore.chartHistory
-        chartVersion: metricStore.chartVersion
         pinned: root.pinned
         onTogglePinned: root.pinned = !root.pinned
         onToggleMetricPin: function(metricId) {

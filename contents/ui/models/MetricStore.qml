@@ -10,20 +10,9 @@ Item {
     required property bool sensorsReady
     required property color baseTextColor
 
-    // Chart history buffer keyed by chartKey. Each entry is a sliding window of
-    // up to maxChartPoints numeric samples collected by chartTimer.
-    property var chartHistory: ({})
-    property int chartVersion: 0
-    property int maxChartPoints: 60
-
     // Debounced metrics array: rebuilt once per flushTimer tick, not per sensor change.
     // Consumers should bind to this property, not to individual sensor values.
     property var metrics: []
-
-    function getHistory(key) {
-        if (!key || !chartHistory[key]) return [];
-        return chartHistory[key];
-    }
 
     function _normalizeValue(val) {
         if (typeof val === "number" && isFinite(val) && !isNaN(val))
@@ -37,15 +26,6 @@ Item {
         if (val !== undefined && val !== null)
             return String(val);
         return fallback !== undefined ? fallback : "";
-    }
-
-    function _pushHistory(key, val) {
-        if (!key || typeof key !== "string") return false;
-        if (typeof val !== "number" || isNaN(val) || !isFinite(val)) return false;
-        if (!chartHistory[key]) chartHistory[key] = [];
-        chartHistory[key].push(val);
-        if (chartHistory[key].length > maxChartPoints) chartHistory[key].shift();
-        return true;
     }
 
     function _rebuildMetrics() {
@@ -66,17 +46,6 @@ Item {
         triggeredOnStart: true
         onTriggered: {
             root._rebuildMetrics();
-
-            var list = root.metrics;
-            var changed = false;
-            for (var i = 0; i < list.length; i++) {
-                var m = list[i];
-                if (m.hasChart && m.chartKey && typeof m.value === "number" && isFinite(m.value) && !isNaN(m.value)) {
-                    if (root._pushHistory(m.chartKey, m.value))
-                        changed = true;
-                }
-            }
-            if (changed) root.chartVersion++;
         }
     }
 
@@ -136,10 +105,6 @@ Item {
         var displayVal = _normalizeString(overrides.displayValue, "");
         var popupDisplay = _normalizeString(overrides.popupDisplay, displayVal);
         var rawStr = _normalizeString(overrides.rawString, displayVal);
-        var chartKey = overrides.chartKey !== undefined ? _normalizeString(overrides.chartKey, "") : (def.chartKey || "");
-        var chartMax = typeof overrides.chartMax === "number" && isFinite(overrides.chartMax) ? overrides.chartMax : (def.chartMax || 0);
-        var hasChart = Boolean(chartKey && chartKey.length > 0);
-
         var isPinned = cfg ? cfg.isPinned(instanceId) : false;
 
         return {
@@ -161,9 +126,6 @@ Item {
             rawString: rawStr,
             color: clr,
             status: _normalizeString(overrides.status, "ready"),
-            chartKey: chartKey,
-            chartMax: chartMax,
-            hasChart: hasChart,
             isPinned: isPinned
         };
     }
@@ -293,7 +255,6 @@ Item {
                             label: gpuName, groupLabel: gpuName,
                             subLabel: "Usage",
                             value: gd.usageNumber, displayValue: gd.usage,
-                            chartKey: "gpu:" + gd.id,
                             status: !isNaN(gd.usageNumber) ? "ready" : "loading"
                         }));
                     }
@@ -312,7 +273,6 @@ Item {
                             label: gpuName, groupLabel: gpuName,
                             subLabel: gpuName,
                             value: gd.tempNumber, displayValue: gd.temp,
-                            chartKey: "gpuTemp:" + gd.id,
                             status: !isNaN(gd.tempNumber) ? "ready" : "unavailable"
                         }));
                     }
@@ -423,7 +383,6 @@ Item {
                     value: fd.valueNumber,
                     displayValue: (fd.isEstimated ? "~" : "") + fd.value,
                     popupDisplay: fd.rpmValue,
-                    chartKey: "fan:" + fd.id,
                     status: !isNaN(fd.valueNumber) ? "ready" : "loading"
                 }));
             }

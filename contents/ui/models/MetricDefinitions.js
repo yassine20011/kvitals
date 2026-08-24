@@ -145,8 +145,6 @@ var PATTERNS = {
 //   label         - text shown in the popup row label
 //   prefix        - direction symbol shown before the value (↓ / ↑); also
 //                   copied to subLabel so compact-view segments show it once
-//   chartKey      - key into the chart history buffer; empty means no sparkline
-//   chartMax      - fixed upper bound for the sparkline (0 = auto-scale to window)
 //   thresholdType - "normal" (warn high), "inverted" (warn low), "none"
 //   thresholdKey  - matches a *WarningThreshold / *CriticalThreshold in MetricConfig
 //   secondaryIcon - extra icon shown beside the primary one in the popup row
@@ -158,8 +156,6 @@ var DEFINITIONS = {
         subKey: "usage",
         sensorId: "cpu/all/usage",
         label: "Usage",
-        chartKey: "cpu",
-        chartMax: 100,
         thresholdType: "normal",
         thresholdKey: "cpu"
     },
@@ -169,8 +165,6 @@ var DEFINITIONS = {
         subKey: "freq",
         sensorId: "cpu/all/averageFrequency",
         label: "Frequency",
-        chartKey: "",
-        chartMax: 0,
         thresholdType: "none"
     },
     "cpu.temp": {
@@ -179,8 +173,6 @@ var DEFINITIONS = {
         subKey: "temp",
         sensorId: "cpu/all/averageTemperature",
         label: "Temperature",
-        chartKey: "cpuTemp",
-        chartMax: 100,
         thresholdType: "normal",
         thresholdKey: "temp",
         secondaryIcon: "temperature-normal"
@@ -191,36 +183,23 @@ var DEFINITIONS = {
         subKey: "percentage",
         sensorId: "memory/physical/used",
         label: "Percentage",
-        chartKey: "ram",
-        chartMax: 100,
         thresholdType: "normal",
         thresholdKey: "ram"
     },
-    // ram.used and ram.percentage both read memory/physical/used; MetricStore
-    // formats one as % and the other as used/total GB.
     "ram.used": {
         id: "ram.used",
         group: "ram",
         subKey: "used",
         sensorId: "memory/physical/used",
         label: "Used / Total",
-        chartKey: "",
-        chartMax: 0,
         thresholdType: "none"
     },
-    // sensorId here is not used at runtime. TempSensors.qml discovers the RAM
-    // temp sensor dynamically by scanning lmsensors for any adapter whose name
-    // starts with "spd5118" (the DDR5 SO-DIMM temp driver). On machines without
-    // that driver (DDR4, desktops, etc.) ramTempExists stays false and MetricStore
-    // skips this entry entirely.
     "ram.temp": {
         id: "ram.temp",
         group: "ram",
         subKey: "temp",
         sensorId: "lmsensors/spd5118",
         label: "Temperature",
-        chartKey: "ramTemp",
-        chartMax: 100,
         thresholdType: "normal",
         thresholdKey: "ramTemp",
         secondaryIcon: "temperature-normal"
@@ -231,8 +210,6 @@ var DEFINITIONS = {
         subKey: "percent",
         sensorId: "memory/swap/usedPercent",
         label: "Usage (%)",
-        chartKey: "swap",
-        chartMax: 100,
         thresholdType: "normal",
         thresholdKey: "swap"
     },
@@ -242,8 +219,6 @@ var DEFINITIONS = {
         subKey: "used",
         sensorId: "memory/swap/used",
         label: "Used",
-        chartKey: "",
-        chartMax: 0,
         thresholdType: "none"
     },
     "swap.free": {
@@ -252,8 +227,6 @@ var DEFINITIONS = {
         subKey: "free",
         sensorId: "memory/swap/free",
         label: "Free",
-        chartKey: "",
-        chartMax: 0,
         thresholdType: "none"
     },
     "swap.total": {
@@ -262,8 +235,6 @@ var DEFINITIONS = {
         subKey: "total",
         sensorId: "memory/swap/total",
         label: "Total",
-        chartKey: "",
-        chartMax: 0,
         thresholdType: "none"
     },
     "temp.system": {
@@ -272,20 +243,15 @@ var DEFINITIONS = {
         subKey: "temp",
         sensorId: "cpu/all/averageTemperature",
         label: "System",
-        chartKey: "temp",
-        chartMax: 100,
         thresholdType: "normal",
         thresholdKey: "system"
     },
-    // GPU metrics use sensorPattern; MetricStore substitutes {id} per discovered GPU.
     "gpu.usage": {
         id: "gpu.usage",
         group: "gpu",
         subKey: "usage",
         sensorPattern: "gpu/{id}/usage",
         label: "Usage",
-        chartKey: "gpu",
-        chartMax: 100,
         thresholdType: "normal",
         thresholdKey: "gpu"
     },
@@ -295,8 +261,6 @@ var DEFINITIONS = {
         subKey: "vram",
         sensorPattern: "gpu/{id}/usedVram",
         label: "VRAM",
-        chartKey: "",
-        chartMax: 0,
         thresholdType: "none"
     },
     "gpu.temp": {
@@ -305,8 +269,6 @@ var DEFINITIONS = {
         subKey: "temp",
         sensorPattern: "gpu/{id}/temperature",
         label: "Temperature",
-        chartKey: "gpuTemp",
-        chartMax: 100,
         thresholdType: "normal",
         thresholdKey: "gpuTemp",
         secondaryIcon: "temperature-normal"
@@ -317,8 +279,6 @@ var DEFINITIONS = {
         subKey: "percentage",
         sensorPattern: "power/{id}/chargePercentage",
         label: "Percentage",
-        chartKey: "bat",
-        chartMax: 100,
         thresholdType: "inverted",
         thresholdKey: "battery"
     },
@@ -328,8 +288,6 @@ var DEFINITIONS = {
         subKey: "power",
         sensorPattern: "power/{id}/chargeRate",
         label: "Power",
-        chartKey: "",
-        chartMax: 0,
         thresholdType: "none",
         iconOverrideKey: "powerIcon"
     },
@@ -340,8 +298,6 @@ var DEFINITIONS = {
         sensorPattern: "network/{id}/download",
         label: "Download",
         icon: "network-download-symbolic",
-        chartKey: "netDown",
-        chartMax: 0,
         thresholdType: "none"
     },
     "net.up": {
@@ -351,8 +307,6 @@ var DEFINITIONS = {
         sensorPattern: "network/{id}/upload",
         label: "Upload",
         icon: "network-upload-symbolic",
-        chartKey: "netUp",
-        chartMax: 0,
         thresholdType: "none"
     },
     "net.ip": {
@@ -362,8 +316,6 @@ var DEFINITIONS = {
         sensorPattern: "network/{id}/ipv4withPrefixLength",
         label: "Local IP",
         icon: "network-symbolic",
-        chartKey: "",
-        chartMax: 0,
         thresholdType: "none"
     },
     "disk.read": {
@@ -373,8 +325,6 @@ var DEFINITIONS = {
         sensorPattern: "disk/{id}/read",
         label: "Read",
         icon: "network-download-symbolic",
-        chartKey: "",
-        chartMax: 0,
         thresholdType: "none"
     },
     "disk.write": {
@@ -384,8 +334,6 @@ var DEFINITIONS = {
         sensorPattern: "disk/{id}/write",
         label: "Write",
         icon: "network-upload-symbolic",
-        chartKey: "",
-        chartMax: 0,
         thresholdType: "none"
     },
     "disk.temp": {
@@ -394,22 +342,16 @@ var DEFINITIONS = {
         subKey: "temp",
         sensorPattern: "lmsensors/{id}/temp1",
         label: "Temperature",
-        chartKey: "diskTemp",
-        chartMax: 100,
         thresholdType: "normal",
         thresholdKey: "diskTemp",
         secondaryIcon: "temperature-normal"
     },
-    // fan.speed uses a two-level pattern: {adapter} is the lmsensors chip name,
-    // {id} is the fan sensor within that chip.
     "fan.speed": {
         id: "fan.speed",
         group: "fan",
         subKey: "speed",
         sensorPattern: "{adapter}/{id}/fan1",
         label: "Fan Speed",
-        chartKey: "fan",
-        chartMax: 0,
         thresholdType: "none"
     },
     "uptime.uptime": {
@@ -418,8 +360,6 @@ var DEFINITIONS = {
         subKey: "uptime",
         sensorId: "os/system/uptime",
         label: "Uptime",
-        chartKey: "",
-        chartMax: 0,
         thresholdType: "none"
     }
 };
