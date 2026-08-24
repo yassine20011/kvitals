@@ -158,34 +158,6 @@ PlasmoidItem {
         onTriggered: sensorLoader.active = true
     }
 
-    Connections {
-        target: sensorLoader
-        function onStatusChanged() {
-            if (sensorLoader.status === Loader.Ready && !Plasmoid.configuration.configMigrated) {
-                var hw = {
-                    gpus: sensorLoader.item ? sensorLoader.item.gpu.discoveredGpus : [],
-                    disks: sensorLoader.item ? sensorLoader.item.disk.discoveredDisks : [],
-                    fans: sensorLoader.item ? sensorLoader.item.fans.discoveredFans : []
-                };
-                metricConfig.migrateLegacyConfig(hw);
-            }
-        }
-    }
-
-    Binding {
-        target: Plasmoid.configuration
-        property: "_tempFallbackActive"
-        value: sensorLoader.item ? sensorLoader.item.temp.sysIsFallback : false
-        when: sensorLoader.status === Loader.Ready
-    }
-
-    Binding {
-        target: Plasmoid.configuration
-        property: "_ramTempDetected"
-        value: sensorLoader.item ? sensorLoader.item.temp.ramTempExists : false
-        when: sensorLoader.status === Loader.Ready
-    }
-
     Component.onCompleted: {
         sensorActivationTimer.start();
     }

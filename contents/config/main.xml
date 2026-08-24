@@ -8,9 +8,6 @@
         <entry name="pinnedMetrics" type="String">
             <default>cpu/usage,ram/percentage,temp/system,bat/percentage,net/down,net/up</default>
         </entry>
-        <entry name="configMigrated" type="Bool">
-            <default>false</default>
-        </entry>
 
         <!-- Category toggles -->
         <entry name="cpuEnabled" type="Bool">
@@ -298,14 +295,6 @@
         </entry>
 
         <!-- Units -->
-        <!-- Hidden: set at runtime when temperature falls back to CPU -->
-        <entry name="_tempFallbackActive" type="Bool">
-            <default>false</default>
-        </entry>
-        <!-- Hidden: set at runtime when a DDR5 RAM temp sensor (SPD5118) is found -->
-        <entry name="_ramTempDetected" type="Bool">
-            <default>false</default>
-        </entry>
         <entry name="tempUnit" type="String">
             <default>C</default>
         </entry>

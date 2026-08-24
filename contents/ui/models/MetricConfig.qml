@@ -17,8 +17,6 @@ QtObject {
         return name;
     }
 
-    readonly property bool configMigrated: Boolean(target && target[propertyPrefix + "configMigrated"])
-
     // Pinned metrics on Plasma panel
     readonly property string pinnedMetrics: (target && target[propertyPrefix + "pinnedMetrics"] !== undefined)
         ? target[propertyPrefix + "pinnedMetrics"]
@@ -82,65 +80,6 @@ QtObject {
         var prop = propertyPrefix + "pinnedMetrics";
         if (target && target[prop] !== undefined) {
             target[prop] = list.join(",");
-        }
-    }
-
-    function migrateLegacyConfig(hardware) {
-        var migProp = propertyPrefix + "configMigrated";
-        if (target && target[migProp]) return;
-
-        var prop = propertyPrefix + "pinnedMetrics";
-        if (target && target[prop] !== undefined && target[prop] && target[prop].length > 0) {
-            if (target && target[migProp] !== undefined) target[migProp] = true;
-            return;
-        }
-
-        var migrated = [];
-        var allG = Defs.ALL_GROUP_KEYS;
-        var hw = hardware || {};
-
-        for (var gi = 0; gi < allG.length; gi++) {
-            var group = allG[gi];
-            var defGroup = Defs.GROUPS[group];
-            if (!defGroup) continue;
-
-            if (group === "cpu") {
-                migrated.push("cpu/usage");
-            } else if (group === "ram") {
-                migrated.push("ram/percentage");
-            } else if (group === "temp") {
-                migrated.push("temp/system");
-            } else if (group === "net") {
-                migrated.push("net/down");
-                migrated.push("net/up");
-            } else if (group === "bat") {
-                if (hw.hasBattery) migrated.push("bat/percentage");
-            } else if (group === "gpu") {
-                if (hw.gpus && hw.gpus.length > 0) {
-                    var gid = typeof hw.gpus[0] === "object" ? hw.gpus[0].id : hw.gpus[0];
-                    migrated.push("gpu:" + gid + "/usage");
-                }
-            } else if (group === "disk") {
-                if (hw.disks && hw.disks.length > 0) {
-                    var did = typeof hw.disks[0] === "object" ? hw.disks[0].id : hw.disks[0];
-                    migrated.push("disk:" + did + "/read");
-                    migrated.push("disk:" + did + "/write");
-                }
-            } else if (group === "fan") {
-                if (hw.fans && hw.fans.length > 0) {
-                    var fid = typeof hw.fans[0] === "object" ? hw.fans[0].id : hw.fans[0];
-                    migrated.push("fan:" + fid + "/speed");
-                }
-            } else if (group === "uptime") {
-                migrated.push("uptime/uptime");
-            }
-        }
-
-        if (target && target[prop] !== undefined) {
-            target[prop] = migrated.join(",");
-        }
-        if (target && target[migProp] !== undefined) {
-            target[migProp] = true;
         }
     }
 
