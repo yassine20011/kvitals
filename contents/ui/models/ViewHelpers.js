@@ -249,21 +249,20 @@ function buildPopupGroups(metricsList, orderedKeys) {
     return categories;
 }
 
-function _resolveSegmentLabel(metric, isTemp) {
-    if (isTemp || metric.group === "fan" || metric.subKey === "core") return metric.subLabel || "";
-    // For CPU, RAM, Swap, Battery, GPU, Network, Disk, value or icon is self-describing
+function _resolveSegmentLabel(metric) {
+    if (metric.prefix) return metric.prefix;
+    if (metric.group === "fan" || metric.subKey === "core") return metric.subLabel || "";
     return "";
 }
 
 function _resolveSegmentIcon(metric) {
-    if (metric.group === "net" || metric.group === "disk") {
+    if (metric.subKey === "down" || metric.subKey === "up" || metric.subKey === "totalDown" || metric.subKey === "totalUp"
+        || metric.subKey === "read" || metric.subKey === "write" || metric.subKey === "signal") {
         return metric.icon || "";
     }
     return "";
 }
 
-// buildCompactItems maps pinned metrics to compact panel items, optionally
-// merging metrics of the same hardware device/family into multi-segment items.
 function buildCompactItems(metricsList, pinnedList, mergeSameFamily) {
     if (!metricsList || metricsList.length === 0 || !pinnedList || pinnedList.length === 0) return [];
     if (mergeSameFamily === undefined) mergeSameFamily = true;
@@ -284,11 +283,9 @@ function buildCompactItems(metricsList, pinnedList, mergeSameFamily) {
         var metric = metricMap[id];
         if (!metric) continue;
 
-        var isTemp = (metric.subKey === "temp" || metric.group === "temp");
-        var groupKey = isTemp ? "temp" : (metric.deviceId ? (metric.group + ":" + metric.deviceId) : metric.group);
+        var groupKey = metric.deviceId ? (metric.group + ":" + metric.deviceId) : metric.group;
 
         if (mergeSameFamily && groupIndexMap[groupKey] !== undefined) {
-            // Merge into existing group item
             var existingItem = items[groupIndexMap[groupKey]];
             if (!existingItem.segments) {
                 var firstSegIcon = existingItem._firstSubIcon || "";
@@ -310,16 +307,15 @@ function buildCompactItems(metricsList, pinnedList, mergeSameFamily) {
             existingItem.segments.push({
                 value: metric.displayValue,
                 color: metric.color,
-                label: _resolveSegmentLabel(metric, isTemp),
+                label: _resolveSegmentLabel(metric),
                 icon: segIcon,
                 key: metric.subKey || metric.id
             });
         } else {
-            // New group item
-            var baseLabel = isTemp ? "TEMP" : (metric.groupLabel || metric.deviceName || metric.group.toUpperCase());
+            var baseLabel = metric.groupLabel || metric.deviceName || metric.group.toUpperCase();
             var singleLabel = metric.label;
-            var itemIcon = isTemp ? "temperature-symbolic" : metric.icon;
-            var segIcon = _resolveSegmentIcon(metric);
+            var itemIcon = metric.icon;
+            var initialSegIcon = _resolveSegmentIcon(metric);
 
             var newItem = {
                 id: metric.id,
@@ -331,8 +327,8 @@ function buildCompactItems(metricsList, pinnedList, mergeSameFamily) {
                 segments: null,
                 _segmentsHaveIcons: false,
                 _groupBaseLabel: baseLabel,
-                _firstSubLabel: _resolveSegmentLabel(metric, isTemp),
-                _firstSubIcon: segIcon,
+                _firstSubLabel: _resolveSegmentLabel(metric),
+                _firstSubIcon: initialSegIcon,
                 _firstSubKey: metric.subKey || metric.id
             };
             if (mergeSameFamily) {

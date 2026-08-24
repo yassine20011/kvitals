@@ -472,14 +472,15 @@ Item {
 
             if (s.disk.diskTempValue) {
                 var firstDiskId = (dList && dList.length > 0) ? dList[0].id : "";
-                var isNvme = firstDiskId.indexOf("nvme") !== -1;
-                var diskTempLabel = isNvme ? "NVMe" : ((dList && dList.length > 0 && dList[0].name) ? dList[0].name : "Disk");
+                var firstDiskName = (dList && dList.length > 0 && dList[0].name) ? dList[0].name : "Disk";
                 list.push(_createMetric("disk.temp", {
                     deviceId: firstDiskId,
+                    deviceName: firstDiskName,
                     value: s.disk.diskTempNumber,
                     displayValue: s.disk.diskTempValue,
-                    label: diskTempLabel,
-                    subLabel: diskTempLabel,
+                    label: firstDiskName,
+                    groupLabel: firstDiskName,
+                    subLabel: firstDiskName,
                     status: !isNaN(s.disk.diskTempNumber) ? "ready" : "unavailable"
                 }));
             }

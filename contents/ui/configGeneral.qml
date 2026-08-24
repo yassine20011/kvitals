@@ -20,6 +20,7 @@ KCM.SimpleKCM {
     property string cfg_networkUnit: "bytes"
     property string cfg_fanUnit: "rpm"
     property bool cfg_mergeFamilyMetrics: true
+    property bool cfg_showSeparators: true
 
     readonly property var displayModes: ["text", "icons", "icons+text", "none"]
     readonly property var displayModeLabels: [i18n("Text"), i18n("Icons"), i18n("Icons + Text"), i18n("None")]
@@ -245,6 +246,13 @@ KCM.SimpleKCM {
             Kirigami.ContextualHelpButton {
                 toolTipText: i18n("Combines metrics belonging to the same hardware group (e.g. CPU Usage & Frequency, Network Download & Upload) into a single compact tile on the panel.")
             }
+        }
+
+        CheckBox {
+            Kirigami.FormData.label: i18n("Separators:")
+            text: i18n("Show separators between metrics")
+            checked: cfg_showSeparators
+            onToggled: cfg_showSeparators = checked
         }
 
         Slider {

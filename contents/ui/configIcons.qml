@@ -99,7 +99,7 @@ KCM.SimpleKCM {
 
         RowLayout {
             Kirigami.FormData.label: i18n("Temperature:")
-            Kirigami.Icon { source: cfg_tempIcon; isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
+            Kirigami.Icon { source: resolveIcon(cfg_tempIcon); isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
             Button { text: i18n("Change..."); onClicked: tempIconDialog.open(); icon.name: "document-edit" }
         }
 
@@ -111,19 +111,19 @@ KCM.SimpleKCM {
 
         RowLayout {
             Kirigami.FormData.label: i18n("Battery:")
-            Kirigami.Icon { source: cfg_batteryIcon; isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
+            Kirigami.Icon { source: resolveIcon(cfg_batteryIcon); isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
             Button { text: i18n("Change..."); onClicked: batteryIconDialog.open(); icon.name: "document-edit" }
         }
 
         RowLayout {
             Kirigami.FormData.label: i18n("Power:")
-            Kirigami.Icon { source: cfg_powerIcon; isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
+            Kirigami.Icon { source: resolveIcon(cfg_powerIcon); isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
             Button { text: i18n("Change..."); onClicked: powerIconDialog.open(); icon.name: "document-edit" }
         }
 
         RowLayout {
             Kirigami.FormData.label: i18n("Network:")
-            Kirigami.Icon { source: cfg_networkIcon; isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
+            Kirigami.Icon { source: resolveIcon(cfg_networkIcon); isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
             Button { text: i18n("Change..."); onClicked: networkIconDialog.open(); icon.name: "document-edit" }
         }
 
@@ -141,7 +141,7 @@ KCM.SimpleKCM {
 
         RowLayout {
             Kirigami.FormData.label: i18n("System Uptime:")
-            Kirigami.Icon { source: cfg_uptimeIcon; isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
+            Kirigami.Icon { source: resolveIcon(cfg_uptimeIcon); isMask: true; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
             Button { text: i18n("Change..."); onClicked: uptimeIconDialog.open(); icon.name: "document-edit" }
         }
 

@@ -20,6 +20,7 @@ RowLayout {
     required property string layoutType
     required property real labelOpacity
     required property real separatorOpacity
+    required property bool showSeparators
 
     readonly property bool isVertical: layoutType === "vertical"
     readonly property bool customFont: effectiveFontSize > 0
@@ -64,6 +65,15 @@ RowLayout {
         onTapped: compactRow.toggleExpanded()
     }
 
+    function resolveIcon(name) {
+        if (!name) return "";
+        var str = String(name);
+        if (str.indexOf("-symbolic") !== -1 && str.indexOf("/") === -1) {
+            return Qt.resolvedUrl("../icons/" + str + ".svg");
+        }
+        return name;
+    }
+
     // Shared segments renderer
     component SegmentsRow: Row {
         id: segRoot
@@ -91,7 +101,7 @@ RowLayout {
 
                 Kirigami.Icon {
                     visible: !!modelData.icon && compactRow.useIcons
-                    source: modelData.icon || ""
+                    source: compactRow.resolveIcon(modelData.icon)
                     isMask: compactRow._themeReady
                     color: compactRow._themeReady ? compactRow.iconColor : Qt.rgba(0, 0, 0, 0)
                     width: Math.round(compactRow.iconSize * 0.85)
@@ -99,10 +109,8 @@ RowLayout {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                // Optional per-segment sub-label (e.g. fan number): rendered in
-                // the label color so it's visually distinct from the value.
                 PlasmaComponents.Label {
-                    visible: !!modelData.label && compactRow.useText
+                    visible: !!modelData.label && (!compactRow.useIcons || !modelData.icon)
                     text: modelData.label || ""
                     font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
                     font.family: compactRow.fontFamily
@@ -183,6 +191,15 @@ RowLayout {
             spacing: Kirigami.Units.smallSpacing
             Layout.fillHeight: true
 
+            // Thin line separator between metrics
+            Rectangle {
+                visible: itemIndex > 0 && compactRow.showSeparators && !itemData.hideSeparator
+                width: 1
+                Layout.fillHeight: true
+                color: compactRow.baseTextColor
+                opacity: compactRow.separatorOpacity
+            }
+
             Row {
                 visible: compactRow.useIcons && (!itemData.segments || !itemData._segmentsHaveIcons)
                 spacing: 1
@@ -194,7 +211,7 @@ RowLayout {
                         return typeof src === "string" ? [src] : src;
                     }
                     delegate: Kirigami.Icon {
-                        source: modelData
+                        source: compactRow.resolveIcon(modelData)
                         isMask: compactRow._themeReady
                         color: compactRow._themeReady ? compactRow.iconColor : Qt.rgba(0, 0, 0, 0)
                         width: compactRow.iconSize
@@ -249,7 +266,7 @@ RowLayout {
 
             // Thin line separator between metrics
             Rectangle {
-                visible: itemIndex > 0 && !itemData.hideSeparator
+                visible: itemIndex > 0 && compactRow.showSeparators && !itemData.hideSeparator
                 width: 1
                 Layout.fillHeight: true
                 color: compactRow.baseTextColor
@@ -304,7 +321,7 @@ RowLayout {
                                 return typeof src === "string" ? [src] : src;
                             }
                             delegate: Kirigami.Icon {
-                                source: modelData
+                                source: compactRow.resolveIcon(modelData)
                                 isMask: compactRow._themeReady
                                 color: compactRow._themeReady ? compactRow.iconColor : Qt.rgba(0, 0, 0, 0)
                                 width:  Math.round(compactRow.iconSize * 0.85)
