@@ -19,6 +19,7 @@ KCM.SimpleKCM {
     property string cfg_tempUnit: "C"
     property string cfg_networkUnit: "bytes"
     property string cfg_fanUnit: "rpm"
+    property bool cfg_mergeFamilyMetrics: true
 
     readonly property var displayModes: ["text", "icons", "icons+text", "none"]
     readonly property var displayModeLabels: [i18n("Text"), i18n("Icons"), i18n("Icons + Text"), i18n("None")]
@@ -228,6 +229,22 @@ KCM.SimpleKCM {
             id: fontBoldCheck
             Kirigami.FormData.label: i18n("Bold font:")
             text: i18n("Bold")
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Panel grouping:")
+            spacing: Kirigami.Units.smallSpacing
+
+            CheckBox {
+                id: mergeFamilyMetricsCheck
+                text: i18n("Merge metrics of the same device into one item")
+                checked: cfg_mergeFamilyMetrics
+                onToggled: cfg_mergeFamilyMetrics = checked
+            }
+
+            Kirigami.ContextualHelpButton {
+                toolTipText: i18n("Combines metrics belonging to the same hardware group (e.g. CPU Usage & Frequency, Network Download & Upload) into a single compact tile on the panel.")
+            }
         }
 
         Slider {

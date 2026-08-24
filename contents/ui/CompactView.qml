@@ -5,7 +5,7 @@ import org.kde.kirigami as Kirigami
 
 RowLayout {
     id: compactRow
-    spacing: Kirigami.Units.smallSpacing
+    spacing: Math.round(Kirigami.Units.gridUnit * 0.65)
 
     required property var metricsModel
     required property bool useIcons
@@ -86,17 +86,30 @@ RowLayout {
                     font.bold: compactRow.fontBold
                     color: compactRow.baseTextColor
                     opacity: compactRow.separatorOpacity
+                    anchors.verticalCenter: parent.verticalCenter
                 }
+
+                Kirigami.Icon {
+                    visible: !!modelData.icon && compactRow.useIcons
+                    source: modelData.icon || ""
+                    isMask: compactRow._themeReady
+                    color: compactRow._themeReady ? compactRow.iconColor : Qt.rgba(0, 0, 0, 0)
+                    width: Math.round(compactRow.iconSize * 0.85)
+                    height: Math.round(compactRow.iconSize * 0.85)
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
                 // Optional per-segment sub-label (e.g. fan number): rendered in
                 // the label color so it's visually distinct from the value.
                 PlasmaComponents.Label {
-                    visible: !!modelData.label
+                    visible: !!modelData.label && compactRow.useText
                     text: modelData.label || ""
                     font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
                     font.family: compactRow.fontFamily
                     font.bold: compactRow.fontBold
                     color: compactRow.labelColor
                     opacity: compactRow.labelOpacity
+                    anchors.verticalCenter: parent.verticalCenter
                 }
                 PlasmaComponents.Label {
                     text: modelData.value
@@ -105,6 +118,7 @@ RowLayout {
                     font.bold: compactRow.fontBold
                     color: modelData.color
                     horizontalAlignment: Text.AlignRight
+                    anchors.verticalCenter: parent.verticalCenter
                     // Row is a positioner, not a Layout: pad via plain `width`
                     // (Layout.preferredWidth has no effect here). Width only
                     // ever grows within the session to avoid reflow when a
@@ -114,6 +128,28 @@ RowLayout {
                         implicitWidth)
                 }
             }
+        }
+    }
+
+    RowLayout {
+        visible: !compactRow.metricsModel || compactRow.metricsModel.length === 0
+        spacing: Kirigami.Units.smallSpacing
+        Layout.fillHeight: true
+
+        Kirigami.Icon {
+            source: "utilities-system-monitor"
+            isMask: compactRow._themeReady
+            color: compactRow._themeReady ? compactRow.iconColor : Qt.rgba(0, 0, 0, 0)
+            width: compactRow.iconSize
+            height: compactRow.iconSize
+        }
+
+        PlasmaComponents.Label {
+            text: "KVitals"
+            font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
+            font.family: compactRow.fontFamily
+            color: compactRow.labelColor
+            opacity: compactRow.labelOpacity
         }
     }
 
@@ -144,21 +180,11 @@ RowLayout {
         id: horizontalDelegate
 
         RowLayout {
-            spacing: 2
+            spacing: Kirigami.Units.smallSpacing
             Layout.fillHeight: true
 
-            PlasmaComponents.Label {
-                visible: itemIndex > 0 && !itemData.hideSeparator
-                text: "|"
-                font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
-                font.family: compactRow.fontFamily
-                color: compactRow.baseTextColor
-                opacity: compactRow.separatorOpacity
-                Layout.alignment: Qt.AlignVCenter
-            }
-
             Row {
-                visible: compactRow.useIcons
+                visible: compactRow.useIcons && (!itemData.segments || !itemData._segmentsHaveIcons)
                 spacing: 1
                 Layout.alignment: Qt.AlignVCenter
                 Repeater {
@@ -268,7 +294,7 @@ RowLayout {
                     Layout.alignment: Qt.AlignHCenter
 
                     Row {
-                        visible: compactRow.useIcons
+                        visible: compactRow.useIcons && (!itemData.segments || !itemData._segmentsHaveIcons)
                         spacing: 1
                         Layout.alignment: Qt.AlignVCenter
                         Repeater {

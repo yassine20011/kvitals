@@ -9,8 +9,13 @@ ConfigModel {
         source: "configGeneral.qml"
     }
     ConfigCategory {
-        name: i18n("Metrics")
-        icon: "view-statistics"
+        name: i18n("Panel Items")
+        icon: "edit-list-order"
+        source: "configPanelOrder.qml"
+    }
+    ConfigCategory {
+        name: i18n("Sensors & Hardware")
+        icon: "preferences-system-hardware"
         source: "configMetrics.qml"
     }
     ConfigCategory {
