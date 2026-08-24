@@ -47,32 +47,26 @@ Each metric features a four-way visibility selector:
 
 | Metric | Panel Label | Popup Features |
 |---|---|---|
-| **CPU Usage** | `CPU:` (customizable) | Per-core usage and 60-sample sparkline history |
-| **RAM Usage** | `RAM:` (customizable) | Used/total memory and 60-sample sparkline history |
-| **CPU Temperature** | `TEMP:` | Dedicated CPU temperature reading and sparkline |
-| **System Temperature** | `SYS:` | Motherboard/chipset temperature |
-| **GPU Metrics** | `GPU:` / `<name>:` | Usage %, VRAM, temperature, and independent GPU sparklines |
-| **Fan Speed** | `FAN:` / `Fan N:` | Fan RPM, estimated %, per-fan labels, and sparklines |
-| **Battery Status** | `BAT:` | Battery level %, state, power draw (watts), and sparkline |
-| **Network Speed** | `NET:` (customizable) | Download/upload rates, IP address, and network rate sparkline |
-| **Disk I/O** | `DSK:` (customizable) | Per-drive read/write speeds, drive temps, and sparklines |
-| **System Uptime** | `UP:` | System uptime formatted as `Xd Xh Xm` |
-
-### Metric Grouping and Custom Labels
-
-- **Merge CPU & Temp**: Shows CPU temperature next to CPU usage in a single panel block.
-- **Merge Battery & Power**: Displays wattage draw next to battery percentage.
-- **Split GPU Metrics**: Separates GPU usage, VRAM, and GPU temperature into individual compact items.
-- **Custom Labels**: Custom text fields are available for CPU, RAM, Disk, Network, and Fan entries. Unchecking **Use Custom Labels in Panel** forces standard short labels in the panel while keeping custom names in the popup.
+| **CPU Metrics** | `CPU:` (customizable) | Overall usage, frequency, load averages (1m/5m/15m), and per-core usage list |
+| **Per-Core CPU** | `Core N:` | Individual CPU core usage, pinnable per core |
+| **RAM & Swap** | `RAM:` / `SWAP:` | Used/total memory, swap percentages, and DDR5 temps |
+| **CPU Temperature** | `CPU:` | Dedicated CPU temperature reading |
+| **System Temperature** | `System:` | Motherboard/chipset temperature |
+| **GPU Metrics** | `GPU:` / `<name>:` | Usage %, VRAM, temperature, core frequency, and power draw |
+| **Fan Speed** | `FAN:` / `Fan N:` | Fan RPM, percentage, per-fan labels, and sparklines |
+| **Battery Status** | `BAT:` | Battery level %, health %, and power draw (watts) |
+| **Network Speed** | `NET:` (customizable) | Download/upload rates, total session download/upload data, Wi-Fi signal %, and IP address |
+| **Disk I/O & Space** | `DSK:` (customizable) | Per-drive read/write speeds, overall used space, and drive temperatures |
+| **System Uptime** | `UPTIME:` | System uptime |
 
 ### Network Interface
 
-When set to `auto`, the widget aggregates traffic across all active network connections using KDE's `network/all` sensor. This handles VPN routing and switching networks automatically.
+When set to `auto`, the widget aggregates traffic across all active network connections using KDE's `network/all` sensor while detecting the active Wi-Fi interface for signal strength. This handles VPN routing and switching networks automatically.
 
-You can manually select a specific interface (e.g., `wlan0`, `enp3s0`) from the drop-down list if you only want to monitor a single network interface.
+You can manually select a specific interface (e.g., `wlo1`, `enp3s0`) from the drop-down list if you only want to monitor a single network interface.
 
 !!! note
-    The manual interface list is populated dynamically from `/sys/class/net/`.
+    The manual interface list is populated dynamically from `HardwareDiscovery.qml` via KSystemStats.
 
 ### GPU Selection
 

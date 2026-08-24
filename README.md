@@ -29,14 +29,14 @@ CPU: 26% · 3.2GHz  |  RAM: 8.8/39.0G  |  TEMP: 58°C  |  🔋BAT: 78% · 20W  |
 
 Here is what you can track and customize:
 
-- **CPU**: Usage percentage, frequency, and temperature in a single panel entry with a custom label.
-- **RAM**: Used/total memory (percentage and absolute), with optional DDR5 temperature via the `spd5118` driver.
+- **CPU**: Usage percentage, frequency, temperature, load averages (1m/5m/15m), and per-core CPU usage.
+- **RAM & Swap**: Used/total memory and swap (percentage and absolute), with optional DDR5 temperature via the `spd5118` driver.
 - **System temperature**: Auto-detects the chipset/motherboard sensor from lmsensors. Falls back to CPU average if no ISA-bus sensor is found.
-- **GPU**: Usage, VRAM, and temperature. Supports multiple GPUs independently with custom labels (iGPU, dGPU, etc.).
+- **GPU**: Usage, VRAM, temperature, core frequency, and power draw. Supports multiple GPUs independently with custom labels (iGPU, dGPU, etc.).
 - **Fan speed**: Per-fan RPM and percentage with stable numbering and individual sparklines.
-- **Battery and power**: Automatically detects battery interfaces with an option to show power draw in watts.
-- **Network**: Download and upload speeds, local IP address display, and interface auto-detection.
-- **Disk I/O and temperature**: Per-drive read/write rates and temperature monitoring with hotplug detection.
+- **Battery and power**: Automatically detects battery interfaces, charge percentage, health, and power draw in watts.
+- **Network**: Download and upload speeds, session data totals (download/upload), Wi-Fi signal strength, local IP address display, and interface auto-detection.
+- **Disk I/O, space, and temperature**: Per-drive read/write rates, overall used space, and temperature monitoring with hotplug detection.
 - **System uptime**: Live uptime pulled from `os/system/uptime`.
 - **Sparkline charts**: Expanded popup shows a 60-sample history graph for all active metrics.
 - **Visibility controls**: Choose where each metric appears — panel and popup, panel only, popup only, or disabled entirely.

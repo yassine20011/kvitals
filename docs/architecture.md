@@ -19,11 +19,11 @@ KVitals separates hardware discovery from sensor interpretation:
 - `count`: Total number of registered sensors.
 - `revision`: Reactive counter incremented when hardware topology changes.
 - `allSensorIds`: Array of all discovered sensor ID strings.
-- `query(pattern)`: Returns array of matching `{ id, name }` objects.
-- `queryIds(pattern)`: Returns array of matching sensor ID strings.
-- `sensorExists(id)`: Fast boolean check.
-
-`HardwareDiscovery` contains zero GPU, disk, fan, network, temperature, or battery specific logic.
+- `discoveredGpus`, `discoveredDisks`, `discoveredFans`, `discoveredCores`, `discoveredNetworkIfaces`: Pre-indexed typed device arrays populated in a single pass.
+- `query(pattern)`: Returns array of matching `{ id, name }` objects (memoized in $O(1)$).
+- `queryIds(pattern)`: Returns array of matching sensor ID strings (memoized in $O(1)$).
+- `sensorExists(id)`: Fast $O(1)$ hash map check.
+- `rescan()`: Public hook to trigger an immediate topology refresh.
 
 ## Sensor modules (`contents/ui/sensors/`)
 
@@ -31,17 +31,18 @@ Each metric category has its own QML component. Components receive the shared `H
 
 | Module | Discovery query | Key exposed properties |
 |---|---|---|
-| `CpuSensors.qml` | Static (`cpu/all/usage`, `averageFrequency`) | `cpuValue`, `cpuNumericValue`, `cpuFreqValue` |
+| `CpuSensors.qml` | Static + `PATTERNS.CPU_CORE` (`discovery.discoveredCores`) | `cpuValue`, `cpuNumericValue`, `cpuFreqValue`, `cpuLoad1Value`, `coreDataList` |
 | `MemorySensors.qml` | Static (`memory/physical/used`, `total`) | `ramValue`, `ramPercentValue`, `ramPercentage` |
+| `SwapSensors.qml` | Static (`memory/swap/used`, `total`) | `swapPercentValue`, `swapUsedValue`, `swapFreeValue` |
 | `TempSensors.qml` | `PATTERNS.TEMP_LMSENSORS` + ISA Super I/O / SPD5118 filtering | `tempValue`, `cpuTempValue`, `ramTempValue`, `ramTempExists` |
-| `GpuSensors.qml` | `PATTERNS.GPU` (`gpu/gpu\d+/usage`) | `gpuDataList`, `discoveredGpus` |
-| `BatterySensors.qml` | `PATTERNS.BATTERY` + probe/qdbus fallback | `batValue`, `batNumericValue`, `powerValue` |
-| `NetworkSensors.qml` | `PATTERNS.NETWORK_IFACE` (`network/[^/]+/download`) | `netDownValue`, `netUpValue`, `netIpValue` |
-| `DiskSensors.qml` | `PATTERNS.DISK_READ` & `PATTERNS.DISK_TEMP` + Solid hotplug filter | `diskReadValue`, `diskWriteValue`, `diskDataList` |
-| `FanSensors.qml` | `PATTERNS.FAN` + alphabetical sort and max RPM check | `fanDataList`, `hasFanData`, `multiFan` |
+| `GpuSensors.qml` | `discovery.discoveredGpus` | `gpuDataList`, `discoveredGpus` |
+| `BatterySensors.qml` | `PATTERNS.BATTERY` + probe/qdbus fallback | `batValue`, `batNumericValue`, `powerValue`, `batHealthValue` |
+| `NetworkSensors.qml` | `discovery.discoveredNetworkIfaces` + Wi-Fi signal detection | `netDownValue`, `netUpValue`, `netTotalDownValue`, `netTotalUpValue`, `netSignalValue`, `netIpValue` |
+| `DiskSensors.qml` | `discovery.discoveredDisks` + Solid hotplug filter | `diskReadValue`, `diskWriteValue`, `diskDataList` |
+| `FanSensors.qml` | `discovery.discoveredFans` | `fanDataList`, `hasFanData` |
 | `UptimeSensors.qml` | Static (`os/system/uptime`) | `uptimeValue` |
 
-`Utils.qml` is a singleton providing formatting helpers (`formatBytes`, `formatRate`, `resolveColor`) used by most sensor components.
+`Utils.qml` is a singleton providing formatting helpers (`formatBytes`, `formatData`, `formatRate`, `resolveColor`) used by sensor components.
 
 ### Performance properties
 

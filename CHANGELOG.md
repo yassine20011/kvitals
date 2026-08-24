@@ -2,6 +2,26 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [3.1.0] - 2026-08-24
+
+### Added
+
+- **Per-Core CPU Monitoring**: Dynamic discovery and individual usage tracking for each CPU core (`cpu:cpu{N}/core`), organized into a dedicated "Cores" section in the popup view and fully pinnable/reorderable in the panel.
+- **Wi-Fi Signal Strength**: Dedicated wireless signal strength metric (`net.signal`) with inverted threshold warning coloring and automatic multi-interface resolution.
+- **Cumulative Network Totals**: Session bandwidth metrics (`net.totalDown` and `net.totalUp`) with auto-scaling unit formatting (KB, MB, GB, TB).
+- **$O(1)$ Hardware Discovery Optimization**: In-memory query memoization (`_patternCache`) and single-pass device bucketing (`discoveredGpus`, `discoveredDisks`, `discoveredFans`, `discoveredCores`, `discoveredNetworkIfaces`) in `HardwareDiscovery.qml`.
+- **Public Rescan Hook**: Added `discovery.rescan()` for on-demand hardware re-indexing.
+
+### Changed
+
+- **Unified Network Discovery**: Completely removed legacy `ls /sys/class/net/` and `Plasma5Support.DataSource` from `configMetrics.qml`, unifying network interface discovery across the entire applet on `HardwareDiscovery.qml`.
+- **Cold-Start Performance**: Optimized initial sensor tree synchronization to rebuild synchronously on the first DBus response, eliminating dialog initialization delays.
+
+### Fixed
+
+- **Settings UI Dynamic Delegate Leaks**: Isolated form sections in `configMetrics.qml` using `twinFormLayouts` so late-discovered disks (e.g. SATA/SCSI `sda`) or fans append strictly to their respective category instead of leaking across the form.
+- **Dual-Homed Wi-Fi Signal Detection**: Fixed Wi-Fi signal detection when Ethernet is active by decoupling wireless signal resolution from the primary IPv4 route interface.
+
 ## [3.0.0] - 2026-08-20
 
 ### Added
