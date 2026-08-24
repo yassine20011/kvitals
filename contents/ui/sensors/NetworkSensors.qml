@@ -41,18 +41,11 @@ Item {
 
     function _refreshInterfaces() {
         if (!discovery) return;
-        var found = [];
-        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.NETWORK_IFACE : /^network\/([^/]+)\/download$/;
-        var ids = discovery.queryIds(pattern);
-        for (var i = 0; i < ids.length; i++) {
-            var match = ids[i].match(pattern);
-            if (!match) continue;
-            var iface = match[1];
-            if (iface === "all" || iface === "lo") continue;
-            if (found.indexOf(iface) < 0) found.push(iface);
-        }
-        if (JSON.stringify(found) !== JSON.stringify(_discoveredIfaces))
-            _discoveredIfaces = found;
+        var ifaces = (discovery.discoveredNetworkIfaces || []).filter(function(iface) {
+            return iface !== "auto";
+        });
+        if (JSON.stringify(ifaces) !== JSON.stringify(_discoveredIfaces))
+            _discoveredIfaces = ifaces;
     }
 
     Connections {
@@ -145,6 +138,25 @@ Item {
         updateRateLimit: root.updateInterval
     }
 
+    // Cumulative totals sensors
+    readonly property real netTotalDownRaw: (netTotalDownSensor.status === Sensors.Sensor.Ready && netTotalDownSensor.value != null) ? Number(netTotalDownSensor.value) : NaN
+    readonly property real netTotalUpRaw:   (netTotalUpSensor.status   === Sensors.Sensor.Ready && netTotalUpSensor.value != null)   ? Number(netTotalUpSensor.value)   : NaN
+
+    readonly property string netTotalDownValue: isNaN(netTotalDownRaw) ? "..." : Utils.formatData(netTotalDownRaw)
+    readonly property string netTotalUpValue:   isNaN(netTotalUpRaw)   ? "..." : Utils.formatData(netTotalUpRaw)
+
+    Sensors.Sensor {
+        id: netTotalDownSensor
+        sensorId: "network/" + root.netIfacePath + "/totalDownload"
+        updateRateLimit: root.updateInterval
+    }
+
+    Sensors.Sensor {
+        id: netTotalUpSensor
+        sensorId: "network/" + root.netIfacePath + "/totalUpload"
+        updateRateLimit: root.updateInterval
+    }
+
     // IP address sensor
 
     readonly property string netIpValue: {
@@ -162,5 +174,40 @@ Item {
                   ? "network/" + root.netIpIfacePath + "/ipv4withPrefixLength"
                   : ""
         updateRateLimit: root.updateInterval
+    }
+
+    // Wi-Fi interface resolution
+    readonly property string _wifiIface: {
+        if (networkInterface !== "" && networkInterface !== "auto") {
+            if (discovery && discovery.sensorExists("network/" + networkInterface + "/signal")) {
+                return networkInterface;
+            }
+            return "";
+        }
+        if (_activeIface !== "" && discovery && discovery.sensorExists("network/" + _activeIface + "/signal")) {
+            return _activeIface;
+        }
+        if (discovery) {
+            for (var i = 0; i < _discoveredIfaces.length; i++) {
+                var iface = _discoveredIfaces[i];
+                if (discovery.sensorExists("network/" + iface + "/signal")) {
+                    return iface;
+                }
+            }
+        }
+        return "";
+    }
+
+    // Wi-Fi signal sensor
+    readonly property string netSignalSensorId: _wifiIface !== "" ? "network/" + _wifiIface + "/signal" : ""
+    readonly property real netSignalRaw: (netSignalSensor.status === Sensors.Sensor.Ready && netSignalSensor.value != null) ? Number(netSignalSensor.value) : NaN
+    readonly property string netSignalValue: isNaN(netSignalRaw) ? "" : Math.round(netSignalRaw) + "%"
+    readonly property bool hasWifiSignal: netSignalSensorId !== "" && !isNaN(netSignalRaw)
+
+    Sensors.Sensor {
+        id: netSignalSensor
+        sensorId: root.netSignalSensorId
+        updateRateLimit: root.updateInterval
+        enabled: root.netSignalSensorId !== ""
     }
 }

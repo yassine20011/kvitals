@@ -29,11 +29,9 @@ Item {
 
     function refreshDiscovered() {
         if (!discovery) return;
-        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.FAN : /^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i;
-        var ids = discovery.queryIds(pattern);
-        ids.sort();
-        var found = ids.map(function(id, i) {
-            return { id: id, name: "Fan " + (i + 1), number: i + 1 };
+        var fans = discovery.discoveredFans || [];
+        var found = fans.map(function(f, i) {
+            return { id: f.id, name: f.name, number: i + 1 };
         });
 
         if (JSON.stringify(found) !== JSON.stringify(_discovered)) {

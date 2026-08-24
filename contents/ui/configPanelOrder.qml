@@ -124,7 +124,13 @@ KCM.SimpleKCM {
         // Mockup preview values
         var previewVal = "";
         if (group === "cpu") {
-            previewVal = subKey === "usage" ? "22%" : (subKey === "freq" ? "3.6 GHz" : (subKey === "temp" ? "62°C" : (subKey === "load1" ? "1.20" : (subKey === "load5" ? "1.05" : (subKey === "load15" ? "0.95" : "22%")))));
+            if (subKey === "core") {
+                var cNum = parseInt(devId.replace("cpu", ""), 10);
+                displayName = "Core " + (!isNaN(cNum) ? (cNum + 1) : devId);
+                previewVal = "28%";
+            } else {
+                previewVal = subKey === "usage" ? "22%" : (subKey === "freq" ? "3.6 GHz" : (subKey === "temp" ? "62°C" : (subKey === "load1" ? "1.20" : (subKey === "load5" ? "1.05" : (subKey === "load15" ? "0.95" : "22%")))));
+            }
         } else if (group === "ram") {
             previewVal = subKey === "percentage" ? "35%" : (subKey === "used" ? "8.4/32G" : "42°C");
         } else if (group === "swap") {
@@ -134,7 +140,18 @@ KCM.SimpleKCM {
         } else if (group === "bat") {
             previewVal = subKey === "percentage" ? "85%" : (subKey === "power" ? "14.2W" : (subKey === "health" ? "98%" : "85%"));
         } else if (group === "net") {
-            previewVal = subKey === "down" ? "↓ 1.2MB" : (subKey === "up" ? "↑ 240KB" : "192.168.1.1");
+            if (subKey === "signal") {
+                icon = "network-wireless-symbolic";
+                previewVal = "78%";
+            } else if (subKey === "totalDown") {
+                icon = "network-download-symbolic";
+                previewVal = "1.24 GB";
+            } else if (subKey === "totalUp") {
+                icon = "network-upload-symbolic";
+                previewVal = "240 MB";
+            } else {
+                previewVal = subKey === "down" ? "↓ 1.2MB" : (subKey === "up" ? "↑ 240KB" : "192.168.1.1");
+            }
         } else if (group === "disk") {
             previewVal = subKey === "read" ? "↓ 45MB" : (subKey === "write" ? "↑ 12MB" : (subKey === "usage" ? "45%" : (subKey === "space" ? "220/512G" : "54°C")));
         } else if (group === "fan") {
@@ -162,17 +179,22 @@ KCM.SimpleKCM {
         var cats = [];
 
         // 1. Processor (CPU)
+        var cores = discovery.discoveredCores || [];
+        var cpuItems = [
+            { id: "cpu/usage", label: i18n("CPU Usage"), icon: "cpu-symbolic" },
+            { id: "cpu/freq", label: i18n("CPU Frequency"), icon: "cpu-symbolic" },
+            { id: "cpu/temp", label: i18n("CPU Temperature"), icon: "temperature-symbolic" },
+            { id: "cpu/load1", label: i18n("CPU Load (1m)"), icon: "cpu-symbolic" },
+            { id: "cpu/load5", label: i18n("CPU Load (5m)"), icon: "cpu-symbolic" },
+            { id: "cpu/load15", label: i18n("CPU Load (15m)"), icon: "cpu-symbolic" }
+        ];
+        for (var ci = 0; ci < cores.length; ci++) {
+            cpuItems.push({ id: "cpu:" + cores[ci].id + "/core", label: cores[ci].name, icon: "cpu-symbolic" });
+        }
         cats.push({
             title: i18n("Processor (CPU)"),
             icon: "cpu-symbolic",
-            items: [
-                { id: "cpu/usage", label: i18n("CPU Usage"), icon: "cpu-symbolic" },
-                { id: "cpu/freq", label: i18n("CPU Frequency"), icon: "cpu-symbolic" },
-                { id: "cpu/temp", label: i18n("CPU Temperature"), icon: "temperature-symbolic" },
-                { id: "cpu/load1", label: i18n("CPU Load (1m)"), icon: "cpu-symbolic" },
-                { id: "cpu/load5", label: i18n("CPU Load (5m)"), icon: "cpu-symbolic" },
-                { id: "cpu/load15", label: i18n("CPU Load (15m)"), icon: "cpu-symbolic" }
-            ]
+            items: cpuItems
         });
 
         // 2. Memory (RAM & Swap)
@@ -208,32 +230,35 @@ KCM.SimpleKCM {
         });
 
         // 5. Network
+        var netItems = [
+            { id: "net/down", label: i18n("Download"), icon: "network-download-symbolic" },
+            { id: "net/up", label: i18n("Upload"), icon: "network-upload-symbolic" },
+            { id: "net/totalDown", label: i18n("Total Download"), icon: "network-download-symbolic" },
+            { id: "net/totalUp", label: i18n("Total Upload"), icon: "network-upload-symbolic" },
+            { id: "net/ip", label: i18n("Local IP"), icon: "network-symbolic" }
+        ];
+        var hasWifi = discovery.queryIds(/^network\/[^/]+\/signal$/).length > 0;
+        if (hasWifi) {
+            netItems.push({ id: "net/signal", label: i18n("Wi-Fi Signal"), icon: "network-wireless-symbolic" });
+        }
         cats.push({
             title: i18n("Network"),
             icon: "network-symbolic",
-            items: [
-                { id: "net/down", label: i18n("Download"), icon: "network-download-symbolic" },
-                { id: "net/up", label: i18n("Upload"), icon: "network-upload-symbolic" },
-                { id: "net/ip", label: i18n("Local IP"), icon: "network-symbolic" }
-            ]
+            items: netItems
         });
 
         // 6. Graphics (GPU)
-        var gPattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.GPU : /^gpu\/(gpu\d+)\/usage$/;
-        var gIds = discovery.queryIds(gPattern);
-        if (gIds.length > 0) {
+        var gpus = discovery.discoveredGpus || [];
+        if (gpus.length > 0) {
             var gpuItems = [];
-            for (var gi = 0; gi < gIds.length; gi++) {
-                var gm = gIds[gi].match(gPattern);
-                if (gm) {
-                    var gid = gm[1];
-                    var gName = "GPU " + (gi + 1);
-                    gpuItems.push({ id: "gpu:" + gid + "/usage", label: gName + " Usage", icon: "gpu-symbolic" });
-                    gpuItems.push({ id: "gpu:" + gid + "/vram", label: gName + " VRAM", icon: "gpu-symbolic" });
-                    gpuItems.push({ id: "gpu:" + gid + "/temp", label: gName + " Temp", icon: "temperature-symbolic" });
-                    gpuItems.push({ id: "gpu:" + gid + "/freq", label: gName + " Frequency", icon: "gpu-symbolic" });
-                    gpuItems.push({ id: "gpu:" + gid + "/power", label: gName + " Power", icon: "voltage-symbolic" });
-                }
+            for (var gi = 0; gi < gpus.length; gi++) {
+                var gid = gpus[gi].id;
+                var gName = gpus[gi].name;
+                gpuItems.push({ id: "gpu:" + gid + "/usage", label: gName + " Usage", icon: "gpu-symbolic" });
+                gpuItems.push({ id: "gpu:" + gid + "/vram", label: gName + " VRAM", icon: "gpu-symbolic" });
+                gpuItems.push({ id: "gpu:" + gid + "/temp", label: gName + " Temp", icon: "temperature-symbolic" });
+                gpuItems.push({ id: "gpu:" + gid + "/freq", label: gName + " Frequency", icon: "gpu-symbolic" });
+                gpuItems.push({ id: "gpu:" + gid + "/power", label: gName + " Power", icon: "voltage-symbolic" });
             }
             cats.push({
                 title: i18n("Graphics (GPU)"),
@@ -243,23 +268,17 @@ KCM.SimpleKCM {
         }
 
         // 7. Storage (Disks)
-        var dPattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_READ : /^disk\/(nvme\d+n\d+|sd[a-z]+)\/read$/;
-        var dIds = discovery.queryIds(dPattern);
-        var seenDisks = {};
+        var disks = discovery.discoveredDisks || [];
         var diskItems = [
             { id: "disk/usage", label: i18n("Overall Usage (%)"), icon: "storage-symbolic" },
             { id: "disk/space", label: i18n("Overall Space"), icon: "storage-symbolic" }
         ];
-        for (var di = 0; di < dIds.length; di++) {
-            var dm = dIds[di].match(dPattern);
-            if (dm && !seenDisks[dm[1]]) {
-                seenDisks[dm[1]] = true;
-                var did = dm[1];
-                var dName = did.indexOf("nvme") !== -1 ? "NVMe" : did;
-                diskItems.push({ id: "disk:" + did + "/read", label: dName + " Read", icon: "network-download-symbolic" });
-                diskItems.push({ id: "disk:" + did + "/write", label: dName + " Write", icon: "network-upload-symbolic" });
-                diskItems.push({ id: "disk:" + did + "/temp", label: dName + " Temp", icon: "temperature-symbolic" });
-            }
+        for (var di = 0; di < disks.length; di++) {
+            var did = disks[di].id;
+            var dName = did.indexOf("nvme") !== -1 ? "NVMe" : did;
+            diskItems.push({ id: "disk:" + did + "/read", label: dName + " Read", icon: "network-download-symbolic" });
+            diskItems.push({ id: "disk:" + did + "/write", label: dName + " Write", icon: "network-upload-symbolic" });
+            diskItems.push({ id: "disk:" + did + "/temp", label: dName + " Temp", icon: "temperature-symbolic" });
         }
         if (diskItems.length > 0) {
             cats.push({
@@ -270,12 +289,11 @@ KCM.SimpleKCM {
         }
 
         // 8. Cooling (Fans)
-        var fPattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.FAN : /^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i;
-        var fIds = discovery.queryIds(fPattern);
-        if (fIds.length > 0) {
+        var fans = discovery.discoveredFans || [];
+        if (fans.length > 0) {
             var fanItems = [];
-            for (var fi = 0; fi < fIds.length; fi++) {
-                fanItems.push({ id: "fan:" + fIds[fi] + "/speed", label: i18n("Fan %1 Speed", (fi + 1)), icon: "fan-symbolic" });
+            for (var fi = 0; fi < fans.length; fi++) {
+                fanItems.push({ id: "fan:" + fans[fi].id + "/speed", label: i18n("Fan %1 Speed", (fi + 1)), icon: "fan-symbolic" });
             }
             cats.push({
                 title: i18n("Cooling (Fans)"),

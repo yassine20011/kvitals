@@ -94,15 +94,11 @@ Item {
 
     function refreshDiscovered() {
         if (!discovery) return;
+        var disks = discovery.discoveredDisks || [];
         var found = [];
-        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_READ : /^disk\/(nvme\d+n\d+|sd[a-z]+)\/read$/;
-        var ids = discovery.queryIds(pattern);
-        for (var i = 0; i < ids.length; i++) {
-            var match = ids[i].match(pattern);
-            if (!match) continue;
-            var did = match[1];
+        for (var i = 0; i < disks.length; i++) {
+            var did = disks[i].id;
             if (_unplugged[did]) continue;
-            if (found.some(function(d){ return d.id === did; })) continue;
             found.push({ id: did, name: "DSK " + (found.length + 1) });
         }
         if (JSON.stringify(found) !== JSON.stringify(_discovered)) {

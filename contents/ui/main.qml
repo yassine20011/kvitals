@@ -80,6 +80,7 @@ PlasmoidItem {
 
             CpuSensors {
                 id: _cpu
+                discovery: _discovery
                 updateInterval: metricConfig.updateInterval
             }
 
