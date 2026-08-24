@@ -2,6 +2,20 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [3.1.1] - 2026-08-25
+
+### Fixed
+
+- **Temperature Grouping & Panel Placement**: Fixed temperature sensors being forced into a separate global `"TEMP:"` group instead of respecting their configured panel positions and parent device groups (Issue #95).
+- **Symbolic Icon Resolution**: Fixed missing or blank icons across the Icons settings page, panel order preview palette, and compact panel view by resolving bundled SVG assets directly.
+- **Custom Disk Labels**: Fixed custom disk names being overridden by the disk temperature metric falling back to generic global labels.
+- **Directional Indicators**: Restored download and upload rate indicators (`↓` / `↑`) for network and disk I/O in text display mode.
+
+### Added
+
+- **Horizontal Separators Option**: Restored metric separators in horizontal layout with a configurable toggle in General settings.
+- **Wi-Fi Symbolic Icon**: Bundled `network-wireless-symbolic.svg` for wireless signal strength.
+
 ## [3.1.0] - 2026-08-24
 
 ### Added
