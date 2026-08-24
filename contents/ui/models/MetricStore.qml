@@ -343,7 +343,8 @@ Item {
                 list.push(_createMetric("bat.health", {
                     value: s.battery.batHealthNumericValue,
                     displayValue: s.battery.batHealthValue,
-                    label: cfg.getGroupLabel("bat") + " Health",
+                    label: (cfg.batLabel || "BAT") + " Health",
+                    subLabel: "Health",
                     status: !isNaN(s.battery.batHealthNumericValue) ? "ready" : "loading"
                 }));
             }

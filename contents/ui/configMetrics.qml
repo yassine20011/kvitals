@@ -31,6 +31,7 @@ KCM.SimpleKCM {
     property int cfg_fanMaxRpm: 2000
     property string cfg_metricOrder: "cpu,ram,swap,temp,gpu,bat,net,disk,fan,uptime"
     property string cfg_batteryDevice: "auto"
+    property string cfg_batLabel: "BAT"
 
     // ── Icon bindings ──────────────────────────────────────────────────────
 
@@ -248,6 +249,14 @@ KCM.SimpleKCM {
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
             Kirigami.FormData.label: i18n("Battery & Power")
+        }
+
+        TextField {
+            Kirigami.FormData.label: i18n("Display label:")
+            text: cfg_batLabel
+            placeholderText: "BAT"
+            implicitWidth: Kirigami.Units.gridUnit * 14
+            onTextEdited: cfg_batLabel = text.trim() || "BAT"
         }
 
         RowLayout {
