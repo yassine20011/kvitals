@@ -133,7 +133,7 @@ Item {
         id: pollTimer
         interval: root.updateInterval
         repeat: true
-        running: root.enabled
+        running: root.enabled && root._bootReady
         triggeredOnStart: true
         onTriggered: {
             root.aggregatePerDisk();
@@ -145,9 +145,11 @@ Item {
 
     Sensors.SensorDataModel {
         id: diskData
-        sensors: root._activeSensorIds
+        // Defer DBus subscriptions by keeping sensors empty until boot guards pass,
+        // avoiding KSysGuard C++ bugs where setting enabled=false on boot freezes the model
+        sensors: root._bootReady ? root._activeSensorIds : []
         updateRateLimit: root.updateInterval
-        enabled: root._activeSensorIds.length > 0
+        enabled: sensors.length > 0
         onDataChanged: root.aggregatePerDisk()
         onReadyChanged: { if (ready) root.aggregatePerDisk(); }
         onRowsInserted: root.aggregatePerDisk()
@@ -263,9 +265,9 @@ Item {
 
     Sensors.SensorDataModel {
         id: tempData
-        sensors: root._tempSensorIds
+        sensors: root._bootReady ? root._tempSensorIds : []
         updateRateLimit: root.updateInterval
-        enabled: root._tempSensorIds.length > 0
+        enabled: sensors.length > 0
         onDataChanged: root._aggregateTemp()
         onReadyChanged: { if (ready) root._aggregateTemp(); }
         onRowsInserted: root._aggregateTemp()

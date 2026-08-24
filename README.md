@@ -97,12 +97,17 @@ Right-click the panel, select **Add Widgets...**, search for **KVitals**, and dr
 
 Right-click the widget and select **Configure KVitals...** to open the settings dialog.
 
-| Tab         | Available settings                                                                                                                                                                  |
-| :---------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **General** | Display modes, layouts (horizontal or vertical), icon dimensions, font styles, refresh intervals, and unit settings (like Fahrenheit or bits per second).                           |
-| **Metrics** | Toggle individual sensors, hide them in the main panel, group related readings (like merging CPU and temperature, or battery and power draw), split GPU metrics, and reorder items. |
-| **Icons**   | Custom icon selectors mapped to your active theme.                                                                                                                                  |
-| **Colors**  | Font, label, and icon colors, threshold levels for warning and critical states, and customizable slider values.                                                                     |
+<div align="center">
+  <img src="screenshots/settings-preview.png" alt="KVitals Settings Preview" width="100%"/>
+</div>
+
+| Tab | Available settings |
+| :-- | :----------------- |
+| **General** | Display modes (Text, Icons, Icons + Text), layouts (Horizontal or Vertical), icon dimensions, custom font selection, refresh intervals, and unit settings (°C/°F, bytes/bits). |
+| **Panel Items** | Live interactive panel preview, drag-and-drop metric chip reordering, and categorized click-to-pin metric palette. |
+| **Sensors & Hardware** | Custom device labels, per-GPU selection and discrete GPU power suspension, per-fan max RPM fallback, and network interface selection. |
+| **Icons** | Custom symbolic icon selectors mapped to your active system icon theme with bundled SVG fallback support. |
+| **Colors** | Font, label, and icon colors, per-metric warning and critical threshold sliders, and custom highlight colors. |
 
 You can find more details on [kvitals.dev](https://kvitals.dev) or in the [local configuration guide](docs/configuration.md).
 
