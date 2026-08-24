@@ -44,8 +44,9 @@ ColumnLayout {
 
     function resolveIcon(name) {
         if (!name) return "configure";
-        if (name.indexOf("-symbolic") !== -1 && name.indexOf("/") === -1) {
-            return Qt.resolvedUrl("../icons/" + name + ".svg");
+        var str = String(name);
+        if (str.indexOf("-symbolic") !== -1 && str.indexOf("/") === -1) {
+            return Qt.resolvedUrl("../icons/" + str + ".svg");
         }
         return name;
     }

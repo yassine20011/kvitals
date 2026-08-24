@@ -81,6 +81,7 @@ Item {
             var idx = flatSensors.index(row, 0);
             var sid = flatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
             if (!sid || sid.length === 0) continue;
+            if (/[\(\)\*\?\+]/.test(sid)) continue;
 
             var name = flatSensors.data(idx, Qt.DisplayRole) || "";
             ids.push(sid);

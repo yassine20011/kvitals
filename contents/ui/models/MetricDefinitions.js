@@ -136,7 +136,7 @@ var PATTERNS = {
     FAN: /^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i,
     NETWORK_IFACE: /^network\/([^/]+)\/download$/,
     TEMP_LMSENSORS: /^lmsensors\/(.+)\/temp\d+$/,
-    BATTERY: /^power\/(?!all)([^\/]+)\/chargePercentage$/
+    BATTERY: /^power\/((?:battery_)[a-zA-Z0-9_-]+|BAT\d+|BATT\d*)\/chargePercentage$/
 };
 
 // DEFINITIONS is the source of truth for every metric.
