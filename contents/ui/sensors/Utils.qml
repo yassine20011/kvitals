@@ -10,6 +10,18 @@ QtObject {
         return gb.toFixed(1);
     }
 
+    function formatData(bytes) {
+        if (typeof bytes !== "number" || isNaN(bytes) || bytes < 0)
+            return "...";
+        if (bytes < 1024 * 1024)
+            return (bytes / 1024).toFixed(1) + " KB";
+        if (bytes < 1024 * 1024 * 1024)
+            return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+        if (bytes < 1024 * 1024 * 1024 * 1024)
+            return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+        return (bytes / (1024 * 1024 * 1024 * 1024)).toFixed(2) + " TB";
+    }
+
     // unit: "bytes" (default, KB/MB) or "bits" (Kb/Mb)
     // Always uses 3 significant figures, padded to 6 chars for stable display
     function formatRate(bytesPerSec, unit) {

@@ -98,15 +98,7 @@ Item {
 
     function refreshDiscovered() {
         if (!discovery) return;
-        var found = [];
-        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.GPU : /^gpu\/(gpu\d+)\/usage$/;
-        var ids = discovery.queryIds(pattern);
-        for (var i = 0; i < ids.length; i++) {
-            var match = ids[i].match(pattern);
-            if (!match) continue;
-            found.push({ id: match[1], name: "GPU " + (found.length + 1) });
-        }
-
+        var found = discovery.discoveredGpus || [];
         if (JSON.stringify(found) !== JSON.stringify(_discovered)) {
             _discovered = found;
         }

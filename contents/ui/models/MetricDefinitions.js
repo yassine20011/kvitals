@@ -16,7 +16,8 @@ var GROUPS = {
             { key: "temp",   label: "Temperature" },
             { key: "load1",  label: "Load (1m)" },
             { key: "load5",  label: "Load (5m)" },
-            { key: "load15", label: "Load (15m)" }
+            { key: "load15", label: "Load (15m)" },
+            { key: "core",   label: "Cores" }
         ]
     },
     ram: {
@@ -85,9 +86,12 @@ var GROUPS = {
         defaultIcon: "network-symbolic",
         defaultSubMetrics: "down,up",
         subs: [
-            { key: "down", label: "Download" },
-            { key: "up",   label: "Upload" },
-            { key: "ip",   label: "IP address" }
+            { key: "down",      label: "Download" },
+            { key: "up",        label: "Upload" },
+            { key: "totalDown", label: "Total Downloaded" },
+            { key: "totalUp",   label: "Total Uploaded" },
+            { key: "signal",    label: "Wi-Fi Signal" },
+            { key: "ip",        label: "IP address" }
         ]
     },
     disk: {
@@ -130,6 +134,7 @@ var ALL_GROUP_KEYS = ["cpu", "ram", "swap", "temp", "gpu", "bat", "net", "disk",
 
 // Canonical discovery patterns for dynamic hardware devices
 var PATTERNS = {
+    CPU_CORE: /^cpu\/(cpu\d+)\/usage$/,
     GPU: /^gpu\/(gpu\d+)\/usage$/,
     DISK_READ: /^disk\/(nvme\d+n\d+|sd[a-z]+)\/read$/,
     DISK_TEMP: /^lmsensors\/(nvme-pci-[^/]+|drivetemp-scsi-[^/]+)\/temp[12]$/,
@@ -208,6 +213,15 @@ var DEFINITIONS = {
         sensorId: "cpu/loadaverages/loadaverage15",
         label: "Load (15m)",
         thresholdType: "none"
+    },
+    "cpu.core": {
+        id: "cpu.core",
+        group: "cpu",
+        subKey: "core",
+        sensorPattern: "cpu/{id}/usage",
+        label: "Core Usage",
+        thresholdType: "normal",
+        thresholdKey: "cpu"
     },
     "ram.percentage": {
         id: "ram.percentage",
@@ -373,6 +387,34 @@ var DEFINITIONS = {
         sensorPattern: "network/{id}/ipv4withPrefixLength",
         label: "Local IP",
         icon: "network-symbolic",
+        thresholdType: "none"
+    },
+    "net.signal": {
+        id: "net.signal",
+        group: "net",
+        subKey: "signal",
+        sensorPattern: "network/{id}/signal",
+        label: "Wi-Fi Signal",
+        icon: "network-wireless-symbolic",
+        thresholdType: "inverted",
+        thresholdKey: "battery"
+    },
+    "net.totalDown": {
+        id: "net.totalDown",
+        group: "net",
+        subKey: "totalDown",
+        sensorPattern: "network/{id}/totalDownload",
+        label: "Total Downloaded",
+        icon: "network-download-symbolic",
+        thresholdType: "none"
+    },
+    "net.totalUp": {
+        id: "net.totalUp",
+        group: "net",
+        subKey: "totalUp",
+        sensorPattern: "network/{id}/totalUpload",
+        label: "Total Uploaded",
+        icon: "network-upload-symbolic",
         thresholdType: "none"
     },
     "disk.read": {

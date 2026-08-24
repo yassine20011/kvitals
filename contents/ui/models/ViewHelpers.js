@@ -85,18 +85,24 @@ function buildPopupGroups(metricsList, orderedKeys) {
     var cpuMetrics = available.filter(function(m) { return m.group === "cpu" && m.subKey !== "temp"; });
     if (cpuMetrics.length > 0) {
         var cpuUsage = map["cpu/usage"] || cpuMetrics[0];
+        var coreMetrics = cpuMetrics.filter(function(m) { return m.subKey === "core"; });
+        var nonCoreMetrics = cpuMetrics.filter(function(m) { return m.subKey !== "core"; });
+
+        var cpuSections = [];
+        if (coreMetrics.length > 0 && nonCoreMetrics.length > 0) {
+            cpuSections.push({ sectionLabel: "", metrics: nonCoreMetrics });
+            cpuSections.push({ sectionLabel: "Cores", metrics: coreMetrics });
+        } else {
+            cpuSections.push({ sectionLabel: "", metrics: cpuMetrics });
+        }
+
         categories.push({
             key: "processor",
             groupLabel: "Processor",
             icon: "cpu-symbolic",
             aggregateValue: cpuUsage ? cpuUsage.displayValue : "",
             aggregateColor: cpuUsage ? cpuUsage.color : "",
-            sections: [
-                {
-                    sectionLabel: "",
-                    metrics: cpuMetrics
-                }
-            ]
+            sections: cpuSections
         });
     }
 
@@ -244,7 +250,7 @@ function buildPopupGroups(metricsList, orderedKeys) {
 }
 
 function _resolveSegmentLabel(metric, isTemp) {
-    if (isTemp || metric.group === "fan") return metric.subLabel || "";
+    if (isTemp || metric.group === "fan" || metric.subKey === "core") return metric.subLabel || "";
     // For CPU, RAM, Swap, Battery, GPU, Network, Disk, value or icon is self-describing
     return "";
 }

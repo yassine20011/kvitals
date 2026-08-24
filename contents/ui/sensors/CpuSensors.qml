@@ -1,9 +1,11 @@
 import QtQuick
 import org.kde.ksysguard.sensors as Sensors
+import "../models/MetricDefinitions.js" as MetricDefinitions
 
 Item {
     id: root
 
+    property var discovery: null
     property int updateInterval: 2000
 
     readonly property real cpuNumericValue: {
@@ -18,7 +20,7 @@ Item {
         return Math.round(cpuNumericValue).toString().padStart(3) + "%";
     }
 
-    // Frequency in MHz from KSysGuard (unit type 302 = MHz); displays as GHz above 1000 MHz
+    // Frequency in MHz from KSysGuard
     readonly property string cpuFreqValue: {
         if (freqSensor.status !== Sensors.Sensor.Ready || freqSensor.value == null)
             return "...";
@@ -64,5 +66,67 @@ Item {
         id: load15Sensor
         sensorId: "cpu/loadaverages/loadaverage15"
         updateRateLimit: root.updateInterval
+    }
+
+    // CPU core discovery
+    readonly property var discoveredCores: _discoveredCores
+    property var _discoveredCores: []
+
+    readonly property var coreDataList: _dataList
+    property var _dataList: []
+
+    function refreshDiscovered() {
+        if (!discovery) return;
+        var found = discovery.discoveredCores || [];
+        if (JSON.stringify(found) !== JSON.stringify(_discoveredCores)) {
+            _discoveredCores = found;
+            aggregateCores();
+        }
+    }
+
+    Connections {
+        target: discovery
+        function onRevisionChanged() { root.refreshDiscovered(); }
+    }
+
+    onDiscoveryChanged: refreshDiscovered()
+    Component.onCompleted: refreshDiscovered()
+
+    readonly property var _activeSensorIds: _discoveredCores.map(function(c){ return "cpu/" + c.id + "/usage"; })
+
+    Sensors.SensorDataModel {
+        id: coreData
+        sensors: root._activeSensorIds
+        updateRateLimit: root.updateInterval
+        enabled: root._activeSensorIds.length > 0
+        onDataChanged: root.aggregateCores()
+        onReadyChanged: { if (ready) root.aggregateCores(); }
+    }
+
+    function _modelValue(sensorId) {
+        var col = coreData.column(sensorId);
+        if (col < 0) return NaN;
+        var idx = coreData.index(0, col);
+        if (!idx.valid) return NaN;
+        var val = coreData.data(idx, Sensors.SensorDataModel.Value);
+        return (val === undefined || val === null) ? NaN : val;
+    }
+
+    function aggregateCores() {
+        var newList = [];
+        for (var i = 0; i < _discoveredCores.length; i++) {
+            var c = _discoveredCores[i];
+            var val = _modelValue("cpu/" + c.id + "/usage");
+            var num = (typeof val === "number" && !isNaN(val)) ? val : NaN;
+            var str = !isNaN(num) ? Math.round(num).toString().padStart(3) + "%" : "...";
+            newList.push({
+                id: c.id,
+                name: c.name,
+                number: c.number,
+                usageNumber: num,
+                usage: str
+            });
+        }
+        _dataList = newList;
     }
 }

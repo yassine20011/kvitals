@@ -189,6 +189,23 @@ Item {
                     status: !isNaN(s.temp.cpuTempNumericValue) ? "ready" : "unavailable"
                 }));
             }
+
+            if (s.cpu.coreDataList && s.cpu.coreDataList.length > 0) {
+                var cList = s.cpu.coreDataList;
+                for (var ci = 0; ci < cList.length; ci++) {
+                    var cd = cList[ci];
+                    list.push(_createMetric("cpu.core", {
+                        deviceId: cd.id,
+                        deviceName: cd.name,
+                        label: cd.name,
+                        groupLabel: cfg.cpuLabel,
+                        subLabel: cd.name,
+                        value: cd.usageNumber,
+                        displayValue: cd.usage,
+                        status: !isNaN(cd.usageNumber) ? "ready" : "loading"
+                    }));
+                }
+            }
         }
 
         // RAM
@@ -368,6 +385,36 @@ Item {
                 icon: cfg.resolveIcon("network-upload-symbolic"),
                 status: !isNaN(s.network.netUpRaw) ? "ready" : "loading"
             }));
+            if (s.network.netTotalDownValue && s.network.netTotalDownValue !== "..." && !isNaN(s.network.netTotalDownRaw)) {
+                list.push(_createMetric("net.totalDown", {
+                    value: s.network.netTotalDownRaw,
+                    displayValue: s.network.netTotalDownValue,
+                    label: cfg.netLabel + " Total ↓",
+                    subLabel: "Total Downloaded",
+                    icon: cfg.resolveIcon("network-download-symbolic"),
+                    status: "ready"
+                }));
+            }
+            if (s.network.netTotalUpValue && s.network.netTotalUpValue !== "..." && !isNaN(s.network.netTotalUpRaw)) {
+                list.push(_createMetric("net.totalUp", {
+                    value: s.network.netTotalUpRaw,
+                    displayValue: s.network.netTotalUpValue,
+                    label: cfg.netLabel + " Total ↑",
+                    subLabel: "Total Uploaded",
+                    icon: cfg.resolveIcon("network-upload-symbolic"),
+                    status: "ready"
+                }));
+            }
+            if (s.network.hasWifiSignal && !isNaN(s.network.netSignalRaw)) {
+                list.push(_createMetric("net.signal", {
+                    value: s.network.netSignalRaw,
+                    displayValue: s.network.netSignalValue,
+                    label: cfg.netLabel + " Signal",
+                    subLabel: "Wi-Fi Signal",
+                    icon: cfg.resolveIcon("network-wireless-symbolic"),
+                    status: "ready"
+                }));
+            }
             if (s.network.netIpValue && s.network.netIpValue !== "..." && s.network.netIpValue !== "") {
                 list.push(_createMetric("net.ip", {
                     displayValue: s.network.netIpValue,
