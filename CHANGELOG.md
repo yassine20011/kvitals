@@ -2,6 +2,39 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [3.1.0] - 2026-08-24
+
+### Added
+
+- **Swap Memory Monitoring**: Added dedicated `SwapSensors.qml` module tracking Swap usage percentage, used, free, and total swap (`memory/swap/*`), with custom color thresholds, icons, and panel pinning.
+- **Per-Core CPU Monitoring**: Dynamic discovery and individual usage tracking for each CPU core (`cpu:cpu{N}/core`), organized into a dedicated "Cores" popup section with individual panel pinning.
+- **CPU Load Averages**: Added 1-minute, 5-minute, and 15-minute system load averages (`cpu/loadaverages/loadaverage{1,5,15}`).
+- **Disk Space & Capacity**: Added overall storage used percentage (`disk/all/usedPercent`) and used/total space (`disk/all/used`), with configurable disk warning (80%) and critical (90%) thresholds.
+- **GPU Frequency & Power Draw**: Added live GPU core frequency (`gpu/{id}/coreFrequency`) and power consumption in watts (`gpu/{id}/power`) across all discovered GPUs.
+- **Battery Health Monitoring**: Added battery health and degradation percentage tracking (`power/{id}/health`).
+- **Wi-Fi Signal Strength**: Added wireless signal percentage (`net.signal`) with inverted threshold warning coloring and automatic multi-interface resolution.
+- **Cumulative Network Totals**: Added session bandwidth counters for total downloaded and uploaded data volume (`net.totalDown` and `net.totalUp`) with auto-scaling unit formatting (KB, MB, GB, TB).
+- **Live Panel Preview & Metric Palette**: Introduced a dedicated visual panel ordering settings tab (`configPanelOrder.qml`) featuring a live panel preview, chip reordering, and a categorized click-to-pin metric palette.
+- **Symbolic Icon Theme Overhaul**: Replaced legacy icon assets with scalable, high-contrast GNOME symbolic icons (CPU, Memory, GPU, Storage, Temperature, Battery, Voltage, Network Download/Upload, Fan, System).
+- **$O(1)$ Hardware Discovery Optimization**: In-memory query memoization (`_patternCache`) and single-pass device bucketing (`discoveredGpus`, `discoveredDisks`, `discoveredFans`, `discoveredCores`, `discoveredNetworkIfaces`) in `HardwareDiscovery.qml`.
+- **Public Rescan Hook**: Added `discovery.rescan()` for on-demand hardware re-indexing.
+
+### Changed
+
+- **Interactive Popup (FullView)**: Revamped popup layout with category header summaries, interactive click-to-pin toggles per metric row, and functional footer buttons (Configure, System Monitor, and Hardware Refresh).
+- **Unified Network Discovery**: Completely removed legacy `ls /sys/class/net/` and `Plasma5Support.DataSource` from `configMetrics.qml`, unifying network interface discovery across the entire applet on `HardwareDiscovery.qml`.
+- **Zero-Write Startup**: Eliminated all startup configuration write cycles, migration timers, and dynamic binding writes, strictly honoring `main.xml` schema defaults.
+- **Cold-Start Performance**: Optimized initial sensor tree synchronization to rebuild synchronously on the first DBus response, eliminating dialog initialization delays.
+
+### Fixed
+
+- **Settings UI Dynamic Delegate Leaks**: Isolated form sections in `configMetrics.qml` using `twinFormLayouts` so late-discovered disks (e.g. SATA/SCSI `sda`) or fans append strictly to their respective category instead of leaking across the form.
+- **Dual-Homed Wi-Fi Signal Detection**: Fixed Wi-Fi signal detection when Ethernet is active by decoupling wireless signal resolution from the primary IPv4 route interface.
+- **Idle Disk I/O Rate Updates**: Added periodic polling and model lifecycle event handling (`columnsInserted`, `layoutChanged`, `modelReset`) to `DiskSensors.qml` so disk read and write rates update reliably when idle.
+- **Intel PCH Motherboard Temperature Discovery**: Added support for Intel Platform Controller Hub thermal drivers (`pch_*`) in `TempSensors.qml` to accurately monitor chipset temperature instead of falling back to CPU temperature.
+- **Empty Pinned Metrics Re-Migration Loop**: Added `configMigrated` schema flag to prevent recurring startup writes when all panel metrics are intentionally unpinned.
+- **Hybrid GPU Suspension**: Persisted `none` sentinel when all GPUs are unchecked, allowing discrete GPUs on hybrid laptops to power down into idle states.
+
 ## [3.0.0] - 2026-08-20
 
 ### Added

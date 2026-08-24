@@ -96,15 +96,12 @@ Item {
                 continue;
             }
 
-            // Super I/O chips (real chipset sensors) live on the ISA/LPC bus
-            // and expose an adapter name containing "-isa-".
-            // CPU sensors (k10temp on AMD) are on PCI → "-pci-".
-            // GPU sensors (amdgpu, nvidia) are on PCI → "-pci-".
-            // Intel coretemp is an exception: it uses "-isa-" too,
-            // so we exclude it explicitly.
-            if (/-isa-/.test(adapter) && !/^coretemp/i.test(adapter)) {
+            // Chipset discovery: Intel PCH (pch_*) and motherboard Super I/O (-isa-)
+            var isPch = /^pch_/i.test(adapter);
+            var isIsaSuperIo = /-isa-/.test(adapter) && !/^coretemp/i.test(adapter) && !/^asus-isa/i.test(adapter);
+            if (isPch || isIsaSuperIo) {
                 var label = sensors[i].name || "";
-                chipsetCandidates.push({ id: sensorId, adapter: adapter, label: label });
+                chipsetCandidates.push({ id: sensorId, adapter: adapter, label: label, priority: isPch ? 1 : 2 });
             }
         }
 
@@ -119,8 +116,9 @@ Item {
             _ramSensorId = ramCandidates[0].id;
         }
 
-        // Chipset sensor discovery — prefer ISA/LPC bus (Super I/O).
+        // Chipset sensor discovery
         if (chipsetCandidates.length > 0) {
+            chipsetCandidates.sort(function(a, b) { return a.priority - b.priority; });
             var best = chipsetCandidates[0];
             if (chipsetCandidates.length > 1) {
                 var nonSystemLabels = /^(cputin|auxtin|peci|smbusmaster)/i;

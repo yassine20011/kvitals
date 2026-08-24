@@ -42,7 +42,17 @@ Item {
         interval: 500
         repeat: false
         running: true
-        onTriggered: root._bootReady = true
+        onTriggered: {
+            root._bootReady = true;
+            root.aggregatePerDisk();
+            root._aggregateTemp();
+        }
+    }
+    on_BootReadyChanged: {
+        if (_bootReady) {
+            aggregatePerDisk();
+            _aggregateTemp();
+        }
     }
 
     // Defer P5Support.DataSource (hotplug) until Solid/UDisks2 is fully ready.
@@ -118,15 +128,34 @@ Item {
         return ids;
     }
 
+    // Periodic poll timer to ensure idle zero-value sensors update reliably
+    Timer {
+        id: pollTimer
+        interval: root.updateInterval
+        repeat: true
+        running: root.enabled && root._bootReady
+        triggeredOnStart: true
+        onTriggered: {
+            root.aggregatePerDisk();
+            root._aggregateTemp();
+        }
+    }
+
     // --- Per-disk SensorDataModel ---
 
     Sensors.SensorDataModel {
         id: diskData
-        sensors: root._activeSensorIds
+        // Defer DBus subscriptions by keeping sensors empty until boot guards pass,
+        // avoiding KSysGuard C++ bugs where setting enabled=false on boot freezes the model
+        sensors: root._bootReady ? root._activeSensorIds : []
         updateRateLimit: root.updateInterval
-        enabled: root._bootReady && root._activeSensorIds.length > 0
+        enabled: sensors.length > 0
         onDataChanged: root.aggregatePerDisk()
         onReadyChanged: { if (ready) root.aggregatePerDisk(); }
+        onRowsInserted: root.aggregatePerDisk()
+        onColumnsInserted: root.aggregatePerDisk()
+        onModelReset: root.aggregatePerDisk()
+        onLayoutChanged: root.aggregatePerDisk()
     }
 
     function parseDiskLabels(str) {
@@ -152,7 +181,9 @@ Item {
         var idx = diskData.index(0, col);
         if (!idx.valid) return NaN;
         var val = diskData.data(idx, Sensors.SensorDataModel.Value);
-        return (val === undefined || val === null) ? NaN : val;
+        if (val === undefined || val === null) return NaN;
+        var num = Number(val);
+        return isNaN(num) ? NaN : num;
     }
 
     function aggregatePerDisk() {
@@ -162,8 +193,8 @@ Item {
             var d = _discovered[i];
             var rVal = _modelValue("disk/" + d.id + "/read");
             var wVal = _modelValue("disk/" + d.id + "/write");
-            var rStr = !isNaN(rVal) ? Utils.formatRate(rVal, networkUnit) : "";
-            var wStr = !isNaN(wVal) ? Utils.formatRate(wVal, networkUnit) : "";
+            var rStr = !isNaN(rVal) ? Utils.formatRate(rVal, networkUnit).trim() : "...";
+            var wStr = !isNaN(wVal) ? Utils.formatRate(wVal, networkUnit).trim() : "...";
             var name = custom[d.id] || d.name;
             newList.push({ id: d.id, name: name, read: rStr, write: wStr });
         }
@@ -234,11 +265,15 @@ Item {
 
     Sensors.SensorDataModel {
         id: tempData
-        sensors: root._tempSensorIds
+        sensors: root._bootReady ? root._tempSensorIds : []
         updateRateLimit: root.updateInterval
-        enabled: root._bootReady && root._tempSensorIds.length > 0
+        enabled: sensors.length > 0
         onDataChanged: root._aggregateTemp()
         onReadyChanged: { if (ready) root._aggregateTemp(); }
+        onRowsInserted: root._aggregateTemp()
+        onColumnsInserted: root._aggregateTemp()
+        onModelReset: root._aggregateTemp()
+        onLayoutChanged: root._aggregateTemp()
     }
 
     function _aggregateTemp() {

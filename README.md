@@ -29,14 +29,14 @@ CPU: 26% · 3.2GHz  |  RAM: 8.8/39.0G  |  TEMP: 58°C  |  🔋BAT: 78% · 20W  |
 
 Here is what you can track and customize:
 
-- **CPU**: Usage percentage, frequency, and temperature in a single panel entry with a custom label.
-- **RAM**: Used/total memory (percentage and absolute), with optional DDR5 temperature via the `spd5118` driver.
+- **CPU**: Usage percentage, frequency, temperature, load averages (1m/5m/15m), and per-core CPU usage.
+- **RAM & Swap**: Used/total memory and swap (percentage and absolute), with optional DDR5 temperature via the `spd5118` driver.
 - **System temperature**: Auto-detects the chipset/motherboard sensor from lmsensors. Falls back to CPU average if no ISA-bus sensor is found.
-- **GPU**: Usage, VRAM, and temperature. Supports multiple GPUs independently with custom labels (iGPU, dGPU, etc.).
+- **GPU**: Usage, VRAM, temperature, core frequency, and power draw. Supports multiple GPUs independently with custom labels (iGPU, dGPU, etc.).
 - **Fan speed**: Per-fan RPM and percentage with stable numbering and individual sparklines.
-- **Battery and power**: Automatically detects battery interfaces with an option to show power draw in watts.
-- **Network**: Download and upload speeds, local IP address display, and interface auto-detection.
-- **Disk I/O and temperature**: Per-drive read/write rates and temperature monitoring with hotplug detection.
+- **Battery and power**: Automatically detects battery interfaces, charge percentage, health, and power draw in watts.
+- **Network**: Download and upload speeds, session data totals (download/upload), Wi-Fi signal strength, local IP address display, and interface auto-detection.
+- **Disk I/O, space, and temperature**: Per-drive read/write rates, overall used space, and temperature monitoring with hotplug detection.
 - **System uptime**: Live uptime pulled from `os/system/uptime`.
 - **Sparkline charts**: Expanded popup shows a 60-sample history graph for all active metrics.
 - **Visibility controls**: Choose where each metric appears — panel and popup, panel only, popup only, or disabled entirely.
@@ -97,12 +97,17 @@ Right-click the panel, select **Add Widgets...**, search for **KVitals**, and dr
 
 Right-click the widget and select **Configure KVitals...** to open the settings dialog.
 
-| Tab         | Available settings                                                                                                                                                                  |
-| :---------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **General** | Display modes, layouts (horizontal or vertical), icon dimensions, font styles, refresh intervals, and unit settings (like Fahrenheit or bits per second).                           |
-| **Metrics** | Toggle individual sensors, hide them in the main panel, group related readings (like merging CPU and temperature, or battery and power draw), split GPU metrics, and reorder items. |
-| **Icons**   | Custom icon selectors mapped to your active theme.                                                                                                                                  |
-| **Colors**  | Font, label, and icon colors, threshold levels for warning and critical states, and customizable slider values.                                                                     |
+<div align="center">
+  <img src="screenshots/settings-preview.png" alt="KVitals Settings Preview" width="100%"/>
+</div>
+
+| Tab | Available settings |
+| :-- | :----------------- |
+| **General** | Display modes (Text, Icons, Icons + Text), layouts (Horizontal or Vertical), icon dimensions, custom font selection, refresh intervals, and unit settings (°C/°F, bytes/bits). |
+| **Panel Items** | Live interactive panel preview, drag-and-drop metric chip reordering, and categorized click-to-pin metric palette. |
+| **Sensors & Hardware** | Custom device labels, per-GPU selection and discrete GPU power suspension, per-fan max RPM fallback, and network interface selection. |
+| **Icons** | Custom symbolic icon selectors mapped to your active system icon theme with bundled SVG fallback support. |
+| **Colors** | Font, label, and icon colors, per-metric warning and critical threshold sliders, and custom highlight colors. |
 
 You can find more details on [kvitals.dev](https://kvitals.dev) or in the [local configuration guide](docs/configuration.md).
 

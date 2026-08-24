@@ -62,6 +62,10 @@ Item {
 
         onDataChanged: root.aggregate()
         onReadyChanged: { if (ready) root.aggregate(); }
+        onRowsInserted: root.aggregate()
+        onColumnsInserted: root.aggregate()
+        onModelReset: root.aggregate()
+        onLayoutChanged: root.aggregate()
     }
 
     function _modelValue(sensorId) {
