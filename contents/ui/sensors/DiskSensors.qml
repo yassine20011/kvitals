@@ -134,11 +134,18 @@ Item {
     }
 
     function parseDiskLabels(str) {
+        if (!str) return {};
+        if (typeof str === "object") return str;
+        var trimmed = String(str).trim();
+        if (trimmed.startsWith("{")) {
+            try {
+                return JSON.parse(trimmed);
+            } catch (e) {}
+        }
         var result = {};
-        if (!str) return result;
-        str.split("|").forEach(function(pair) {
+        trimmed.split("|").forEach(function(pair) {
             var sep = pair.indexOf(":");
-            if (sep > 0) result[pair.substring(0, sep)] = pair.substring(sep + 1);
+            if (sep > 0) result[pair.substring(0, sep).trim()] = pair.substring(sep + 1).trim();
         });
         return result;
     }

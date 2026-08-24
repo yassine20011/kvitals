@@ -1,126 +1,340 @@
-// ViewHelpers transforms the generic metrics list from MetricStore into
-// view-specific presentation items. Neither CompactView nor FullView should
-// contain grouping or ordering logic; that belongs here.
 .pragma library
 
-// buildCompactItems groups metrics by display order and returns a flat list of
-// compact panel items. Each item is one of:
-//   { icon, label, value, color, key }            - single-value row
-//   { icon, label, segments, color, key }          - multi-value row (net, disk, fans)
-//
-// Multi-device groups (e.g. two GPUs) get one item per device. Single-device
-// groups with multiple sub-metrics get a segments array.
-function buildCompactItems(metricsList, orderedKeys) {
+// buildPopupGroups groups catalogue metrics into standard GNOME Vitals categories:
+// Temperature, Fan, Memory, Processor, System, Network, Storage, GPU.
+function buildPopupGroups(metricsList, orderedKeys) {
     if (!metricsList || metricsList.length === 0) return [];
-    var visible = metricsList.filter(function(m) {
-        return m.visibleInCompact && m.status === "ready";
+    var available = metricsList.filter(function(m) {
+        return m.status !== "unavailable";
     });
 
-    var items = [];
-    for (var i = 0; i < orderedKeys.length; i++) {
-        var group = orderedKeys[i];
-        var groupMetrics = visible.filter(function(m) { return m.group === group; });
-        if (groupMetrics.length === 0) continue;
-
-        var deviceIds = [];
-        for (var d = 0; d < groupMetrics.length; d++) {
-            var dev = groupMetrics[d].deviceId;
-            if (dev && deviceIds.indexOf(dev) === -1) deviceIds.push(dev);
-        }
-
-        if (deviceIds.length > 1) {
-            for (var di = 0; di < deviceIds.length; di++) {
-                var devId = deviceIds[di];
-                var devMetrics = groupMetrics.filter(function(m) { return m.deviceId === devId; });
-                var devLabel = devMetrics[0].groupLabel || devMetrics[0].deviceName || group.toUpperCase();
-                var devIcon = devMetrics[0].icon;
-                var devColor = devMetrics[0].color;
-
-                var segs = devMetrics.map(function(m) {
-                    return { value: m.displayValue, color: m.color, key: m.subKey, label: m.subLabel };
-                });
-
-                var singlePfx = segs.length === 1 ? (devMetrics[0].subLabel || devMetrics[0].prefix || "") : "";
-                var singleLbl = singlePfx ? (devLabel + " " + singlePfx) : devLabel;
-
-                items.push({
-                    icon: devIcon,
-                    label: (segs.length > 1 ? devLabel : singleLbl) + ":",
-                    segments: segs.length > 1 ? segs : null,
-                    value: segs.length === 1 ? segs[0].value : null,
-                    color: devColor,
-                    key: group + ":" + devId
-                });
-            }
-        } else if (group === "fan" && groupMetrics.length > 1) {
-            var fanSegs = groupMetrics.map(function(m) {
-                return { value: m.displayValue, color: m.color, key: m.id, label: m.subLabel };
-            });
-            items.push({
-                icon: groupMetrics[0].icon,
-                label: groupMetrics[0].groupLabel + ":",
-                segments: fanSegs,
-                color: groupMetrics[0].color,
-                key: "fan"
-            });
-        } else {
-            var gLabel = groupMetrics[0].groupLabel;
-            var gIcon = groupMetrics[0].icon;
-            var gColor = groupMetrics[0].color;
-
-            if (groupMetrics.length === 1) {
-                var singlePfx = groupMetrics[0].subLabel || groupMetrics[0].prefix || "";
-                var singleLbl = singlePfx ? (gLabel + " " + singlePfx) : gLabel;
-                items.push({
-                    icon: gIcon,
-                    label: singleLbl + ":",
-                    value: groupMetrics[0].displayValue,
-                    color: gColor,
-                    key: group
-                });
-            } else {
-                var gSegs = groupMetrics.map(function(m) {
-                    return { value: m.displayValue, color: m.color, key: m.subKey, label: m.subLabel };
-                });
-                items.push({
-                    icon: gIcon,
-                    label: gLabel + ":",
-                    segments: gSegs,
-                    color: gColor,
-                    key: group
-                });
-            }
-        }
+    var map = {};
+    for (var i = 0; i < available.length; i++) {
+        map[available[i].id] = available[i];
     }
-    return items;
+
+    var categories = [];
+
+    // 1. Temperature (all temperature sensors across devices)
+    var tempMetrics = available.filter(function(m) {
+        return m.subKey === "temp" || m.group === "temp";
+    }).map(function(m) {
+        return Object.assign({}, m, {
+            icon: "temperature-symbolic"
+        });
+    });
+    if (tempMetrics.length > 0) {
+        var tempAgg = map["temp/system"] || map["cpu/temp"] || tempMetrics[0];
+        categories.push({
+            key: "temperature",
+            groupLabel: "Temperature",
+            icon: "temperature-symbolic",
+            aggregateValue: tempAgg ? tempAgg.displayValue : "",
+            aggregateColor: tempAgg ? tempAgg.color : "",
+            sections: [
+                {
+                    sectionLabel: "",
+                    metrics: tempMetrics
+                }
+            ]
+        });
+    }
+
+    // 2. Fan
+    var fanMetrics = available.filter(function(m) { return m.group === "fan"; });
+    if (fanMetrics.length > 0) {
+        categories.push({
+            key: "fan",
+            groupLabel: "Fan",
+            icon: fanMetrics[0].icon || "fan-symbolic",
+            aggregateValue: fanMetrics[0].displayValue,
+            aggregateColor: fanMetrics[0].color,
+            sections: [
+                {
+                    sectionLabel: "",
+                    metrics: fanMetrics
+                }
+            ]
+        });
+    }
+
+    // 3. Memory (RAM + Swap)
+    var ramMetrics = available.filter(function(m) { return m.group === "ram" && m.subKey !== "temp"; });
+    var swapMetrics = available.filter(function(m) { return m.group === "swap"; });
+    if (ramMetrics.length > 0 || swapMetrics.length > 0) {
+        var ramPct = map["ram/percentage"];
+        var memSections = [];
+        if (ramMetrics.length > 0 && swapMetrics.length > 0) {
+            memSections.push({ sectionLabel: "RAM", metrics: ramMetrics });
+            memSections.push({ sectionLabel: "Swap", metrics: swapMetrics });
+        } else {
+            memSections.push({ sectionLabel: "", metrics: ramMetrics.concat(swapMetrics) });
+        }
+
+        categories.push({
+            key: "memory",
+            groupLabel: "Memory",
+            icon: "memory-symbolic",
+            aggregateValue: ramPct ? ramPct.displayValue : (ramMetrics[0] ? ramMetrics[0].displayValue : ""),
+            aggregateColor: ramPct ? ramPct.color : (ramMetrics[0] ? ramMetrics[0].color : ""),
+            sections: memSections
+        });
+    }
+
+    // 4. Processor (CPU)
+    var cpuMetrics = available.filter(function(m) { return m.group === "cpu" && m.subKey !== "temp"; });
+    if (cpuMetrics.length > 0) {
+        var cpuUsage = map["cpu/usage"] || cpuMetrics[0];
+        categories.push({
+            key: "processor",
+            groupLabel: "Processor",
+            icon: "cpu-symbolic",
+            aggregateValue: cpuUsage ? cpuUsage.displayValue : "",
+            aggregateColor: cpuUsage ? cpuUsage.color : "",
+            sections: [
+                {
+                    sectionLabel: "",
+                    metrics: cpuMetrics
+                }
+            ]
+        });
+    }
+
+    // 5. Battery (when present on laptops)
+    var batMetrics = available.filter(function(m) { return m.group === "bat"; });
+    if (batMetrics.length > 0) {
+        var batPct = map["bat/percentage"] || batMetrics[0];
+        categories.push({
+            key: "battery",
+            groupLabel: "Battery",
+            icon: "battery-symbolic",
+            aggregateValue: batPct ? batPct.displayValue : "",
+            aggregateColor: batPct ? batPct.color : "",
+            sections: [
+                {
+                    sectionLabel: "",
+                    metrics: batMetrics
+                }
+            ]
+        });
+    }
+
+    // 6. System (Uptime)
+    var sysMetrics = available.filter(function(m) { return m.group === "uptime"; });
+    if (sysMetrics.length > 0) {
+        var uptimeMetric = map["uptime/uptime"] || sysMetrics[0];
+        categories.push({
+            key: "system",
+            groupLabel: "System",
+            icon: "system-symbolic",
+            aggregateValue: uptimeMetric ? uptimeMetric.displayValue : "",
+            aggregateColor: uptimeMetric ? uptimeMetric.color : "",
+            sections: [
+                {
+                    sectionLabel: "",
+                    metrics: sysMetrics
+                }
+            ]
+        });
+    }
+
+    // 7. Network
+    var netMetrics = available.filter(function(m) { return m.group === "net"; });
+    if (netMetrics.length > 0) {
+        var netDown = map["net/down"] || netMetrics[0];
+        categories.push({
+            key: "network",
+            groupLabel: "Network",
+            icon: "network-symbolic",
+            aggregateValue: netDown ? netDown.displayValue : "",
+            aggregateColor: netDown ? netDown.color : "",
+            sections: [
+                {
+                    sectionLabel: "",
+                    metrics: netMetrics
+                }
+            ]
+        });
+    }
+
+    // 8. Storage (Disks)
+    var diskMetrics = available.filter(function(m) { return m.group === "disk" && m.subKey !== "temp"; });
+    if (diskMetrics.length > 0) {
+        var diskDeviceIds = [];
+        for (var di = 0; di < diskMetrics.length; di++) {
+            var dev = diskMetrics[di].deviceId;
+            if (dev && diskDeviceIds.indexOf(dev) === -1) diskDeviceIds.push(dev);
+        }
+
+        var diskSections = [];
+        if (diskDeviceIds.length > 1) {
+            var globalDiskItems = diskMetrics.filter(function(m) { return !m.deviceId; });
+            if (globalDiskItems.length > 0) {
+                diskSections.push({
+                    sectionLabel: "Overall",
+                    metrics: globalDiskItems
+                });
+            }
+            for (var dIdx = 0; dIdx < diskDeviceIds.length; dIdx++) {
+                var dId = diskDeviceIds[dIdx];
+                var dItems = diskMetrics.filter(function(m) { return m.deviceId === dId; });
+                var dLabel = dItems[0].deviceName || dItems[0].groupLabel || ("Disk " + (dIdx + 1));
+                diskSections.push({
+                    sectionLabel: dLabel,
+                    metrics: dItems
+                });
+            }
+        } else {
+            diskSections.push({
+                sectionLabel: "",
+                metrics: diskMetrics
+            });
+        }
+
+        var diskAgg = map["disk/usage"] || diskMetrics[0];
+        categories.push({
+            key: "storage",
+            groupLabel: "Storage",
+            icon: "storage-symbolic",
+            aggregateValue: diskAgg ? diskAgg.displayValue : "",
+            aggregateColor: diskAgg ? diskAgg.color : "",
+            sections: diskSections
+        });
+    }
+
+    // 8. GPU
+    var gpuMetrics = available.filter(function(m) { return m.group === "gpu"; });
+    if (gpuMetrics.length > 0) {
+        var gpuDeviceIds = [];
+        for (var gi = 0; gi < gpuMetrics.length; gi++) {
+            var gDev = gpuMetrics[gi].deviceId;
+            if (gDev && gpuDeviceIds.indexOf(gDev) === -1) gpuDeviceIds.push(gDev);
+        }
+
+        var gpuSections = [];
+        if (gpuDeviceIds.length > 1) {
+            for (var gIdx = 0; gIdx < gpuDeviceIds.length; gIdx++) {
+                var gId = gpuDeviceIds[gIdx];
+                var gItems = gpuMetrics.filter(function(m) { return m.deviceId === gId; });
+                var gLabel = gItems[0].deviceName || gItems[0].groupLabel || ("GPU " + (gIdx + 1));
+                gpuSections.push({
+                    sectionLabel: gLabel,
+                    metrics: gItems
+                });
+            }
+        } else {
+            gpuSections.push({
+                sectionLabel: "",
+                metrics: gpuMetrics
+            });
+        }
+
+        var gpuUsage = gpuMetrics.filter(function(m){ return m.subKey === "usage"; })[0] || gpuMetrics[0];
+        categories.push({
+            key: "gpu",
+            groupLabel: "GPU",
+            icon: "gpu-symbolic",
+            aggregateValue: gpuUsage ? gpuUsage.displayValue : "",
+            aggregateColor: gpuUsage ? gpuUsage.color : "",
+            sections: gpuSections
+        });
+    }
+
+    return categories;
 }
 
-// buildPopupItems returns one row per visible metric in order. Each item is:
-//   { label, value, color, icon, chartKey, chartMax }
-// icon may be a string or a two-element array when a secondary icon is present.
-function buildPopupItems(metricsList, orderedKeys) {
-    if (!metricsList || metricsList.length === 0) return [];
-    var visible = metricsList.filter(function(m) {
-        return m.visibleInPopup && m.status === "ready";
-    });
+function _resolveSegmentLabel(metric, isTemp) {
+    if (isTemp || metric.group === "fan") return metric.subLabel || "";
+    // For CPU, RAM, Swap, Battery, GPU, Network, Disk, value or icon is self-describing
+    return "";
+}
 
-    var items = [];
-    for (var i = 0; i < orderedKeys.length; i++) {
-        var group = orderedKeys[i];
-        var groupMetrics = visible.filter(function(m) { return m.group === group; });
-        for (var j = 0; j < groupMetrics.length; j++) {
-            var m = groupMetrics[j];
-            var icons = [m.icon];
-            if (m.secondaryIcon) icons.push(m.secondaryIcon);
-            items.push({
-                label: m.label,
-                value: m.popupDisplay || m.displayValue,
-                color: m.color,
-                icon: icons.length > 1 ? icons : m.icon,
-                chartKey: m.chartKey,
-                chartMax: m.chartMax
-            });
+function _resolveSegmentIcon(metric) {
+    if (metric.group === "net" || metric.group === "disk") {
+        return metric.icon || "";
+    }
+    return "";
+}
+
+// buildCompactItems maps pinned metrics to compact panel items, optionally
+// merging metrics of the same hardware device/family into multi-segment items.
+function buildCompactItems(metricsList, pinnedList, mergeSameFamily) {
+    if (!metricsList || metricsList.length === 0 || !pinnedList || pinnedList.length === 0) return [];
+    if (mergeSameFamily === undefined) mergeSameFamily = true;
+
+    var metricMap = {};
+    for (var mIdx = 0; mIdx < metricsList.length; mIdx++) {
+        var m = metricsList[mIdx];
+        if (m.status === "ready") {
+            metricMap[m.id] = m;
         }
     }
+
+    var items = [];
+    var groupIndexMap = {};
+
+    for (var i = 0; i < pinnedList.length; i++) {
+        var id = pinnedList[i];
+        var metric = metricMap[id];
+        if (!metric) continue;
+
+        var isTemp = (metric.subKey === "temp" || metric.group === "temp");
+        var groupKey = isTemp ? "temp" : (metric.deviceId ? (metric.group + ":" + metric.deviceId) : metric.group);
+
+        if (mergeSameFamily && groupIndexMap[groupKey] !== undefined) {
+            // Merge into existing group item
+            var existingItem = items[groupIndexMap[groupKey]];
+            if (!existingItem.segments) {
+                var firstSegIcon = existingItem._firstSubIcon || "";
+                existingItem.segments = [
+                    {
+                        value: existingItem.value,
+                        color: existingItem.color,
+                        label: existingItem._firstSubLabel || "",
+                        icon: firstSegIcon,
+                        key: existingItem._firstSubKey || ""
+                    }
+                ];
+                existingItem.value = null;
+                existingItem.label = existingItem._groupBaseLabel + ":";
+                if (firstSegIcon) existingItem._segmentsHaveIcons = true;
+            }
+            var segIcon = _resolveSegmentIcon(metric);
+            if (segIcon) existingItem._segmentsHaveIcons = true;
+            existingItem.segments.push({
+                value: metric.displayValue,
+                color: metric.color,
+                label: _resolveSegmentLabel(metric, isTemp),
+                icon: segIcon,
+                key: metric.subKey || metric.id
+            });
+        } else {
+            // New group item
+            var baseLabel = isTemp ? "TEMP" : (metric.groupLabel || metric.deviceName || metric.group.toUpperCase());
+            var singleLabel = metric.label;
+            var itemIcon = isTemp ? "temperature-symbolic" : metric.icon;
+            var segIcon = _resolveSegmentIcon(metric);
+
+            var newItem = {
+                id: metric.id,
+                icon: itemIcon,
+                label: singleLabel + ":",
+                value: metric.displayValue,
+                color: metric.color,
+                key: groupKey,
+                segments: null,
+                _segmentsHaveIcons: false,
+                _groupBaseLabel: baseLabel,
+                _firstSubLabel: _resolveSegmentLabel(metric, isTemp),
+                _firstSubIcon: segIcon,
+                _firstSubKey: metric.subKey || metric.id
+            };
+            if (mergeSameFamily) {
+                groupIndexMap[groupKey] = items.length;
+            }
+            items.push(newItem);
+        }
+    }
+
     return items;
 }

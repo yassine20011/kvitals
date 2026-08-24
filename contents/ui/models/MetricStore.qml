@@ -1,11 +1,3 @@
-// MetricStore aggregates live sensor values into a flat list of metric objects.
-// Views (CompactView, FullView) never read sensor components directly; they only
-// consume the metrics list and chartHistory exposed here.
-//
-// Data flow:
-//   Sensor QML components -> MetricStore.metrics (recalculated on each sensor change)
-//   chartTimer -> MetricStore.chartHistory (sampled every updateInterval ms)
-//   ViewHelpers.js -> presentation items consumed by the views
 import QtQuick
 import "../sensors"
 import "./MetricDefinitions.js" as Defs
@@ -18,26 +10,16 @@ Item {
     required property bool sensorsReady
     required property color baseTextColor
 
-    // Chart history buffer keyed by chartKey. Each entry is a sliding window of
-    // up to maxChartPoints numeric samples collected by chartTimer.
-    property var chartHistory: ({})
-    property int chartVersion: 0
-    property int maxChartPoints: 60
+    // Debounced metrics array: rebuilt once per flushTimer tick, not per sensor change.
+    // Consumers should bind to this property, not to individual sensor values.
+    property var metrics: []
 
-    // Returns the sample array for a chartKey, or [] if none exists yet.
-    function getHistory(key) {
-        if (!key || !chartHistory[key]) return [];
-        return chartHistory[key];
-    }
-
-    // Normalizes input to a finite numeric scalar or NaN sentinel
     function _normalizeValue(val) {
         if (typeof val === "number" && isFinite(val) && !isNaN(val))
             return val;
         return NaN;
     }
 
-    // Normalizes input to string
     function _normalizeString(val, fallback) {
         if (typeof val === "string")
             return val;
@@ -46,36 +28,53 @@ Item {
         return fallback !== undefined ? fallback : "";
     }
 
-    // Appends val to the chartKey ring buffer. Rejects non-finite numbers.
-    function _pushHistory(key, val) {
-        if (!key || typeof key !== "string") return false;
-        if (typeof val !== "number" || isNaN(val) || !isFinite(val)) return false;
-        if (!chartHistory[key]) chartHistory[key] = [];
-        chartHistory[key].push(val);
-        if (chartHistory[key].length > maxChartPoints) chartHistory[key].shift();
-        return true;
+    function _rebuildMetrics() {
+        if (!sensorsReady || !sensors || !config) {
+            metrics = [];
+            return;
+        }
+        metrics = _computeMetrics();
     }
 
+    // Single flush timer: fires once per update interval and rebuilds metrics.
+    // This prevents N partial rebuilds when N sensors update in quick succession.
     Timer {
-        id: chartTimer
+        id: flushTimer
         interval: root.config ? root.config.updateInterval : 2000
         repeat: true
         running: root.sensorsReady
+        triggeredOnStart: true
         onTriggered: {
-            var list = root.metrics;
-            var changed = false;
-            for (var i = 0; i < list.length; i++) {
-                var m = list[i];
-                if (m.hasChart && m.chartKey && typeof m.value === "number" && isFinite(m.value) && !isNaN(m.value)) {
-                    if (root._pushHistory(m.chartKey, m.value))
-                        changed = true;
-                }
-            }
-            if (changed) root.chartVersion++;
+            root._rebuildMetrics();
         }
     }
 
-    // Resolves color based on numeric value and threshold settings
+    onSensorsReadyChanged: {
+        if (sensorsReady) root._rebuildMetrics();
+    }
+
+    Connections {
+        target: root.config
+        function onPinnedListChanged() { root._rebuildMetrics(); }
+        function onCpuLabelChanged() { root._rebuildMetrics(); }
+        function onRamLabelChanged() { root._rebuildMetrics(); }
+        function onSwapLabelChanged() { root._rebuildMetrics(); }
+        function onTempLabelChanged() { root._rebuildMetrics(); }
+        function onNetLabelChanged() { root._rebuildMetrics(); }
+        function onDiskLabelChanged() { root._rebuildMetrics(); }
+        function onFanLabelChanged() { root._rebuildMetrics(); }
+        function onBatLabelChanged() { root._rebuildMetrics(); }
+        function onGpuLabelsChanged() { root._rebuildMetrics(); }
+        function onDiskLabelsChanged() { root._rebuildMetrics(); }
+        function onFanLabelsChanged() { root._rebuildMetrics(); }
+        function onGpuSelectionChanged() { root._rebuildMetrics(); }
+        function onNetworkInterfaceChanged() { root._rebuildMetrics(); }
+        function onBatteryDeviceChanged() { root._rebuildMetrics(); }
+        function onEnableThresholdColorsChanged() { root._rebuildMetrics(); }
+        function onWarningColorChanged() { root._rebuildMetrics(); }
+        function onCriticalColorChanged() { root._rebuildMetrics(); }
+    }
+
     function _resolveMetricColor(numVal, thresholdType, thresholdKey) {
         if (!root.config || !root.config.enableThresholdColors || thresholdType === "none" || typeof numVal !== "number" || isNaN(numVal) || !isFinite(numVal))
             return root.baseTextColor;
@@ -87,39 +86,37 @@ Item {
         return Utils.resolveColor(numVal, warn, crit, root.config.warningColor, root.config.criticalColor, root.baseTextColor, inverted);
     }
 
-    // Constructs a normalized metric object conforming to the Metric Contract
     function _createMetric(defId, overrides) {
         overrides = overrides || {};
         var def = Defs.DEFINITIONS[defId] || {};
         var cfg = root.config;
         var group = _normalizeString(overrides.group || def.group, "");
         var subKey = _normalizeString(overrides.subKey || def.subKey, "");
+        var devId = _normalizeString(overrides.deviceId, "");
+        var devName = _normalizeString(overrides.deviceName, "");
+        var instanceId = _normalizeString(overrides.id, Defs.buildInstanceId(group, devId, subKey));
+
         var rawVal = _normalizeValue(overrides.value);
         var threshType = def.thresholdType || "none";
         var threshKey = def.thresholdKey || group;
         var clr = overrides.color !== undefined ? overrides.color : _resolveMetricColor(rawVal, threshType, threshKey);
-        var defIcon = def.iconOverrideKey ? cfg[def.iconOverrideKey] : cfg.getGroupIcon(group);
+        var defIcon = def.icon ? cfg.resolveIcon(def.icon) : (def.iconOverrideKey ? cfg[def.iconOverrideKey] : cfg.getGroupIcon(group));
 
         var displayVal = _normalizeString(overrides.displayValue, "");
         var popupDisplay = _normalizeString(overrides.popupDisplay, displayVal);
         var rawStr = _normalizeString(overrides.rawString, displayVal);
-        var chartKey = overrides.chartKey !== undefined ? _normalizeString(overrides.chartKey, "") : (def.chartKey || "");
-        var chartMax = typeof overrides.chartMax === "number" && isFinite(overrides.chartMax) ? overrides.chartMax : (def.chartMax || 0);
-        var hasChart = Boolean(chartKey && chartKey.length > 0);
-
-        var devId = _normalizeString(overrides.deviceId, "");
-        var devName = _normalizeString(overrides.deviceName, "");
+        var isPinned = cfg ? cfg.isPinned(instanceId) : false;
 
         return {
-            id: _normalizeString(overrides.id, def.id || defId),
+            id: instanceId,
             defId: defId,
             group: group,
             subKey: subKey,
             deviceId: devId,
             deviceName: devName,
-            label: _normalizeString(overrides.label, (group === "ram" && subKey === "percentage" ? cfg.ramLabel : (cfg.getGroupLabel(group) + " " + def.label))),
+            label: _normalizeString(overrides.label, (cfg ? cfg.getGroupLabel(group) : (def.label || group.toUpperCase()))),
             groupLabel: _normalizeString(overrides.groupLabel, cfg.getGroupLabel(group)),
-            subLabel: _normalizeString(overrides.subLabel !== undefined ? overrides.subLabel : (def.prefix || ""), ""),
+            subLabel: _normalizeString(overrides.subLabel !== undefined ? overrides.subLabel : (def.label || ""), ""),
             prefix: _normalizeString(overrides.prefix !== undefined ? overrides.prefix : (def.prefix || ""), ""),
             icon: overrides.icon || defIcon,
             secondaryIcon: overrides.secondaryIcon !== undefined ? overrides.secondaryIcon : (def.secondaryIcon ? cfg.tempIcon : ""),
@@ -129,15 +126,11 @@ Item {
             rawString: rawStr,
             color: clr,
             status: _normalizeString(overrides.status, "ready"),
-            chartKey: chartKey,
-            chartMax: chartMax,
-            hasChart: hasChart,
-            visibleInCompact: cfg.isMetricVisible(group, subKey, "compact", devId),
-            visibleInPopup: cfg.isMetricVisible(group, subKey, "widget", devId)
+            isPinned: isPinned
         };
     }
 
-    readonly property var metrics: {
+    function _computeMetrics() {
         if (!sensorsReady || !sensors || !config) return [];
 
         var list = [];
@@ -145,16 +138,20 @@ Item {
         var cfg = config;
 
         // CPU
-        if (cfg.isGroupEnabled("cpu") && s.cpu) {
+        if (s.cpu) {
             list.push(_createMetric("cpu.usage", {
                 value: s.cpu.cpuNumericValue,
                 displayValue: s.cpu.cpuValue,
+                label: cfg.cpuLabel,
+                subLabel: "Usage",
                 status: !isNaN(s.cpu.cpuNumericValue) ? "ready" : "loading"
             }));
 
             if (s.cpu.cpuFreqValue) {
                 list.push(_createMetric("cpu.freq", {
                     displayValue: s.cpu.cpuFreqValue,
+                    label: cfg.cpuLabel,
+                    subLabel: "Frequency",
                     status: s.cpu.cpuFreqValue !== "..." ? "ready" : "loading"
                 }));
             }
@@ -187,23 +184,27 @@ Item {
                 list.push(_createMetric("cpu.temp", {
                     value: s.temp.cpuTempNumericValue,
                     displayValue: s.temp.cpuTempValue,
+                    label: "CPU",
+                    subLabel: "CPU",
                     status: !isNaN(s.temp.cpuTempNumericValue) ? "ready" : "unavailable"
                 }));
             }
         }
 
         // RAM
-        if (cfg.isGroupEnabled("ram") && s.memory) {
+        if (s.memory) {
             list.push(_createMetric("ram.percentage", {
                 value: s.memory.ramPercentage,
                 displayValue: s.memory.ramPercentValue,
                 label: cfg.ramLabel,
+                subLabel: "Percentage",
                 status: !isNaN(s.memory.ramPercentage) ? "ready" : "loading"
             }));
 
             list.push(_createMetric("ram.used", {
                 displayValue: s.memory.ramValue,
-                label: cfg.ramLabel + " Usage",
+                label: cfg.ramLabel,
+                subLabel: "Used / Total",
                 status: s.memory.ramValue !== "..." ? "ready" : "loading"
             }));
 
@@ -211,54 +212,61 @@ Item {
                 list.push(_createMetric("ram.temp", {
                     value: s.temp.ramTempNumericValue,
                     displayValue: s.temp.ramTempValue,
+                    label: "RAM",
+                    subLabel: "RAM",
                     status: !isNaN(s.temp.ramTempNumericValue) ? "ready" : "unavailable"
                 }));
             }
         }
 
         // Swap
-        if (cfg.isGroupEnabled("swap") && s.swap) {
+        if (s.swap && s.swap.swapAvailable) {
             list.push(_createMetric("swap.percent", {
                 value: s.swap.swapPercentage,
                 displayValue: s.swap.swapPercentValue,
                 label: cfg.swapLabel,
-                status: !isNaN(s.swap.swapPercentage) ? "ready" : (s.swap.swapAvailable ? "loading" : "unavailable")
+                subLabel: "Usage (%)",
+                status: !isNaN(s.swap.swapPercentage) ? "ready" : "loading"
             }));
 
             list.push(_createMetric("swap.used", {
                 value: s.swap.swapUsedRaw,
                 displayValue: s.swap.swapUsedValue,
-                label: cfg.swapLabel + " Used",
-                status: !isNaN(s.swap.swapUsedRaw) ? "ready" : (s.swap.swapAvailable ? "loading" : "unavailable")
+                label: cfg.swapLabel,
+                subLabel: "Used",
+                status: !isNaN(s.swap.swapUsedRaw) ? "ready" : "loading"
             }));
 
             list.push(_createMetric("swap.free", {
                 value: s.swap.swapFreeRaw,
                 displayValue: s.swap.swapFreeValue,
-                label: cfg.swapLabel + " Free",
-                status: !isNaN(s.swap.swapFreeRaw) ? "ready" : (s.swap.swapAvailable ? "loading" : "unavailable")
+                label: cfg.swapLabel,
+                subLabel: "Free",
+                status: !isNaN(s.swap.swapFreeRaw) ? "ready" : "loading"
             }));
 
             list.push(_createMetric("swap.total", {
                 value: s.swap.swapTotalRaw,
                 displayValue: s.swap.swapTotalValue,
-                label: cfg.swapLabel + " Total",
-                status: !isNaN(s.swap.swapTotalRaw) ? "ready" : (s.swap.swapAvailable ? "loading" : "unavailable")
+                label: cfg.swapLabel,
+                subLabel: "Total",
+                status: !isNaN(s.swap.swapTotalRaw) ? "ready" : "loading"
             }));
         }
 
         // System Temperature
-        if (cfg.isGroupEnabled("temp") && s.temp && s.temp.tempValue && s.temp.tempValue !== "--") {
+        if (s.temp && s.temp.tempValue && s.temp.tempValue !== "--") {
             list.push(_createMetric("temp.system", {
                 value: s.temp.tempNumericValue,
                 displayValue: s.temp.tempValue,
                 label: cfg.tempLabel,
+                subLabel: "System",
                 status: !isNaN(s.temp.tempNumericValue) ? "ready" : "unavailable"
             }));
         }
 
         // GPU instances
-        if (cfg.isGroupEnabled("gpu") && s.gpu) {
+        if (s.gpu) {
             var gList = s.gpu.gpuDataList;
             if (gList && gList.length > 0) {
                 for (var gi = 0; gi < gList.length; gi++) {
@@ -267,49 +275,46 @@ Item {
 
                     if (gd.usage) {
                         list.push(_createMetric("gpu.usage", {
-                            id: "gpu:" + gd.id + ".usage",
                             deviceId: gd.id, deviceName: gpuName,
-                            label: gpuName + " Usage", groupLabel: gpuName,
+                            label: gpuName, groupLabel: gpuName,
+                            subLabel: "Usage",
                             value: gd.usageNumber, displayValue: gd.usage,
-                            chartKey: "gpu:" + gd.id,
                             status: !isNaN(gd.usageNumber) ? "ready" : "loading"
                         }));
                     }
                     if (gd.vram) {
                         list.push(_createMetric("gpu.vram", {
-                            id: "gpu:" + gd.id + ".vram",
                             deviceId: gd.id, deviceName: gpuName,
-                            label: gpuName + " VRAM", groupLabel: gpuName,
+                            label: gpuName, groupLabel: gpuName,
+                            subLabel: "VRAM",
                             displayValue: gd.vram,
                             status: "ready"
                         }));
                     }
                     if (gd.temp) {
                         list.push(_createMetric("gpu.temp", {
-                            id: "gpu:" + gd.id + ".temp",
                             deviceId: gd.id, deviceName: gpuName,
-                            label: gpuName + " Temperature", groupLabel: gpuName,
+                            label: gpuName, groupLabel: gpuName,
+                            subLabel: gpuName,
                             value: gd.tempNumber, displayValue: gd.temp,
-                            chartKey: "gpuTemp:" + gd.id,
                             status: !isNaN(gd.tempNumber) ? "ready" : "unavailable"
                         }));
                     }
                     if (gd.freq) {
                         list.push(_createMetric("gpu.freq", {
-                            id: "gpu:" + gd.id + ".freq",
                             deviceId: gd.id, deviceName: gpuName,
                             label: gpuName + " Frequency", groupLabel: gpuName,
+                            subLabel: "Frequency",
                             value: gd.freqNumber, displayValue: gd.freq,
                             status: !isNaN(gd.freqNumber) ? "ready" : "loading"
                         }));
                     }
                     if (gd.power) {
                         list.push(_createMetric("gpu.power", {
-                            id: "gpu:" + gd.id + ".power",
                             deviceId: gd.id, deviceName: gpuName,
                             label: gpuName + " Power", groupLabel: gpuName,
+                            subLabel: "Power",
                             value: gd.powerNumber, displayValue: gd.power,
-                            chartKey: "gpuPower:" + gd.id,
                             status: !isNaN(gd.powerNumber) ? "ready" : "loading"
                         }));
                     }
@@ -318,17 +323,19 @@ Item {
         }
 
         // Battery
-        if (cfg.isGroupEnabled("bat") && s.battery) {
-            if (s.battery.batValue) {
-                list.push(_createMetric("bat.percentage", {
-                    value: s.battery.batNumericValue,
-                    displayValue: s.battery.batValue,
-                    status: !isNaN(s.battery.batNumericValue) ? "ready" : "loading"
-                }));
-            }
+        if (s.battery && s.battery.hasBattery) {
+            list.push(_createMetric("bat.percentage", {
+                value: s.battery.batNumericValue,
+                displayValue: s.battery.batValue || "...",
+                label: cfg.batLabel || "BAT",
+                subLabel: "Percentage",
+                status: !isNaN(s.battery.batNumericValue) ? "ready" : "loading"
+            }));
             if (s.battery.powerValue) {
                 list.push(_createMetric("bat.power", {
                     displayValue: s.battery.powerValue,
+                    label: cfg.batLabel || "BAT",
+                    subLabel: "Power",
                     status: "ready"
                 }));
             }
@@ -343,59 +350,58 @@ Item {
         }
 
         // Network
-        if (cfg.isGroupEnabled("net") && s.network) {
+        if (s.network) {
             list.push(_createMetric("net.down", {
                 value: s.network.netDownRaw,
                 displayValue: s.network.netDownValue,
-                label: cfg.netLabel + " ↓",
+                label: cfg.netLabel,
+                subLabel: "Download",
+                icon: cfg.resolveIcon("network-download-symbolic"),
                 status: !isNaN(s.network.netDownRaw) ? "ready" : "loading"
             }));
             list.push(_createMetric("net.up", {
                 value: s.network.netUpRaw,
                 displayValue: s.network.netUpValue,
-                label: cfg.netLabel + " ↑",
+                label: cfg.netLabel,
+                subLabel: "Upload",
+                icon: cfg.resolveIcon("network-upload-symbolic"),
                 status: !isNaN(s.network.netUpRaw) ? "ready" : "loading"
             }));
-            if (cfg.showNetworkIp && s.network.netIpValue && s.network.netIpValue !== "..." && s.network.netIpValue !== "") {
+            if (s.network.netIpValue && s.network.netIpValue !== "..." && s.network.netIpValue !== "") {
                 list.push(_createMetric("net.ip", {
                     displayValue: s.network.netIpValue,
+                    label: cfg.netLabel,
+                    subLabel: "IP address",
+                    icon: cfg.resolveIcon("network-symbolic"),
                     status: "ready"
                 }));
             }
         }
 
         // Disk instances
-        if (cfg.isGroupEnabled("disk") && s.disk) {
-            if (s.disk.multiDisk && s.disk.diskDataList.length > 0) {
-                for (var di = 0; di < s.disk.diskDataList.length; di++) {
-                    var dd = s.disk.diskDataList[di];
+        if (s.disk) {
+            var dList = s.disk.diskDataList;
+            if (dList && dList.length > 0) {
+                for (var di = 0; di < dList.length; di++) {
+                    var dd = dList[di];
                     var dName = dd.name || dd.id;
                     list.push(_createMetric("disk.read", {
-                        id: "disk:" + dd.id + ".read",
                         deviceId: dd.id, deviceName: dName,
-                        label: dName + " ↓", groupLabel: dName,
+                        label: dName, groupLabel: dName,
+                        subLabel: "Read",
+                        icon: cfg.resolveIcon("network-download-symbolic"),
                         displayValue: dd.read,
                         status: "ready"
                     }));
                     list.push(_createMetric("disk.write", {
-                        id: "disk:" + dd.id + ".write",
                         deviceId: dd.id, deviceName: dName,
-                        label: dName + " ↑", groupLabel: dName,
+                        label: dName, groupLabel: dName,
+                        subLabel: "Write",
+                        icon: cfg.resolveIcon("network-upload-symbolic"),
                         displayValue: dd.write,
                         status: "ready"
                     }));
                 }
-            } else {
-                list.push(_createMetric("disk.read", {
-                    displayValue: s.disk.diskReadValue,
-                    label: cfg.diskLabel + " ↓",
-                    status: "ready"
-                }));
-                list.push(_createMetric("disk.write", {
-                    displayValue: s.disk.diskWriteValue,
-                    label: cfg.diskLabel + " ↑",
-                    status: "ready"
-                }));
             }
 
             if (s.disk.diskUsedPercentValue) {
@@ -417,38 +423,45 @@ Item {
             }
 
             if (s.disk.diskTempValue) {
+                var firstDiskId = (dList && dList.length > 0) ? dList[0].id : "";
+                var isNvme = firstDiskId.indexOf("nvme") !== -1;
+                var diskTempLabel = isNvme ? "NVMe" : ((dList && dList.length > 0 && dList[0].name) ? dList[0].name : "Disk");
                 list.push(_createMetric("disk.temp", {
+                    deviceId: firstDiskId,
                     value: s.disk.diskTempNumber,
                     displayValue: s.disk.diskTempValue,
-                    label: cfg.diskLabel + " Temperature",
+                    label: diskTempLabel,
+                    subLabel: diskTempLabel,
                     status: !isNaN(s.disk.diskTempNumber) ? "ready" : "unavailable"
                 }));
             }
         }
 
         // Fan instances
-        if (cfg.isGroupEnabled("fan") && s.fans && s.fans.hasFanData) {
+        if (s.fans && s.fans.hasFanData) {
             var fList = s.fans.fanDataList;
             for (var fi = 0; fi < fList.length; fi++) {
                 var fd = fList[fi];
+                var fName = fd.name || ("Fan " + fd.number);
                 list.push(_createMetric("fan.speed", {
-                    id: "fan:" + fd.id,
-                    deviceId: fd.id, deviceName: fd.name || ("Fan " + fd.number),
-                    label: fd.number + ": " + (fd.name || fd.id),
+                    deviceId: fd.id, deviceName: fName,
+                    label: fName,
                     groupLabel: cfg.fanLabel,
-                    subLabel: s.fans.multiFan ? (fd.number + ":") : "",
+                    subLabel: fName,
                     value: fd.valueNumber,
                     displayValue: (fd.isEstimated ? "~" : "") + fd.value,
                     popupDisplay: fd.rpmValue,
-                    chartKey: "fan:" + fd.id,
                     status: !isNaN(fd.valueNumber) ? "ready" : "loading"
                 }));
             }
         }
 
         // Uptime
-        if (cfg.isGroupEnabled("uptime") && s.uptime && s.uptime.uptimeValue) {
+        if (s.uptime && s.uptime.uptimeValue) {
             list.push(_createMetric("uptime.uptime", {
+                label: "Uptime",
+                groupLabel: "Uptime",
+                subLabel: "Uptime",
                 displayValue: s.uptime.uptimeValue,
                 status: "ready"
             }));

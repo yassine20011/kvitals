@@ -40,6 +40,10 @@ Item {
         return Math.round(batHealthNumericValue) + "%";
     }
 
+    readonly property bool hasBattery: (batChargeSensor.status === Sensors.Sensor.Ready && !isNaN(batNumericValue))
+                                       || (discoveredBatId.length > 0)
+                                       || (batteryDevice !== "" && batteryDevice !== "auto")
+
     // --- Dynamic battery sensor discovery ---
 
     property string discoveredBatId: ""
@@ -66,12 +70,12 @@ Item {
     onDiscoveryChanged: refreshDiscovered()
 
     property string batChargeSensorId: {
-        var base = (batteryDevice && batteryDevice !== "auto") ? batteryDevice : discoveredBatId;
+        var base = (batteryDevice && batteryDevice !== "auto") ? batteryDevice : (discoveredBatId || "battery_BAT0");
         return base ? ("power/" + base + "/chargePercentage") : "";
     }
 
     property string batRateSensorId: {
-        var base = (batteryDevice && batteryDevice !== "auto") ? batteryDevice : discoveredBatId;
+        var base = (batteryDevice && batteryDevice !== "auto") ? batteryDevice : (discoveredBatId || "battery_BAT0");
         return base ? ("power/" + base + "/chargeRate") : "";
     }
 
@@ -223,13 +227,13 @@ Item {
     Sensors.Sensor {
         id: batChargeSensor
         sensorId: root.batChargeSensorId
-        updateRateLimit: root.updateInterval > 5000 ? root.updateInterval : 5000
+        updateRateLimit: root.updateInterval
     }
 
     Sensors.Sensor {
         id: batRateSensor
         sensorId: root.batRateSensorId
-        updateRateLimit: root.updateInterval > 5000 ? root.updateInterval : 5000
+        updateRateLimit: root.updateInterval
     }
 
     Sensors.Sensor {

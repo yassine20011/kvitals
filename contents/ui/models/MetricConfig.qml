@@ -1,13 +1,3 @@
-// MetricConfig is the single-source adapter between Plasmoid.configuration and
-// the rest of the widget. Every sensor module and MetricStore read from here
-// rather than touching Plasmoid.configuration directly.
-//
-// It owns:
-//   - group enable flags and isGroupEnabled()
-//   - sub-metric and visibility settings per group
-//   - labels, icons, and threshold values (with defaults)
-//   - isMetricVisible() which combines all three visibility axes
-//   - orderedKeys: the canonical metric display order
 import QtQuick
 import org.kde.plasma.plasmoid
 import "./MetricDefinitions.js" as Defs
@@ -15,255 +5,281 @@ import "./MetricDefinitions.js" as Defs
 QtObject {
     id: root
 
+    property var target: Plasmoid.configuration
+    property string propertyPrefix: ""
+
     // Icon fallback resolver
     function resolveIcon(name) {
-        switch (name) {
-        case "am-cpu-symbolic":
-        case "nvidia-ram-symbolic":
-        case "am-disk-utility-symbolic":
-        case "am-fan-symbolic":
-        case "gpu-symbolic":
+        if (!name) return "configure";
+        if (name.indexOf("-symbolic") !== -1 && name.indexOf("/") === -1) {
             return Qt.resolvedUrl("../../icons/" + name + ".svg");
-        default:
-            return name;
+        }
+        return name;
+    }
+
+    // Pinned metrics on Plasma panel
+    readonly property string pinnedMetrics: (target && target[propertyPrefix + "pinnedMetrics"] !== undefined)
+        ? target[propertyPrefix + "pinnedMetrics"]
+        : "cpu/usage,ram/percentage,temp/system,bat/percentage,net/down,net/up"
+
+    readonly property var pinnedList: {
+        if (!pinnedMetrics) return [];
+        return pinnedMetrics.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+    }
+
+    readonly property var _pinnedSet: {
+        var s = new Set();
+        for (var i = 0; i < pinnedList.length; i++) {
+            s.add(pinnedList[i]);
+        }
+        return s;
+    }
+
+    function isPinned(instanceId) {
+        if (!instanceId) return false;
+        return _pinnedSet.has(instanceId);
+    }
+
+    function togglePin(instanceId) {
+        if (!instanceId) return;
+        var list = pinnedList.slice();
+        var idx = list.indexOf(instanceId);
+        if (idx >= 0) {
+            list.splice(idx, 1);
+        } else {
+            list.push(instanceId);
+        }
+        var prop = propertyPrefix + "pinnedMetrics";
+        if (target && target[prop] !== undefined) {
+            target[prop] = list.join(",");
         }
     }
 
-    // Whether each group appears in the widget at all. Disabled groups are
-    // skipped by MetricStore and hidden from the config metrics page.
-    readonly property bool cpuEnabled:    Plasmoid.configuration.cpuEnabled
-    readonly property bool ramEnabled:    Plasmoid.configuration.ramEnabled
-    readonly property bool swapEnabled:   Plasmoid.configuration.swapEnabled
-    readonly property bool tempEnabled:   Plasmoid.configuration.tempEnabled
-    readonly property bool gpuEnabled:    Plasmoid.configuration.gpuEnabled
-    readonly property bool batEnabled:    Plasmoid.configuration.batEnabled
-    readonly property bool netEnabled:    Plasmoid.configuration.netEnabled
-    readonly property bool diskEnabled:   Plasmoid.configuration.diskEnabled
-    readonly property bool fanEnabled:    Plasmoid.configuration.fanEnabled
-    readonly property bool uptimeEnabled: Plasmoid.configuration.uptimeEnabled
-
-    function isGroupEnabled(group) {
-        switch (group) {
-        case "cpu":    return cpuEnabled;
-        case "ram":    return ramEnabled;
-        case "swap":   return swapEnabled;
-        case "temp":   return tempEnabled;
-        case "gpu":    return gpuEnabled;
-        case "bat":    return batEnabled;
-        case "net":    return netEnabled;
-        case "disk":   return diskEnabled;
-        case "fan":    return fanEnabled;
-        case "uptime": return uptimeEnabled;
-        default:       return false;
+    function setPinned(instanceId, shouldPin) {
+        if (!instanceId) return;
+        var list = pinnedList.slice();
+        var idx = list.indexOf(instanceId);
+        if (shouldPin && idx < 0) {
+            list.push(instanceId);
+        } else if (!shouldPin && idx >= 0) {
+            list.splice(idx, 1);
+        } else {
+            return;
+        }
+        var prop = propertyPrefix + "pinnedMetrics";
+        if (target && target[prop] !== undefined) {
+            target[prop] = list.join(",");
         }
     }
 
-    // Sub-metric comma-separated lists
-    readonly property string cpuSubMetrics:  Plasmoid.configuration.cpuSubMetrics  || Defs.GROUPS.cpu.defaultSubMetrics
-    readonly property string ramSubMetrics:  Plasmoid.configuration.ramSubMetrics  || Defs.GROUPS.ram.defaultSubMetrics
-    readonly property string swapSubMetrics: Plasmoid.configuration.swapSubMetrics || Defs.GROUPS.swap.defaultSubMetrics
-    readonly property string gpuSubMetrics:  Plasmoid.configuration.gpuSubMetrics  || Defs.GROUPS.gpu.defaultSubMetrics
-    readonly property string batSubMetrics:  Plasmoid.configuration.batSubMetrics  || Defs.GROUPS.bat.defaultSubMetrics
-    readonly property string netSubMetrics:  Plasmoid.configuration.netSubMetrics  || Defs.GROUPS.net.defaultSubMetrics
-    readonly property string diskSubMetrics: Plasmoid.configuration.diskSubMetrics || Defs.GROUPS.disk.defaultSubMetrics
-
-    // Where each group appears: "compact" (panel only), "widget" (popup only),
-    // or "both". isMetricVisible() enforces this per sub-metric.
-    readonly property string cpuVisibility:    Plasmoid.configuration.cpuVisibility    || "both"
-    readonly property string ramVisibility:    Plasmoid.configuration.ramVisibility    || "both"
-    readonly property string swapVisibility:   Plasmoid.configuration.swapVisibility   || "both"
-    readonly property string tempVisibility:   Plasmoid.configuration.tempVisibility   || "both"
-    readonly property string gpuVisibility:    Plasmoid.configuration.gpuVisibility    || "both"
-    readonly property string batVisibility:    Plasmoid.configuration.batVisibility    || "both"
-    readonly property string netVisibility:    Plasmoid.configuration.netVisibility    || "both"
-    readonly property string diskVisibility:   Plasmoid.configuration.diskVisibility   || "both"
-    readonly property string fanVisibility:    Plasmoid.configuration.fanVisibility    || "both"
-    readonly property string uptimeVisibility: Plasmoid.configuration.uptimeVisibility || "both"
-
-    function getGroupVisibility(group) {
-        switch (group) {
-        case "cpu":    return cpuVisibility;
-        case "ram":    return ramVisibility;
-        case "swap":   return swapVisibility;
-        case "temp":   return tempVisibility;
-        case "gpu":    return gpuVisibility;
-        case "bat":    return batVisibility;
-        case "net":    return netVisibility;
-        case "disk":   return diskVisibility;
-        case "fan":    return fanVisibility;
-        case "uptime": return uptimeVisibility;
-        default:       return "both";
+    function movePinnedMetric(fromIndex, toIndex) {
+        var list = pinnedList.slice();
+        if (fromIndex < 0 || fromIndex >= list.length || toIndex < 0 || toIndex >= list.length) return;
+        var item = list.splice(fromIndex, 1)[0];
+        list.splice(toIndex, 0, item);
+        var prop = propertyPrefix + "pinnedMetrics";
+        if (target && target[prop] !== undefined) {
+            target[prop] = list.join(",");
         }
     }
 
-    function isSubMetricEnabled(group, subKey, deviceId) {
-        var str = "";
-        switch (group) {
-        case "cpu":  str = cpuSubMetrics; break;
-        case "ram":  str = ramSubMetrics; break;
-        case "swap": str = swapSubMetrics; break;
-        case "gpu":  str = gpuSubMetrics; break;
-        case "bat":  str = batSubMetrics; break;
-        case "net":  str = netSubMetrics; break;
-        case "disk": str = diskSubMetrics; break;
-        case "temp": return true;
-        case "fan": return true;
-        case "uptime": return true;
-        default: return true;
-        }
-
-        // Per-device sub-metric support
-        if (str.indexOf(":") >= 0) {
-            if (deviceId) {
-                var pairs = str.split("|");
-                for (var i = 0; i < pairs.length; i++) {
-                    var sep = pairs[i].indexOf(":");
-                    if (sep > 0 && pairs[i].substring(0, sep) === deviceId) {
-                        var subs = pairs[i].substring(sep + 1).split(",").map(function(s){ return s.trim(); });
-                        return subs.indexOf(subKey) >= 0;
-                    }
-                }
-            }
-            var allPairs = str.split("|");
-            for (var j = 0; j < allPairs.length; j++) {
-                var pSep = allPairs[j].indexOf(":");
-                var pSubs = (pSep > 0 ? allPairs[j].substring(pSep + 1) : allPairs[j]).split(",").map(function(s){ return s.trim(); });
-                if (pSubs.indexOf(subKey) >= 0) return true;
-            }
-            return false;
-        }
-
-        return str.split(",").map(function(s){ return s.trim(); }).indexOf(subKey) >= 0;
+    // Dynamic Hardware Group Labels
+    function parseGpuLabels() {
+        return _parseJsonSafe((target && target[propertyPrefix + "gpuLabels"]) || "{}");
     }
 
-    // Returns true when a metric should appear in the given view ("compact" or "widget").
-    // Checks group enable, group visibility target, and sub-metric enable in that order.
-    function isMetricVisible(group, subKey, view, deviceId) {
-        if (!isGroupEnabled(group)) return false;
-        var vis = getGroupVisibility(group);
-        if (vis !== "both" && vis !== view) return false;
-
-        if (view === "widget" && group === "ram" && ramWidgetShowBoth) {
-            if (subKey === "percentage" || subKey === "used") return true;
+    function saveGpuLabel(deviceId, label) {
+        var map = parseGpuLabels();
+        map[deviceId] = label;
+        var prop = propertyPrefix + "gpuLabels";
+        if (target && target[prop] !== undefined) {
+            target[prop] = JSON.stringify(map);
         }
-
-        return isSubMetricEnabled(group, subKey, deviceId);
     }
 
-    // Labels
-    readonly property string cpuLabel:  Plasmoid.configuration.cpuLabel  || "CPU"
-    readonly property string ramLabel:  Plasmoid.configuration.ramLabel  || "RAM"
-    readonly property string swapLabel: Plasmoid.configuration.swapLabel || "SWAP"
-    readonly property string tempLabel: Plasmoid.configuration.tempLabel || "System"
-    readonly property string netLabel:  Plasmoid.configuration.netLabel  || "NET"
-    readonly property string diskLabel: Plasmoid.configuration.diskLabel || "DSK"
-    readonly property string fanLabel:  Plasmoid.configuration.fanLabel  || "FAN"
-    readonly property string gpuLabels: Plasmoid.configuration.gpuLabels || ""
-    readonly property string diskLabels: Plasmoid.configuration.diskLabels || ""
-    readonly property string fanLabels: Plasmoid.configuration.fanLabels || ""
+    function isGpuSelected(deviceId) {
+        var raw = (target && target[propertyPrefix + "gpuSelection"]) || "";
+        if (raw === "none") return false;
+        if (!raw) return true; // all enabled by default
+        var list = raw.split(",").map(function(s){ return s.trim(); });
+        return list.indexOf(deviceId) !== -1;
+    }
+
+    function setGpuSelected(deviceId, enabled, allDiscoveredGpuIds) {
+        var raw = (target && target[propertyPrefix + "gpuSelection"]) || "";
+        var current;
+        if (raw === "none") {
+            current = [];
+        } else if (!raw) {
+            current = allDiscoveredGpuIds ? allDiscoveredGpuIds.slice() : [];
+        } else {
+            current = raw.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+        }
+        var idx = current.indexOf(deviceId);
+        if (enabled && idx === -1) {
+            current.push(deviceId);
+        } else if (!enabled && idx !== -1) {
+            current.splice(idx, 1);
+        }
+        var prop = propertyPrefix + "gpuSelection";
+        if (target && target[prop] !== undefined) {
+            target[prop] = current.length === 0 ? "none" : current.join(",");
+        }
+    }
+
+    function parseDiskLabels() {
+        return _parseJsonSafe((target && target[propertyPrefix + "diskLabels"]) || "{}");
+    }
+
+    function saveDiskLabel(deviceId, label) {
+        var map = parseDiskLabels();
+        map[deviceId] = label;
+        var prop = propertyPrefix + "diskLabels";
+        if (target && target[prop] !== undefined) {
+            target[prop] = JSON.stringify(map);
+        }
+    }
+
+    function parseFanLabels() {
+        return _parseJsonSafe((target && target[propertyPrefix + "fanLabels"]) || "{}");
+    }
+
+    function saveFanLabel(deviceId, label) {
+        var map = parseFanLabels();
+        map[deviceId] = label;
+        var prop = propertyPrefix + "fanLabels";
+        if (target && target[prop] !== undefined) {
+            target[prop] = JSON.stringify(map);
+        }
+    }
+
+    function _parseJsonSafe(str) {
+        if (!str) return {};
+        if (typeof str === "object") return str;
+        var trimmed = String(str).trim();
+        if (trimmed.startsWith("{")) {
+            try {
+                return JSON.parse(trimmed);
+            } catch (e) {}
+        }
+        var res = {};
+        trimmed.split("|").forEach(function(pair) {
+            var sep = pair.indexOf(":");
+            if (sep > 0) res[pair.substring(0, sep).trim()] = pair.substring(sep + 1).trim();
+        });
+        return res;
+    }
+
+    // Static Group Labels
+    readonly property string cpuLabel:  (target && target[propertyPrefix + "cpuLabel"])  || "CPU"
+    readonly property string ramLabel:  (target && target[propertyPrefix + "ramLabel"])  || "RAM"
+    readonly property string swapLabel: (target && target[propertyPrefix + "swapLabel"]) || "SWAP"
+    readonly property string tempLabel: (target && target[propertyPrefix + "tempLabel"]) || "System"
+    readonly property string netLabel:  (target && target[propertyPrefix + "netLabel"])  || "NET"
+    readonly property string diskLabel: (target && target[propertyPrefix + "diskLabel"]) || "DSK"
+    readonly property string fanLabel:  (target && target[propertyPrefix + "fanLabel"])  || "FAN"
+    readonly property string batLabel:  (target && target[propertyPrefix + "batLabel"])  || "BAT"
+
+    readonly property var _labelMap: ({
+        cpu: cpuLabel, ram: ramLabel, swap: swapLabel, temp: tempLabel,
+        net: netLabel, disk: diskLabel, fan: fanLabel, bat: batLabel, uptime: "Uptime"
+    })
 
     function getGroupLabel(group) {
-        switch (group) {
-        case "cpu":    return cpuLabel;
-        case "ram":    return ramLabel;
-        case "swap":   return swapLabel;
-        case "temp":   return tempLabel;
-        case "gpu":    return "GPU";
-        case "bat":    return "BAT";
-        case "net":    return netLabel;
-        case "disk":   return diskLabel;
-        case "fan":    return fanLabel;
-        case "uptime": return "UPTIME";
-        default:       return group.toUpperCase();
+        return _labelMap[group] || (group ? group.toUpperCase() : "");
+    }
+
+    function setGroupLabel(group, val) {
+        var prop = propertyPrefix + group + "Label";
+        if (target && target[prop] !== undefined) {
+            target[prop] = val;
         }
     }
 
     // Icons
-    readonly property string cpuIcon:     resolveIcon(Plasmoid.configuration.cpuIcon || "am-cpu-symbolic")
-    readonly property string ramIcon:     resolveIcon(Plasmoid.configuration.ramIcon || "nvidia-ram-symbolic")
-    readonly property string swapIcon:    resolveIcon(Plasmoid.configuration.swapIcon || "nvidia-ram-symbolic")
-    readonly property string tempIcon:    resolveIcon(Plasmoid.configuration.tempIcon || "temperature-normal")
-    readonly property string gpuIcon:     resolveIcon(Plasmoid.configuration.gpuIcon || "gpu-symbolic")
-    readonly property string batteryIcon: resolveIcon(Plasmoid.configuration.batteryIcon || "battery-good")
-    readonly property string powerIcon:   resolveIcon(Plasmoid.configuration.powerIcon || "battery-charging-60")
-    readonly property string networkIcon: resolveIcon(Plasmoid.configuration.networkIcon || "network-wireless")
-    readonly property string diskIcon:    resolveIcon(Plasmoid.configuration.diskIcon || "am-disk-utility-symbolic")
-    readonly property string fanIcon:     resolveIcon(Plasmoid.configuration.fanIcon || "am-fan-symbolic")
-    readonly property string uptimeIcon:  resolveIcon(Plasmoid.configuration.uptimeIcon || "clock")
+    readonly property string cpuIcon:     resolveIcon((target && target[propertyPrefix + "cpuIcon"])     || "cpu-symbolic")
+    readonly property string ramIcon:     resolveIcon((target && target[propertyPrefix + "ramIcon"])     || "memory-symbolic")
+    readonly property string swapIcon:    resolveIcon((target && target[propertyPrefix + "swapIcon"])    || "memory-symbolic")
+    readonly property string tempIcon:    resolveIcon((target && target[propertyPrefix + "tempIcon"])    || "temperature-symbolic")
+    readonly property string gpuIcon:     resolveIcon((target && target[propertyPrefix + "gpuIcon"])     || "gpu-symbolic")
+    readonly property string batteryIcon: resolveIcon((target && target[propertyPrefix + "batteryIcon"]) || "battery-symbolic")
+    readonly property string powerIcon:   resolveIcon((target && target[propertyPrefix + "powerIcon"])   || "voltage-symbolic")
+    readonly property string networkIcon: resolveIcon((target && target[propertyPrefix + "networkIcon"]) || "network-symbolic")
+    readonly property string diskIcon:    resolveIcon((target && target[propertyPrefix + "diskIcon"])    || "storage-symbolic")
+    readonly property string fanIcon:     resolveIcon((target && target[propertyPrefix + "fanIcon"])     || "fan-symbolic")
+    readonly property string uptimeIcon:  resolveIcon((target && target[propertyPrefix + "uptimeIcon"])  || "system-symbolic")
+
+    readonly property var _iconMap: ({
+        cpu: cpuIcon, ram: ramIcon, swap: swapIcon, temp: tempIcon, gpu: gpuIcon,
+        bat: batteryIcon, net: networkIcon, disk: diskIcon, fan: fanIcon, uptime: uptimeIcon
+    })
 
     function getGroupIcon(group) {
-        switch (group) {
-        case "cpu":    return cpuIcon;
-        case "ram":    return ramIcon;
-        case "swap":   return swapIcon;
-        case "temp":   return tempIcon;
-        case "gpu":    return gpuIcon;
-        case "bat":    return batteryIcon;
-        case "net":    return networkIcon;
-        case "disk":   return diskIcon;
-        case "fan":    return fanIcon;
-        case "uptime": return uptimeIcon;
-        default:       return "";
-        }
+        return _iconMap[group] || "";
     }
 
-    // Threshold colors. getWarningThreshold / getCriticalThreshold look up the
-    // property by name (e.g. "cpu" -> cpuWarningThreshold) so new groups only
-    // need new properties here, not changes to those functions.
-    readonly property bool enableThresholdColors: Plasmoid.configuration.enableThresholdColors
-    readonly property string warningColor:        Plasmoid.configuration.warningColor  || "#e5a50a"
-    readonly property string criticalColor:       Plasmoid.configuration.criticalColor || "#da4453"
+    // Threshold colors
+    readonly property bool enableThresholdColors: Boolean(target && target[propertyPrefix + "enableThresholdColors"])
+    readonly property string warningColor:        (target && target[propertyPrefix + "warningColor"])  || "#e5a50a"
+    readonly property string criticalColor:       (target && target[propertyPrefix + "criticalColor"]) || "#da4453"
 
-    readonly property int cpuWarningThreshold:      Plasmoid.configuration.cpuWarningThreshold      || 70
-    readonly property int cpuCriticalThreshold:     Plasmoid.configuration.cpuCriticalThreshold     || 90
-    readonly property int tempWarningThreshold:     Plasmoid.configuration.tempWarningThreshold     || 60
-    readonly property int tempCriticalThreshold:    Plasmoid.configuration.tempCriticalThreshold    || 85
-    readonly property int systemWarningThreshold:   Plasmoid.configuration.systemWarningThreshold   || 60
-    readonly property int systemCriticalThreshold:  Plasmoid.configuration.systemCriticalThreshold  || 85
-    readonly property int ramWarningThreshold:      Plasmoid.configuration.ramWarningThreshold      || 70
-    readonly property int ramCriticalThreshold:     Plasmoid.configuration.ramCriticalThreshold     || 90
-    readonly property int swapWarningThreshold:     Plasmoid.configuration.swapWarningThreshold     || 70
-    readonly property int swapCriticalThreshold:    Plasmoid.configuration.swapCriticalThreshold    || 90
-    readonly property int ramTempWarningThreshold:  Plasmoid.configuration.ramTempWarningThreshold  || 60
-    readonly property int ramTempCriticalThreshold: Plasmoid.configuration.ramTempCriticalThreshold || 85
-    readonly property int gpuWarningThreshold:      Plasmoid.configuration.gpuWarningThreshold      || 70
-    readonly property int gpuCriticalThreshold:     Plasmoid.configuration.gpuCriticalThreshold     || 90
-    readonly property int gpuTempWarningThreshold:  Plasmoid.configuration.gpuTempWarningThreshold  || 60
-    readonly property int gpuTempCriticalThreshold: Plasmoid.configuration.gpuTempCriticalThreshold || 85
-    readonly property int batteryWarningThreshold:  Plasmoid.configuration.batteryWarningThreshold  || 30
-    readonly property int batteryCriticalThreshold: Plasmoid.configuration.batteryCriticalThreshold || 15
-    readonly property int diskWarningThreshold:     Plasmoid.configuration.diskWarningThreshold     || 80
-    readonly property int diskCriticalThreshold:    Plasmoid.configuration.diskCriticalThreshold    || 90
-    readonly property int diskTempWarningThreshold: Plasmoid.configuration.diskTempWarningThreshold || 45
-    readonly property int diskTempCriticalThreshold: Plasmoid.configuration.diskTempCriticalThreshold || 60
+    readonly property int cpuWarningThreshold:      (target && target[propertyPrefix + "cpuWarningThreshold"])      || 70
+    readonly property int cpuCriticalThreshold:     (target && target[propertyPrefix + "cpuCriticalThreshold"])     || 90
+    readonly property int tempWarningThreshold:     (target && target[propertyPrefix + "tempWarningThreshold"])     || 60
+    readonly property int tempCriticalThreshold:    (target && target[propertyPrefix + "tempCriticalThreshold"])    || 85
+    readonly property int systemWarningThreshold:   (target && target[propertyPrefix + "systemWarningThreshold"])   || 60
+    readonly property int systemCriticalThreshold:  (target && target[propertyPrefix + "systemCriticalThreshold"])  || 85
+    readonly property int ramWarningThreshold:      (target && target[propertyPrefix + "ramWarningThreshold"])      || 70
+    readonly property int ramCriticalThreshold:     (target && target[propertyPrefix + "ramCriticalThreshold"])     || 90
+    readonly property int swapWarningThreshold:     (target && target[propertyPrefix + "swapWarningThreshold"])     || 70
+    readonly property int swapCriticalThreshold:    (target && target[propertyPrefix + "swapCriticalThreshold"])    || 90
+    readonly property int ramTempWarningThreshold:  (target && target[propertyPrefix + "ramTempWarningThreshold"])  || 60
+    readonly property int ramTempCriticalThreshold: (target && target[propertyPrefix + "ramTempCriticalThreshold"]) || 85
+    readonly property int gpuWarningThreshold:      (target && target[propertyPrefix + "gpuWarningThreshold"])      || 70
+    readonly property int gpuCriticalThreshold:     (target && target[propertyPrefix + "gpuCriticalThreshold"])     || 90
+    readonly property int gpuTempWarningThreshold:  (target && target[propertyPrefix + "gpuTempWarningThreshold"])  || 60
+    readonly property int gpuTempCriticalThreshold: (target && target[propertyPrefix + "gpuTempCriticalThreshold"]) || 85
+    readonly property int batteryWarningThreshold:  (target && target[propertyPrefix + "batteryWarningThreshold"])  || 30
+    readonly property int batteryCriticalThreshold: (target && target[propertyPrefix + "batteryCriticalThreshold"]) || 15
+    readonly property int diskWarningThreshold:     (target && target[propertyPrefix + "diskWarningThreshold"])     || 80
+    readonly property int diskCriticalThreshold:    (target && target[propertyPrefix + "diskCriticalThreshold"])    || 90
+    readonly property int diskTempWarningThreshold: (target && target[propertyPrefix + "diskTempWarningThreshold"]) || 45
+    readonly property int diskTempCriticalThreshold: (target && target[propertyPrefix + "diskTempCriticalThreshold"]) || 60
 
     function getWarningThreshold(key) {
-        var val = root[key + "WarningThreshold"];
-        return val !== undefined ? val : 70;
+        var prop = propertyPrefix + key + "WarningThreshold";
+        var val = target ? target[prop] : undefined;
+        if (val !== undefined) return val;
+        var direct = root[key + "WarningThreshold"];
+        return direct !== undefined ? direct : 70;
     }
 
     function getCriticalThreshold(key) {
-        var val = root[key + "CriticalThreshold"];
-        return val !== undefined ? val : 90;
+        var prop = propertyPrefix + key + "CriticalThreshold";
+        var val = target ? target[prop] : undefined;
+        if (val !== undefined) return val;
+        var direct = root[key + "CriticalThreshold"];
+        return direct !== undefined ? direct : 90;
     }
 
     // Units & hardware preferences
-    readonly property int updateInterval:         Plasmoid.configuration.updateInterval    || 2000
-    readonly property string tempUnit:            Plasmoid.configuration.tempUnit          || "C"
-    readonly property string networkUnit:         Plasmoid.configuration.networkUnit       || "bytes"
-    readonly property string fanUnit:             Plasmoid.configuration.fanUnit           || "rpm"
-    readonly property int fanMaxRpm:              Plasmoid.configuration.fanMaxRpm         || 2000
-    readonly property bool ramWidgetShowBoth:     Plasmoid.configuration.ramWidgetShowBoth || false
-    readonly property string batteryDevice:       Plasmoid.configuration.batteryDevice     || "auto"
-    readonly property string networkInterface:    Plasmoid.configuration.networkInterface  || "auto"
-    readonly property bool showNetworkIp:         Plasmoid.configuration.showNetworkIp     || false
-    readonly property string gpuSelection:        Plasmoid.configuration.gpuSelection      || ""
+    readonly property int updateInterval:         (target && target[propertyPrefix + "updateInterval"])    || 2000
+    readonly property string tempUnit:            (target && target[propertyPrefix + "tempUnit"])          || "C"
+    readonly property string networkUnit:         (target && target[propertyPrefix + "networkUnit"])       || "bytes"
+    readonly property string fanUnit:             (target && target[propertyPrefix + "fanUnit"])           || "rpm"
+    readonly property int fanMaxRpm:              (target && target[propertyPrefix + "fanMaxRpm"])         || 2000
+    readonly property string batteryDevice:       (target && target[propertyPrefix + "batteryDevice"])     || "auto"
+    readonly property string networkInterface:    (target && target[propertyPrefix + "networkInterface"])  || "auto"
+    readonly property bool showNetworkIp:         Boolean(target && target[propertyPrefix + "showNetworkIp"])
+    readonly property string gpuSelection:        (target && target[propertyPrefix + "gpuSelection"])      || ""
+    readonly property string gpuLabels:           (target && target[propertyPrefix + "gpuLabels"])          || ""
+    readonly property string diskLabels:          (target && target[propertyPrefix + "diskLabels"])         || ""
+    readonly property string fanLabels:           (target && target[propertyPrefix + "fanLabels"])          || ""
+    readonly property string gpuSubMetrics:       (target && target[propertyPrefix + "gpuSubMetrics"])      || "usage,vram,temp"
+    readonly property string diskSubMetrics:      (target && target[propertyPrefix + "diskSubMetrics"])     || "read,write"
 
-    // orderedKeys is the final display order for both views. It starts from
-    // metricOrder (user-defined), then appends any group keys missing from that
-    // list using ALL_GROUP_KEYS so new groups always appear rather than silently
-    // disappearing from the panel.
-    readonly property string metricOrder: Plasmoid.configuration.metricOrder || "cpu,ram,temp,gpu,bat,net,disk,fan,uptime"
+    // Group order in popup catalogue
+    readonly property string metricOrder: (target && target[propertyPrefix + "metricOrder"]) || "cpu,ram,temp,gpu,bat,net,disk,fan,uptime"
     readonly property var orderedKeys: {
         var all = Defs.ALL_GROUP_KEYS;
         var keys = metricOrder.split(",").map(function(k){ return k.trim(); }).filter(function(k){ return k.length > 0 && all.indexOf(k) >= 0; });
@@ -271,5 +287,16 @@ QtObject {
             if (keys.indexOf(all[i]) === -1) keys.push(all[i]);
         }
         return keys;
+    }
+
+    function moveMetric(fromIndex, toIndex) {
+        var keys = orderedKeys.slice();
+        if (fromIndex < 0 || fromIndex >= keys.length || toIndex < 0 || toIndex >= keys.length) return;
+        var item = keys.splice(fromIndex, 1)[0];
+        keys.splice(toIndex, 0, item);
+        var prop = propertyPrefix + "metricOrder";
+        if (target && target[prop] !== undefined) {
+            target[prop] = keys.join(",");
+        }
     }
 }
