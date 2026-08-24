@@ -176,13 +176,30 @@ Item {
         updateRateLimit: root.updateInterval
     }
 
-    // Wi-Fi signal sensor
-    readonly property string netSignalSensorId: {
-        if (netIpIfacePath === "") return "";
-        if (discovery && !discovery.sensorExists("network/" + netIpIfacePath + "/signal")) return "";
-        return "network/" + netIpIfacePath + "/signal";
+    // Wi-Fi interface resolution
+    readonly property string _wifiIface: {
+        if (networkInterface !== "" && networkInterface !== "auto") {
+            if (discovery && discovery.sensorExists("network/" + networkInterface + "/signal")) {
+                return networkInterface;
+            }
+            return "";
+        }
+        if (_activeIface !== "" && discovery && discovery.sensorExists("network/" + _activeIface + "/signal")) {
+            return _activeIface;
+        }
+        if (discovery) {
+            for (var i = 0; i < _discoveredIfaces.length; i++) {
+                var iface = _discoveredIfaces[i];
+                if (discovery.sensorExists("network/" + iface + "/signal")) {
+                    return iface;
+                }
+            }
+        }
+        return "";
     }
 
+    // Wi-Fi signal sensor
+    readonly property string netSignalSensorId: _wifiIface !== "" ? "network/" + _wifiIface + "/signal" : ""
     readonly property real netSignalRaw: (netSignalSensor.status === Sensors.Sensor.Ready && netSignalSensor.value != null) ? Number(netSignalSensor.value) : NaN
     readonly property string netSignalValue: isNaN(netSignalRaw) ? "" : Math.round(netSignalRaw) + "%"
     readonly property bool hasWifiSignal: netSignalSensorId !== "" && !isNaN(netSignalRaw)
