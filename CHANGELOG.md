@@ -30,6 +30,8 @@ All notable changes to KVitals will be documented in this file.
 
 - **Settings UI Dynamic Delegate Leaks**: Isolated form sections in `configMetrics.qml` using `twinFormLayouts` so late-discovered disks (e.g. SATA/SCSI `sda`) or fans append strictly to their respective category instead of leaking across the form.
 - **Dual-Homed Wi-Fi Signal Detection**: Fixed Wi-Fi signal detection when Ethernet is active by decoupling wireless signal resolution from the primary IPv4 route interface.
+- **Idle Disk I/O Rate Updates**: Added periodic polling and model lifecycle event handling (`columnsInserted`, `layoutChanged`, `modelReset`) to `DiskSensors.qml` so disk read and write rates update reliably when idle.
+- **Intel PCH Motherboard Temperature Discovery**: Added support for Intel Platform Controller Hub thermal drivers (`pch_*`) in `TempSensors.qml` to accurately monitor chipset temperature instead of falling back to CPU temperature.
 - **Empty Pinned Metrics Re-Migration Loop**: Added `configMigrated` schema flag to prevent recurring startup writes when all panel metrics are intentionally unpinned.
 - **Hybrid GPU Suspension**: Persisted `none` sentinel when all GPUs are unchecked, allowing discrete GPUs on hybrid laptops to power down into idle states.
 

@@ -101,6 +101,10 @@ Item {
         enabled: root._activeSensorIds.length > 0
         onDataChanged: root.aggregateCores()
         onReadyChanged: { if (ready) root.aggregateCores(); }
+        onRowsInserted: root.aggregateCores()
+        onColumnsInserted: root.aggregateCores()
+        onModelReset: root.aggregateCores()
+        onLayoutChanged: root.aggregateCores()
     }
 
     function _modelValue(sensorId) {
