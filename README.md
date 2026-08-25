@@ -36,7 +36,7 @@ Here is what you can track and customize:
 - **Fan speed**: Per-fan RPM and percentage with stable numbering and individual sparklines.
 - **Battery and power**: Automatically detects battery interfaces, charge percentage, health, and power draw in watts.
 - **Network**: Download and upload speeds, session data totals (download/upload), Wi-Fi signal strength, local IP address display, and interface auto-detection.
-- **Disk I/O, space, and temperature**: Per-drive read/write rates, overall used space, and temperature monitoring with hotplug detection.
+- **Disk I/O, space, and temperature**: Per-drive read/write rates, overall used space, and per-disk temperature monitoring (displayed when the corresponding sensor is available through KSystemStats) with hotplug detection.
 - **System uptime**: Live uptime pulled from `os/system/uptime`.
 - **Sparkline charts**: Expanded popup shows a 60-sample history graph for all active metrics.
 - **Visibility controls**: Choose where each metric appears — panel and popup, panel only, popup only, or disabled entirely.

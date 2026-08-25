@@ -85,15 +85,24 @@ independent of the chipset discovery. This ensures the "CPU Temperature"
 sub-metric correctly shows CPU temp even when the System temperature
 switches to a chipset sensor.
 
-## Three Independent Sensors
+## Hardware Temperature Sensors
 
-| Display              | QML Property        | Sensor ID                                           | Source          |
-| -------------------- | ------------------- | --------------------------------------------------- | --------------- |
-| System Temperature   | `temp.tempValue`    | chipset auto-detect or `cpu/all/averageTemperature` | `sysSensor`     |
-| CPU Temperature      | `temp.cpuTempValue` | `cpu/all/averageTemperature`                        | `cpuTempSensor` |
-| DDR5 RAM Temperature | `temp.ramTempValue` | `lmsensors/spd5118-*/temp1`                         | `ramSensor`     |
+| Display              | QML Property        | Sensor ID                                           | Source                 |
+| -------------------- | ------------------- | --------------------------------------------------- | ---------------------- |
+| System Temperature   | `temp.tempValue`    | chipset auto-detect or `cpu/all/averageTemperature` | `sysSensor`            |
+| CPU Temperature      | `temp.cpuTempValue` | `cpu/all/averageTemperature`                        | `cpuTempSensor`        |
+| DDR5 RAM Temperature | `temp.ramTempValue` | `lmsensors/spd5118-*/temp1`                         | `ramSensor`            |
+| Disk Temperatures    | `disk.temp`         | `disk/<id>/temperature` or `lmsensors/*`            | `DiskSensors.qml`      |
 
 - `sysIsFallback = true` when System Temperature falls back to CPU
 - The "No chipset temp sensor detected" label in settings is controlled by
   `Plasmoid.configuration._tempFallbackActive`
 - Changes to the sensor tree trigger `refreshDiscovered()` via `discovery.onRevisionChanged`
+
+## Disk Temperature Discovery (`DiskSensors.qml`)
+
+KVitals binds disk temperatures on a per-device basis. Per-disk temperatures are displayed when the corresponding sensor is available through KSystemStats:
+
+1. **Direct Path (Preferred)**: `disk/<deviceId>/temperature` exposed natively by KSystemStats (backed by UDisks2).
+2. **NVMe Fallback**: `lmsensors/nvme-pci-*/temp1` (or `temp2`), mapped deterministically to physical NVMe controllers. Namespaces (e.g. `nvme0n1`, `nvme0n2`) share the physical controller's sensor.
+3. **SATA/SCSI Fallback**: `lmsensors/drivetemp-scsi-*/temp1` provided by the Linux `drivetemp` kernel driver. If `drivetemp` is not loaded in the kernel, KSystemStats will not register SATA drive temperatures.
