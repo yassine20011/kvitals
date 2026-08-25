@@ -188,6 +188,20 @@
             return val;
         }
 
+        // Resolve the temperature sensor for a disk.
+        //
+        // Prefer the direct KSystemStats per-disk sensor when available:
+        //   disk/<deviceId>/temperature
+        //
+        // Some systems expose drive temperatures only through lmsensors,
+        // such as nvme-pci-* or drivetemp-scsi-* adapters. When the direct
+        // sensor is unavailable, use the discovered disk/controller topology
+        // to associate the disk with the corresponding sensor adapter.
+        //
+        // This fallback is best-effort because KSystemStats does not expose
+        // an explicit disk-to-lmsensors adapter relationship. It avoids relying
+        // on raw sensor discovery order, but the direct per-disk sensor always
+        // takes priority when available.
         function _findTempSensorForDisk(diskId) {
             if (!diskId) return "";
             var directId = "disk/" + diskId + "/temperature";
@@ -195,6 +209,7 @@
 
             var nvmeMatch = diskId.match(/^nvme(\d+)n\d+/);
             if (nvmeMatch) {
+                // NVMe namespaces on the same controller share one temperature adapter.
                 var nvmeControllers = [];
                 for (var k = 0; k < _discovered.length; k++) {
                     var m1 = _discovered[k].id.match(/^nvme(\d+)/);
@@ -228,6 +243,7 @@
 
             var scsiMatch = diskId.match(/^sd([a-z]+)/);
             if (scsiMatch) {
+                // SATA/SCSI drives use the corresponding drivetemp/SCSI adapter.
                 var scsiControllers = [];
                 for (var d = 0; d < _discovered.length; d++) {
                     var m3 = _discovered[d].id.match(/^sd([a-z]+)/);
@@ -316,7 +332,7 @@
             }
         }
 
-        // Temperature (lmsensors)
+        // Per-disk temperature sensor discovery
 
         property var _tempSensorIds: []
 
