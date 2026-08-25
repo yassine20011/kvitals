@@ -449,6 +449,16 @@ Item {
                         displayValue: dd.write,
                         status: "ready"
                     }));
+                    if (dd.temp) {
+                        list.push(_createMetric("disk.temp", {
+                            deviceId: dd.id, deviceName: dName,
+                            label: dName, groupLabel: dName,
+                            subLabel: dName,
+                            value: dd.tempNumber,
+                            displayValue: dd.temp,
+                            status: !isNaN(dd.tempNumber) ? "ready" : "unavailable"
+                        }));
+                    }
                 }
             }
 
@@ -467,21 +477,6 @@ Item {
                     displayValue: s.disk.diskSpaceValue,
                     label: cfg.diskLabel + " Space",
                     status: !isNaN(s.disk.diskUsedRaw) ? "ready" : "loading"
-                }));
-            }
-
-            if (s.disk.diskTempValue) {
-                var firstDiskId = (dList && dList.length > 0) ? dList[0].id : "";
-                var firstDiskName = (dList && dList.length > 0 && dList[0].name) ? dList[0].name : "Disk";
-                list.push(_createMetric("disk.temp", {
-                    deviceId: firstDiskId,
-                    deviceName: firstDiskName,
-                    value: s.disk.diskTempNumber,
-                    displayValue: s.disk.diskTempValue,
-                    label: firstDiskName,
-                    groupLabel: firstDiskName,
-                    subLabel: firstDiskName,
-                    status: !isNaN(s.disk.diskTempNumber) ? "ready" : "unavailable"
                 }));
             }
         }

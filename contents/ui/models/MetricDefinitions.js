@@ -50,7 +50,7 @@ var GROUPS = {
         name: "Temperature",
         defaultLabel: "System",
         defaultIcon: "temperature-symbolic",
-        defaultSubMetrics: "temp",
+        defaultSubMetrics: "system",
         subs: []
     },
     gpu: {
@@ -128,9 +128,28 @@ var GROUPS = {
     }
 };
 
-// Canonical display order. MetricConfig uses this list to fill any gaps left
-// by a partial metricOrder setting.
 var ALL_GROUP_KEYS = ["cpu", "ram", "swap", "temp", "gpu", "bat", "net", "disk", "fan", "uptime"];
+
+var BUNDLED_ICONS = [
+    "battery-symbolic",
+    "cpu-symbolic",
+    "fan-symbolic",
+    "gpu-symbolic",
+    "memory-symbolic",
+    "network-download-symbolic",
+    "network-symbolic",
+    "network-upload-symbolic",
+    "network-wireless-symbolic",
+    "storage-symbolic",
+    "system-symbolic",
+    "temperature-symbolic",
+    "voltage-symbolic"
+];
+
+function isBundledIcon(name) {
+    if (!name) return false;
+    return BUNDLED_ICONS.indexOf(String(name)) !== -1;
+}
 
 // Canonical discovery patterns for dynamic hardware devices
 var PATTERNS = {
@@ -286,7 +305,7 @@ var DEFINITIONS = {
     "temp.system": {
         id: "temp.system",
         group: "temp",
-        subKey: "temp",
+        subKey: "system",
         sensorId: "cpu/all/averageTemperature",
         label: "System",
         thresholdType: "normal",

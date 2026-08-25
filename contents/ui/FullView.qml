@@ -5,6 +5,7 @@ import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.plasmoid
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.kirigami as Kirigami
+import "models/MetricDefinitions.js" as MetricDefinitions
 
 ColumnLayout {
     id: fullView
@@ -45,7 +46,7 @@ ColumnLayout {
     function resolveIcon(name) {
         if (!name) return "configure";
         var str = String(name);
-        if (str.indexOf("-symbolic") !== -1 && str.indexOf("/") === -1) {
+        if (MetricDefinitions.isBundledIcon(str)) {
             return Qt.resolvedUrl("../icons/" + str + ".svg");
         }
         return name;

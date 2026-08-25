@@ -12,7 +12,7 @@ QtObject {
     function resolveIcon(name) {
         if (!name) return "configure";
         var str = String(name);
-        if (str.indexOf("-symbolic") !== -1 && str.indexOf("/") === -1) {
+        if (Defs.isBundledIcon(str)) {
             return Qt.resolvedUrl("../../icons/" + str + ".svg");
         }
         return name;

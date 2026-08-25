@@ -4,17 +4,16 @@ import QtQuick.Layouts 1.0
 import org.kde.kirigami 2.5 as Kirigami
 import org.kde.kcmutils as KCM
 import org.kde.iconthemes as KIconThemes
+import "models/MetricDefinitions.js" as MetricDefinitions
 
 KCM.SimpleKCM {
     id: iconsPage
 
-    // Mirrors main.qml's resolveIcon(): these names only exist in third-party
-    // icon themes (e.g. Win11/Win11-dark), so fall back to the bundled SVG
-    // for the preview instead of showing a blank icon on Breeze etc.
     function resolveIcon(name) {
         if (!name) return "configure";
-        if (name.indexOf("-symbolic") !== -1 && name.indexOf("/") === -1) {
-            return Qt.resolvedUrl("../icons/" + name + ".svg");
+        var str = String(name);
+        if (MetricDefinitions.isBundledIcon(str)) {
+            return Qt.resolvedUrl("../icons/" + str + ".svg");
         }
         return name;
     }
