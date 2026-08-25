@@ -37,13 +37,11 @@ sensors 2>/dev/null | head -20
     ↓
 SMART temperature
     ↓
-Linux drivetemp module
-    ↓
-lm-sensors
+Linux drivetemp module / UDisks2
     ↓
 KSystemStats
     ↓
-lmsensors/drivetemp-scsi-0-0/temp1
+disk/sda/temperature
     ↓
 KVitals DSK 2 temperature
 ```

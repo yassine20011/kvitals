@@ -189,92 +189,14 @@
         }
 
         // Resolve the temperature sensor for a disk.
-        //
-        // Prefer the direct KSystemStats per-disk sensor when available:
+        // KVitals strictly consumes the direct KSystemStats per-disk sensor:
         //   disk/<deviceId>/temperature
-        //
-        // Some systems expose drive temperatures only through lmsensors,
-        // such as nvme-pci-* or drivetemp-scsi-* adapters. When the direct
-        // sensor is unavailable, use the discovered disk/controller topology
-        // to associate the disk with the corresponding sensor adapter.
-        //
-        // This fallback is best-effort because KSystemStats does not expose
-        // an explicit disk-to-lmsensors adapter relationship. It avoids relying
-        // on raw sensor discovery order, but the direct per-disk sensor always
-        // takes priority when available.
+        // We avoid heuristic matching against lmsensors adapters to guarantee
+        // that disk temperatures are never misassigned across drives.
         function _findTempSensorForDisk(diskId) {
             if (!diskId) return "";
             var directId = "disk/" + diskId + "/temperature";
             if (discovery && discovery.sensorExists(directId)) return directId;
-
-            var nvmeMatch = diskId.match(/^nvme(\d+)n\d+/);
-            if (nvmeMatch) {
-                // NVMe namespaces on the same controller share one temperature adapter.
-                var nvmeControllers = [];
-                for (var k = 0; k < _discovered.length; k++) {
-                    var m1 = _discovered[k].id.match(/^nvme(\d+)/);
-                    if (m1 && nvmeControllers.indexOf(m1[1]) === -1) {
-                        nvmeControllers.push(m1[1]);
-                    }
-                }
-                nvmeControllers.sort(function(a, b) { return parseInt(a, 10) - parseInt(b, 10); });
-                var nvmeIdx = nvmeControllers.indexOf(nvmeMatch[1]);
-
-                var nvmeAdapters = [];
-                for (var i = 0; i < _tempSensorIds.length; i++) {
-                    var sid = _tempSensorIds[i];
-                    var m2 = sid.match(/^(lmsensors\/nvme-pci-[^/]+)\/temp\d+$/);
-                    if (m2 && nvmeAdapters.indexOf(m2[1]) === -1) {
-                        nvmeAdapters.push(m2[1]);
-                    }
-                }
-                nvmeAdapters.sort();
-
-                if (nvmeIdx >= 0 && nvmeIdx < nvmeAdapters.length) {
-                    var base = nvmeAdapters[nvmeIdx];
-                    if (_tempSensorIds.indexOf(base + "/temp1") !== -1) return base + "/temp1";
-                    if (_tempSensorIds.indexOf(base + "/temp2") !== -1) return base + "/temp2";
-                    for (var s = 0; s < _tempSensorIds.length; s++) {
-                        if (_tempSensorIds[s].indexOf(base) === 0) return _tempSensorIds[s];
-                    }
-                }
-                return "";
-            }
-
-            var scsiMatch = diskId.match(/^sd([a-z]+)/);
-            if (scsiMatch) {
-                // SATA/SCSI drives use the corresponding drivetemp/SCSI adapter.
-                var scsiControllers = [];
-                for (var d = 0; d < _discovered.length; d++) {
-                    var m3 = _discovered[d].id.match(/^sd([a-z]+)/);
-                    if (m3 && scsiControllers.indexOf(m3[1]) === -1) {
-                        scsiControllers.push(m3[1]);
-                    }
-                }
-                scsiControllers.sort();
-                var scsiIdx = scsiControllers.indexOf(scsiMatch[1]);
-
-                var scsiAdapters = [];
-                for (var j = 0; j < _tempSensorIds.length; j++) {
-                    var sid2 = _tempSensorIds[j];
-                    var m4 = sid2.match(/^(lmsensors\/(?:drivetemp-scsi|scsi|drivetemp)-[^/]+)\/temp\d+$/);
-                    if (m4 && scsiAdapters.indexOf(m4[1]) === -1) {
-                        scsiAdapters.push(m4[1]);
-                    }
-                }
-                scsiAdapters.sort();
-
-                if (scsiIdx >= 0 && scsiIdx < scsiAdapters.length) {
-                    var scsiBase = scsiAdapters[scsiIdx];
-                    if (_tempSensorIds.indexOf(scsiBase + "/temp1") !== -1) return scsiBase + "/temp1";
-                    if (_tempSensorIds.indexOf(scsiBase + "/temp2") !== -1) return scsiBase + "/temp2";
-                    for (var t = 0; t < _tempSensorIds.length; t++) {
-                        if (_tempSensorIds[t].indexOf(scsiBase) === 0) return _tempSensorIds[t];
-                    }
-                }
-                return "";
-            }
-
             return "";
         }
 
@@ -338,11 +260,10 @@
 
         function _refreshTempSensors() {
             if (!discovery) return;
-            var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_TEMP : /^lmsensors\/(nvme-pci-[^/]+|drivetemp-scsi-[^/]+)\/temp[12]$/;
-            var found = discovery.queryIds(pattern);
+            var found = [];
             for (var i = 0; i < _discovered.length; i++) {
                 var direct = "disk/" + _discovered[i].id + "/temperature";
-                if (discovery.sensorExists(direct) && found.indexOf(direct) === -1) {
+                if (discovery.sensorExists(direct)) {
                     found.push(direct);
                 }
             }
