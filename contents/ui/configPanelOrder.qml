@@ -133,6 +133,10 @@ KCM.SimpleKCM {
             }
         } else if (group === "ram") {
             previewVal = subKey === "percentage" ? "35%" : (subKey === "used" ? "8.4/32G" : "42°C");
+            if (subKey === "temp") {
+                icon = "temperature-symbolic";
+                displayName = i18n("RAM Temperature");
+            }
         } else if (group === "swap") {
             previewVal = subKey === "percent" ? "0%" : "0 MB";
         } else if (group === "temp") {
@@ -204,6 +208,7 @@ KCM.SimpleKCM {
             items: [
                 { id: "ram/percentage", label: i18n("RAM Percentage"), icon: "memory-symbolic" },
                 { id: "ram/used", label: i18n("RAM Used / Total"), icon: "memory-symbolic" },
+                { id: "ram/temp", label: i18n("RAM Temperature"), icon: "temperature-symbolic" },
                 { id: "swap/percent", label: i18n("Swap Percentage"), icon: "memory-symbolic" },
                 { id: "swap/used", label: i18n("Swap Used"), icon: "memory-symbolic" }
             ]

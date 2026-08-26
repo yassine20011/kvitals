@@ -41,7 +41,7 @@ Linux drivetemp module / UDisks2
     ↓
 KSystemStats
     ↓
-disk/sda/temperature
+disk/sda/temperature or lmsensors/drivetemp-scsi-0-0/temp1
     ↓
 KVitals DSK 2 temperature
 ```

@@ -202,7 +202,7 @@ RowLayout {
             }
 
             Row {
-                visible: compactRow.useIcons && (!itemData.segments || !itemData._segmentsHaveIcons)
+                visible: compactRow.useIcons
                 spacing: 1
                 Layout.alignment: Qt.AlignVCenter
                 Repeater {
@@ -312,7 +312,7 @@ RowLayout {
                     Layout.alignment: Qt.AlignHCenter
 
                     Row {
-                        visible: compactRow.useIcons && (!itemData.segments || !itemData._segmentsHaveIcons)
+                        visible: compactRow.useIcons
                         spacing: 1
                         Layout.alignment: Qt.AlignVCenter
                         Repeater {

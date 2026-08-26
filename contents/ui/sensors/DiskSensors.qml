@@ -188,15 +188,80 @@
             return val;
         }
 
-        // Resolve the temperature sensor for a disk.
-        // KVitals strictly consumes the direct KSystemStats per-disk sensor:
-        //   disk/<deviceId>/temperature
-        // We avoid heuristic matching against lmsensors adapters to guarantee
-        // that disk temperatures are never misassigned across drives.
+        // Sysfs is used only for identity resolution; KSystemStats remains the value source
+        readonly property string _sysfsScanCommand: "sh -c 'for b in /sys/class/block/*; do [ -e \"$b/device\" ] || continue; bname=$(basename \"$b\"); bdev=$(readlink -f \"$b/device\"); for h in /sys/class/hwmon/hwmon*; do [ -e \"$h/device\" ] || continue; hdev=$(readlink -f \"$h/device\"); if [ \"$bdev\" = \"$hdev\" ]; then hname=$(cat \"$h/name\" 2>/dev/null); echo \"$bname:$hname:$hdev\"; fi; done; done'"
+
+        property var _sysfsDiskSensorMap: ({})
+
+        function _parseSysfsOutput(rawOutput) {
+            if (!rawOutput) return;
+            var availableSensors = root._tempSensorIds;
+            var map = {};
+            var lines = String(rawOutput).split("\n");
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].trim();
+                if (!line) continue;
+                var parts = line.split(":");
+                if (parts.length < 3) continue;
+                var bname = parts[0].trim();
+                var hname = parts[1].trim();
+                var hdev = parts.slice(2).join(":").trim();
+
+                var adapterPrefix = "";
+                if (hname === "nvme") {
+                    var pciMatches = hdev.match(/[0-9a-fA-F]{4}:([0-9a-fA-F]{2}):([0-9a-fA-F]{2})\.([0-9a-fA-F])/g);
+                    if (pciMatches && pciMatches.length > 0) {
+                        var lastPci = pciMatches[pciMatches.length - 1];
+                        var m = lastPci.match(/([0-9a-fA-F]{2}):([0-9a-fA-F]{2})\.([0-9a-fA-F])/);
+                        if (m) {
+                            var pciAddr = m[1] + m[2];
+                            adapterPrefix = "lmsensors/nvme-pci-" + pciAddr.toLowerCase();
+                        }
+                    }
+                } else if (hname === "drivetemp") {
+                    var scsiMatch = hdev.match(/host(\d+)\/target\d+:\d+:(\d+)\/(\d+):(\d+):(\d+):(\d+)/);
+                    if (scsiMatch) {
+                        adapterPrefix = "lmsensors/drivetemp-scsi-" + scsiMatch[1] + "-" + scsiMatch[2];
+                    } else {
+                        var scsiDevMatch = hdev.match(/(\d+):(\d+):(\d+):(\d+)$/);
+                        if (scsiDevMatch) {
+                            adapterPrefix = "lmsensors/drivetemp-scsi-" + scsiDevMatch[1] + "-" + scsiDevMatch[3];
+                        }
+                    }
+                }
+
+                if (adapterPrefix) {
+                    var targetSensor = adapterPrefix + "/temp1";
+                    if (availableSensors && availableSensors.length > 0) {
+                        if (availableSensors.indexOf(targetSensor) !== -1) {
+                            map[bname] = targetSensor;
+                        } else {
+                            for (var s = 0; s < availableSensors.length; s++) {
+                                if (availableSensors[s].indexOf(adapterPrefix) === 0) {
+                                    map[bname] = availableSensors[s];
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        map[bname] = targetSensor;
+                    }
+                }
+            }
+            _sysfsDiskSensorMap = map;
+            root.aggregatePerDisk();
+        }
+
         function _findTempSensorForDisk(diskId) {
             if (!diskId) return "";
+
+            // Direct sensor
             var directId = "disk/" + diskId + "/temperature";
             if (discovery && discovery.sensorExists(directId)) return directId;
+
+            // Sysfs-derived hardware mapping
+            if (_sysfsDiskSensorMap[diskId]) return _sysfsDiskSensorMap[diskId];
+
             return "";
         }
 
@@ -218,6 +283,12 @@
             _dataList = newList;
         }
 
+        function _triggerSysfsScan() {
+            if (sysfsLoader.item) {
+                sysfsLoader.item.connectSource(root._sysfsScanCommand);
+            }
+        }
+
         // ksystemstats' disk plugin does NOT remove sensors or emit rowsRemoved
         // when a USB disk is unplugged — the sensor tree entries persist with 0
         // values indefinitely. The Solid hotplug dataengine emits add/remove
@@ -234,6 +305,24 @@
         }
 
         Loader {
+            id: sysfsLoader
+            active: root._hotplugReady
+            sourceComponent: P5Support.DataSource {
+                engine: "executable"
+                connectedSources: []
+                onNewData: function(sourceName, data) {
+                    if (data && data["stdout"]) {
+                        root._parseSysfsOutput(data["stdout"]);
+                    }
+                    disconnectSource(sourceName);
+                }
+                Component.onCompleted: {
+                    connectSource(root._sysfsScanCommand);
+                }
+            }
+        }
+
+        Loader {
             active: root._hotplugReady
             sourceComponent: P5Support.DataSource {
                 engine: "hotplug"
@@ -242,6 +331,7 @@
                     if (disk && root._unplugged[disk]) {
                         delete root._unplugged[disk];
                         root.refreshDiscovered();
+                        root._triggerSysfsScan();
                     }
                 }
                 onSourceRemoved: function(source) {
@@ -249,6 +339,7 @@
                     if (disk) {
                         root._unplugged[disk] = true;
                         root.refreshDiscovered();
+                        root._triggerSysfsScan();
                     }
                 }
             }
@@ -260,10 +351,11 @@
 
         function _refreshTempSensors() {
             if (!discovery) return;
-            var found = [];
+            var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_TEMP : /^(?:disk\/(?:nvme\d+n\d+|sd[a-z]+)\/temperature|lmsensors\/(?:nvme-pci-[^/]+|drivetemp-scsi-[^/]+|scsi-[^/]+|drivetemp-[^/]+)\/temp\d+)$/;
+            var found = discovery.queryIds(pattern);
             for (var i = 0; i < _discovered.length; i++) {
                 var direct = "disk/" + _discovered[i].id + "/temperature";
-                if (discovery.sensorExists(direct)) {
+                if (discovery.sensorExists(direct) && found.indexOf(direct) === -1) {
                     found.push(direct);
                 }
             }

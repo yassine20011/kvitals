@@ -115,9 +115,10 @@ Item {
             deviceId: devId,
             deviceName: devName,
             label: _normalizeString(overrides.label, (cfg ? cfg.getGroupLabel(group) : (def.label || group.toUpperCase()))),
-            groupLabel: _normalizeString(overrides.groupLabel, cfg.getGroupLabel(group)),
+            groupLabel: _normalizeString(overrides.groupLabel, cfg ? cfg.getGroupLabel(group) : (def.label || group.toUpperCase())),
             subLabel: _normalizeString(overrides.subLabel !== undefined ? overrides.subLabel : (def.label || ""), ""),
             prefix: _normalizeString(overrides.prefix !== undefined ? overrides.prefix : (def.prefix || ""), ""),
+            groupIcon: overrides.groupIcon || (cfg ? cfg.getGroupIcon(group) : ""),
             icon: overrides.icon || defIcon,
             secondaryIcon: overrides.secondaryIcon !== undefined ? overrides.secondaryIcon : (def.secondaryIcon ? cfg.tempIcon : ""),
             value: rawVal,
@@ -225,13 +226,15 @@ Item {
                 status: s.memory.ramValue !== "..." ? "ready" : "loading"
             }));
 
-            if (s.temp && s.temp.ramTempExists && s.temp.ramTempValue !== "--") {
+            if (s.temp && s.temp.ramTempExists) {
+                var rNum = s.temp.ramTempNumericValue;
+                var rDisp = s.temp.ramTempValue;
                 list.push(_createMetric("ram.temp", {
-                    value: s.temp.ramTempNumericValue,
-                    displayValue: s.temp.ramTempValue,
+                    value: rNum,
+                    displayValue: (rDisp && rDisp !== "--") ? rDisp : "...",
                     label: "RAM",
                     subLabel: "RAM",
-                    status: !isNaN(s.temp.ramTempNumericValue) ? "ready" : "unavailable"
+                    status: !isNaN(rNum) ? "ready" : "loading"
                 }));
             }
         }

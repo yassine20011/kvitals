@@ -300,10 +300,8 @@ function buildCompactItems(metricsList, pinnedList, mergeSameFamily) {
                 ];
                 existingItem.value = null;
                 existingItem.label = existingItem._groupBaseLabel + ":";
-                if (firstSegIcon) existingItem._segmentsHaveIcons = true;
             }
             var segIcon = _resolveSegmentIcon(metric);
-            if (segIcon) existingItem._segmentsHaveIcons = true;
             existingItem.segments.push({
                 value: metric.displayValue,
                 color: metric.color,
@@ -314,7 +312,7 @@ function buildCompactItems(metricsList, pinnedList, mergeSameFamily) {
         } else {
             var baseLabel = metric.groupLabel || metric.deviceName || metric.group.toUpperCase();
             var singleLabel = metric.label;
-            var itemIcon = metric.icon;
+            var itemIcon = metric.groupIcon || metric.icon;
             var initialSegIcon = _resolveSegmentIcon(metric);
 
             var newItem = {
@@ -325,7 +323,6 @@ function buildCompactItems(metricsList, pinnedList, mergeSameFamily) {
                 color: metric.color,
                 key: groupKey,
                 segments: null,
-                _segmentsHaveIcons: false,
                 _groupBaseLabel: baseLabel,
                 _firstSubLabel: _resolveSegmentLabel(metric),
                 _firstSubIcon: initialSegIcon,
