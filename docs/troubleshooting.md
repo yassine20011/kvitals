@@ -26,6 +26,55 @@ sensors 2>/dev/null | head -20
     ```
     To load it automatically on boot, add `k10temp` to `/etc/modules-load.d/k10temp.conf`.
 
+## Disk Temperature Missing (SATA/SCSI Drives)
+
+**Cause:** KVitals reads disk temperatures exposed through KDE KSystemStats. For SATA drives, the Linux kernel provides drive temperature via the `drivetemp` module. If `drivetemp` is not loaded, KSystemStats does not expose `lmsensors/drivetemp-*` sensors, and KVitals has no disk temperature value to display.
+
+**Sensor Data Flow:**
+
+```text
+/dev/sda
+    ↓
+SMART temperature
+    ↓
+Linux drivetemp module / UDisks2
+    ↓
+KSystemStats
+    ↓
+disk/sda/temperature or lmsensors/drivetemp-scsi-0-0/temp1
+    ↓
+KVitals DSK 2 temperature
+```
+
+**Troubleshooting:**
+
+1. Check if the module and sensor are active:
+   ```bash
+   lsmod | grep drivetemp
+   sensors
+   ```
+
+2. Test loading the module:
+   ```bash
+   sudo modprobe drivetemp
+   sensors
+   ```
+
+3. Verify KSystemStats registration:
+   ```bash
+   qdbus --literal org.kde.ksystemstats1 \
+     /org/kde/ksystemstats1 \
+     org.kde.ksystemstats1.allSensors | grep -i drivetemp
+   ```
+
+4. To load `drivetemp` automatically on boot:
+   ```bash
+   echo "drivetemp" | sudo tee /etc/modules-load.d/drivetemp.conf
+   ```
+
+!!! note
+    KVitals does not load kernel modules itself; it visualizes sensors provided by KSystemStats. Per-disk temperatures are displayed when the corresponding sensor is available through KSystemStats.
+
 ## RAM Shows Empty (versions ≤ 1.4.0)
 
 **Cause:** On versions before 1.4.1, RAM was read by parsing the `free` command, which translates its output headers (e.g. `Mem:`) based on your system locale. Non-English locales caused the parser to match nothing.

@@ -31,6 +31,8 @@ PlasmoidItem {
     property int effectiveFontSize: fontSize > 0 ? fontSize : -1
     property bool mergeFamilyMetrics: Plasmoid.configuration.mergeFamilyMetrics !== undefined ? Plasmoid.configuration.mergeFamilyMetrics : true
 
+    property bool showSeparators: Plasmoid.configuration.showSeparators !== undefined ? Plasmoid.configuration.showSeparators : true
+
     property bool useIcons: displayMode === "icons" || displayMode === "icons+text"
     property bool useText:  displayMode === "text"  || displayMode === "icons+text"
 
@@ -205,6 +207,7 @@ PlasmoidItem {
         iconColor: root.resolvedIconColor
         labelOpacity: root.labelOpacity
         separatorOpacity: root.separatorOpacity
+        showSeparators: root.showSeparators
         onToggleExpanded: root.expanded = !root.expanded
     }
 

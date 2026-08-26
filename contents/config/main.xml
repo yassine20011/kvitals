@@ -151,6 +151,9 @@
         <entry name="mergeFamilyMetrics" type="Bool">
             <default>true</default>
         </entry>
+        <entry name="showSeparators" type="Bool">
+            <default>true</default>
+        </entry>
 
         <!-- Icons -->
         <entry name="cpuIcon" type="String">

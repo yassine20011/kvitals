@@ -91,7 +91,7 @@ Item {
 
             var adapter = match[1];
 
-            if (/^spd5118/i.test(adapter)) {
+            if (/^(spd5118|jc42|dimm_temp|dimm-temp)/i.test(adapter)) {
                 ramCandidates.push({ id: sensorId, adapter: adapter });
                 continue;
             }
