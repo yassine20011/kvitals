@@ -14,7 +14,7 @@ Item {
     function refreshDiscovered() {
         if (batteryDevice && batteryDevice !== "auto") return;
         if (!discovery) return;
-        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.BATTERY : /^power\/((?!all)[^/]+)\/chargePercentage$/;
+        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.BATTERY : /^power\/([^/]+)\/chargePercentage$/;
         var ids = discovery.queryIds(pattern);
         if (ids.length > 0) {
             var match = ids[0].match(pattern);

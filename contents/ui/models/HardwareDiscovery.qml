@@ -131,7 +131,7 @@ Item {
         var pFan = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.FAN : /^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i;
         var pCore = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.CPU_CORE : /^cpu\/(cpu\d+)\/usage$/;
         var pNet = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.NETWORK_IFACE : /^network\/([^/]+)\/download$/;
-        var pBat = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.BATTERY : /^power\/((?!all)[^/]+)\/chargePercentage$/;
+        var pBat = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.BATTERY : /^power\/([^/]+)\/chargePercentage$/;
         var pDiskTemp = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_TEMP : /^(?:disk\/(?:nvme\d+n\d+|sd[a-z]+)\/temperature|lmsensors\/(?:nvme-pci-[^/]+|drivetemp-scsi-[^/]+|scsi-[^/]+|drivetemp-[^/]+)\/temp\d+)$/;
 
         for (var row = 0; row < rowCount; row++) {
