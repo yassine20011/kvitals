@@ -63,6 +63,13 @@ KCM.SimpleKCM {
     readonly property var discoveredDisks: discovery.discoveredDisks
     readonly property var discoveredFans: discovery.discoveredFans
     readonly property var ifaceList: discovery.discoveredNetworkIfaces
+    readonly property var batteryList: {
+        var list = ["auto"].concat(discovery.discoveredBatteries || []);
+        if (cfg_batteryDevice && list.indexOf(cfg_batteryDevice) === -1) {
+            list.push(cfg_batteryDevice);
+        }
+        return list;
+    }
 
     // Fan max-RPM check
     property bool fanMaxFallbackNeeded: true
@@ -240,18 +247,19 @@ KCM.SimpleKCM {
                 Kirigami.FormData.label: i18n("Battery device:")
                 spacing: Kirigami.Units.smallSpacing
 
-                TextField {
-                    text: cfg_batteryDevice === "auto" ? "" : cfg_batteryDevice
-                    placeholderText: i18n("Auto-detect (e.g. BAT0)")
-                    implicitWidth: Kirigami.Units.gridUnit * 14
-                    onTextEdited: {
-                        var v = text.trim();
-                        cfg_batteryDevice = v.length > 0 ? v : "auto";
+                ComboBox {
+                    id: batDeviceCombo
+                    model: metricsPage.batteryList
+                    currentIndex: {
+                        var idx = metricsPage.batteryList.indexOf(cfg_batteryDevice);
+                        return idx >= 0 ? idx : 0;
                     }
+                    onActivated: cfg_batteryDevice = metricsPage.batteryList[currentIndex]
+                    implicitWidth: Kirigami.Units.gridUnit * 14
                 }
 
                 Kirigami.ContextualHelpButton {
-                    toolTipText: i18n("Leave empty for automatic detection. Specify a custom sysfs battery device name (e.g. BAT0, BAT1) if multiple batteries are installed.")
+                    toolTipText: i18n("Select 'auto' for automatic detection, or select a specific battery if multiple are installed.")
                 }
             }
         }

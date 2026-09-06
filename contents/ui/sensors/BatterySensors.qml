@@ -14,14 +14,20 @@ Item {
     function refreshDiscovered() {
         if (batteryDevice && batteryDevice !== "auto") return;
         if (!discovery) return;
-        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.BATTERY : /^power\/((?:battery_)[a-zA-Z0-9_-]+|BAT\d+|BATT\d*)\/chargePercentage$/;
+        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.BATTERY : /^power\/([^/]+)\/chargePercentage$/;
         var ids = discovery.queryIds(pattern);
         if (ids.length > 0) {
             var match = ids[0].match(pattern);
             if (match && match[1]) {
                 discoveredBatId = match[1];
+                return;
             }
         }
+        if (discovery.discoveredBatteries && discovery.discoveredBatteries.length > 0) {
+            discoveredBatId = discovery.discoveredBatteries[0];
+            return;
+        }
+        discoveredBatId = "";
     }
 
     Connections {
@@ -33,12 +39,23 @@ Item {
     Component.onCompleted: refreshDiscovered()
 
     readonly property string _resolvedBase: {
+        var _rev = discovery ? discovery.revision : 0;
         if (batteryDevice && batteryDevice !== "auto") {
-            if (batteryDevice.startsWith("battery_") || batteryDevice.startsWith("power/"))
-                return batteryDevice;
-            return "battery_" + batteryDevice;
+            var dev = batteryDevice.trim();
+            dev = dev.replace(/^power\//, "").replace(/\/.*$/, "");
+            if (discovery && discovery.sensorExists) {
+                if (discovery.sensorExists("power/" + dev + "/chargePercentage"))
+                    return dev;
+                if (discovery.sensorExists("power/battery_" + dev + "/chargePercentage"))
+                    return "battery_" + dev;
+                var stripped = dev.replace(/^battery_/, "");
+                if (discovery.sensorExists("power/" + stripped + "/chargePercentage"))
+                    return stripped;
+                return "";
+            }
+            return "";
         }
-        return discoveredBatId || "battery_BAT0";
+        return discoveredBatId;
     }
 
     readonly property string batChargeSensorId: _resolvedBase ? ("power/" + _resolvedBase + "/chargePercentage") : ""
@@ -60,9 +77,10 @@ Item {
     readonly property string batHealthValue: isNaN(batHealthNumericValue) ? "" : Math.round(batHealthNumericValue) + "%"
 
     readonly property bool hasBattery: {
-        if (batteryDevice && batteryDevice !== "auto") return true;
-        if (discoveredBatId && discoveredBatId.length > 0) return true;
+        if (!_resolvedBase || _resolvedBase.length === 0) return false;
         if (batChargeSensor.status === Sensors.Sensor.Ready && !isNaN(batNumericValue)) return true;
+        if (discoveredBatId && discoveredBatId.length > 0) return true;
+        if (batteryDevice && batteryDevice !== "auto") return true;
         return false;
     }
 
