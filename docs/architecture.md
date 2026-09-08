@@ -61,7 +61,7 @@ A `.pragma library` file (shared singleton) holding:
 
 - `GROUPS`: Metadata per category (id, default label, icon, default sub-metrics).
 - `PATTERNS`: Canonical discovery regex patterns (`GPU`, `DISK_READ`, `DISK_TEMP`, `FAN`, `NETWORK_IFACE`, `TEMP_LMSENSORS`, `BATTERY`).
-- `DEFINITIONS`: One entry per metric keyed by `"group.subKey"`. Each entry declares the sensor path, chart settings, threshold type/key, and direction prefix. `MetricStore._createMetric` merges these definitions with runtime overrides from the sensor layer.
+- `DEFINITIONS`: One entry per metric keyed by `"group.subKey"`. Each entry declares the sensor path, threshold type/key, and direction prefix. `MetricStore._createMetric` merges these definitions with runtime overrides from the sensor layer.
 
 ### `MetricConfig.qml`
 
@@ -76,8 +76,6 @@ A `QtObject` that wraps every `Plasmoid.configuration` value and provides typed 
 ### `MetricStore.qml`
 
 The central aggregator. On every sensor change it recomputes `metrics`, a `readonly` property holding a flat array of metric objects conforming to the Metric Contract.
-
-`MetricStore` also manages `chartHistory`, a ring buffer (up to 60 samples) per `chartKey`, written by `chartTimer` at `updateInterval` ms.
 
 ## Metric Contract
 
@@ -115,9 +113,6 @@ Represents a scalar numeric measurement (percentages, rates, temperatures, frequ
 - `value`: Finite numeric scalar (`typeof value === "number" && isFinite(value)`). Set to `NaN` when temporarily loading or unavailable.
 - `displayValue`: Formatted string (e.g. `" 42%"`, `"55°C"`, `"16.4/32.0G"`).
 - `status`: `"ready"`, `"loading"`, or `"unavailable"`.
-- `hasChart`: `true` if `chartKey` is configured.
-- `chartKey`: Buffer identifier in `chartHistory`.
-- `chartMax`: Upper bound for chart scaling (`0` for auto-scale).
 - Thresholds: Warning and critical thresholds evaluate only against finite numeric values.
 
 MetricStore accepts finite numeric scalars, including negative values. Whether negative values are meaningful depends on the metric's domain semantics (such as battery charge/discharge rates, energy flow, or temperature deltas); sensor modules and metric definitions determine the appropriate interpretation.
@@ -128,9 +123,7 @@ Represents discrete text data without scalar telemetry (IP addresses, uptime str
 - `value`: `NaN` (explicit sentinel).
 - `displayValue`: Formatted string (e.g. `"192.168.1.10"`, `"2d 4h 12m"`).
 - `status`: `"ready"`, `"loading"`, or `"unavailable"`.
-- `hasChart`: `false` (`chartKey: ""`).
 - Thresholds: Not evaluated; retains base text color.
-- Chart history: Never enters `chartHistory`.
 
 ### Normalization Rules
 
@@ -157,8 +150,6 @@ Represents discrete text data without scalar telemetry (IP addresses, uptime str
     subKey: "swap",
     sensorId: "memory/swap/used",
     label: "Swap Usage",
-    chartKey: "swap",
-    chartMax: 100,
     thresholdType: "normal",
     thresholdKey: "ram"
 }
@@ -218,9 +209,6 @@ list.push(_createMetric("swap.usage", {
     rawString: "25%",
     color: "#ffffff",
     status: "ready",
-    chartKey: "swap",
-    chartMax: 100,
-    hasChart: true,
     visibleInCompact: true,
     visibleInPopup: true
 }
@@ -236,8 +224,6 @@ list.push(_createMetric("swap.usage", {
     subKey: "ip",
     sensorPattern: "network/{id}/ipv4withPrefixLength",
     label: "Local IP",
-    chartKey: "",
-    chartMax: 0,
     thresholdType: "none"
 }
 ```
@@ -279,9 +265,6 @@ list.push(_createMetric("net.ip", {
     rawString: "192.168.1.10",
     color: "#ffffff",
     status: "ready",
-    chartKey: "",
-    chartMax: 0,
-    hasChart: false,
     visibleInCompact: false,
     visibleInPopup: true
 }
@@ -291,15 +274,15 @@ list.push(_createMetric("net.ip", {
 
 - **HardwareDiscovery**: *"What sensors exist?"* (topology and IDs)
 - **Sensor modules**: *"What does this sensor mean?"* (polling, calculations, and domain formatting)
-- **MetricStore**: *"How do I normalize and expose this metric?"* (contract enforcement, thresholds, chart history)
+- **MetricStore**: *"How do I normalize and expose this metric?"* (contract enforcement, thresholds, and normalization)
 - **ViewHelpers / Views**: *"How do I present the metric?"* (generic layout and presentation)
 
 ### `ViewHelpers.js`
 
-A `.pragma library` file with two functions:
+A `.pragma library` file with two primary functions:
 
-- `buildCompactItems(metricsList, orderedKeys)`: groups and orders metrics into compact panel items. Items are either `{ icon, label, value, color, key }` (single value) or `{ icon, label, segments, color, key }` (multi-value, used for net, disk, multi-fan).
-- `buildPopupItems(metricsList, orderedKeys)`: returns one row per visible popup metric: `{ label, value, color, icon, chartKey, chartMax }`. `icon` may be a two-element array when a secondary icon is present.
+- `buildCompactItems(metricsList, pinnedList, mergeSameFamily)`: groups and orders metrics into compact panel items. Items are either `{ icon, label, value, color, key }` (single value) or `{ icon, label, segments, color, key }` (multi-value, used for net, disk, multi-fan).
+- `buildPopupGroups(metricsList, orderedKeys)`: organizes metrics into categorized accordion sections (Temperature, Fan, Memory, Processor, Storage, Network, Battery, System) with aggregate values and status colors for each group header.
 
 ## Views
 
@@ -316,7 +299,7 @@ A `RowLayout` with a `Repeater` driven by `buildCompactItems`. Each item renders
 
 ### FullView (popup)
 
-A `ColumnLayout` with a `Repeater` driven by `buildPopupItems`. Each row shows a label, a bold value, and an optional sparkline chart drawn from `MetricStore.chartHistory`.
+An interactive accordion popup driven by `buildPopupGroups`. Each category features aggregate values, expandable sub-sections, and individual metric rows with click-to-pin controls. Footer buttons provide quick actions to refresh sensors and open KDE System Monitor.
 
 ### Tooltip
 
@@ -355,8 +338,6 @@ For optional sub-metrics (disabled by default until selected by the user in sett
        subKey: "swap",
        sensorId: "memory/swap/used",
        label: "Swap Usage",
-       chartKey: "swap",
-       chartMax: 100,
        thresholdType: "normal",
        thresholdKey: "ram"
    }
@@ -378,7 +359,7 @@ For optional sub-metrics (disabled by default until selected by the user in sett
        status: !isNaN(s.memory.swapPercentage) ? "ready" : "loading"
    }));
    ```
-   `_createMetric` automatically verifies the Metric Contract, checks visibility via `MetricConfig.isMetricVisible()`, resolves threshold colors, and handles sparkline history buffering.
+   `_createMetric` automatically verifies the Metric Contract, checks visibility via `MetricConfig.isMetricVisible()`, and resolves threshold colors.
 
 4. **Add UI toggle in `configMetrics.qml` (`contents/ui/configMetrics.qml`)**:
    Add the sub-metric entry to `metricMeta[group].subs`:
@@ -477,7 +458,7 @@ kvitals/
         ├── models/
         │   ├── MetricDefinitions.js  <- shared metric catalog
         │   ├── MetricConfig.qml      <- Plasmoid.configuration adapter
-        │   ├── MetricStore.qml       <- flat metrics list + chart history
+        │   ├── MetricStore.qml       <- flat normalized metrics list
         │   └── ViewHelpers.js        <- grouping/ordering for each view
         └── sensors/
             ├── qmldir

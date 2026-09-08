@@ -16,7 +16,7 @@ Have a suggestion? Open an issue or start a discussion on GitHub.
 - Battery: charge percentage, power draw (watts), and health across standard and serial-numbered devices
 - Network: download/upload rates, cumulative data volume (total down/up), Wi-Fi signal strength, local IP address
 - Disk: read/write rates, overall usage/space, and temperature (NVMe, SATA, virtual disks, eMMC)
-- Fan: speed (RPM and percentage, per-fan sparklines)
+- Fan: speed (RPM and percentage)
 - System uptime
 
 ---
@@ -33,12 +33,12 @@ Have a suggestion? Open an issue or start a discussion on GitHub.
 - Display modes: text, icons, icons + text, none
 - Horizontal and vertical layout with optional dividers
 - Unit preferences (°C/°F, bytes/bits, RPM/%)
-- Sparkline charts in the popup (60-sample history per metric)
+- Interactive accordion popup with category summaries and click-to-pin toggles
 - Popup pin mode
 - Per-metric custom label (CPU, RAM, NET, DSK, FAN, TEMP)
 - Network interface auto-detection and manual override
 - Battery device auto-detection and manual override
-- Per-fan stable numbering and independent sparklines
+- Per-fan stable numbering
 
 ---
 
@@ -64,4 +64,4 @@ These are ideas being evaluated — no commitment yet:
 
 ## Not planned
 
-- Sparklines or charts in the compact panel bar — charts are shown in the popup only
+- Sparklines or history charts — KVitals focuses on low-overhead, clean text and icon vitals rather than rendering history graphs

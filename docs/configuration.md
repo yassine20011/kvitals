@@ -101,7 +101,7 @@ Each metric features a four-way visibility selector:
 | **CPU Temperature** | `CPU:` | Dedicated CPU temperature reading |
 | **System Temperature** | `System:` | Motherboard/chipset temperature |
 | **GPU Metrics** | `GPU:` / `<name>:` | Usage %, VRAM, temperature, core frequency, and power draw |
-| **Fan Speed** | `FAN:` / `Fan N:` | Fan RPM, percentage, per-fan labels, and sparklines |
+| **Fan Speed** | `FAN:` / `Fan N:` | Fan RPM, percentage, and per-fan labels |
 | **Battery Status** | `BAT:` | Battery level %, health %, and power draw (watts) |
 | **Network Speed** | `NET:` (customizable) | Download/upload rates, total session download/upload data, Wi-Fi signal %, and IP address |
 | **Disk I/O & Space** | `DSK:` (customizable) | Per-drive read/write speeds, overall used space, and drive temperatures |
@@ -149,11 +149,12 @@ The **Disks** section lists all block devices discovered via KSystemStats and So
 
 ### Expanded Popup Panel
 
-Clicking the panel widget opens an expanded view with detailed readings and real-time sparkline charts:
+Clicking the panel widget opens an expanded view with detailed readings and interactive controls:
 
-- **Sparkline History**: Renders 60-sample history graphs for active metrics. Usage percentages and temperatures use a fixed 0-100 scale.
-- **Pin Button**: Clicking the pin icon in the title bar toggles `Plasmoid.hideOnWindowDeactivate`, keeping the panel open while interacting with other windows.
-- **Multi-Disk and Multi-Fan Views**: Displays separate rows, individual read/write speeds, and sparklines for every discovered drive and fan.
+- **Interactive Pinning**: Click on any metric row to instantly pin or unpin it from your compact panel.
+- **Pin Window Button**: Clicking the pin icon in the title bar toggles `Plasmoid.hideOnWindowDeactivate`, keeping the panel open while interacting with other windows.
+- **Multi-Disk and Multi-Fan Views**: Displays separate rows and individual readings for every discovered drive and fan.
+- **Footer Actions**: Quick shortcuts to refresh hardware sensors and launch KDE System Monitor.
 
 ## Icons Tab
 
