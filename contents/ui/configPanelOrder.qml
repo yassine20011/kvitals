@@ -17,6 +17,7 @@ KCM.SimpleKCM {
     property string cfg_tempLabel: "System"
     property string cfg_netLabel: "NET"
     property string cfg_diskLabel: "DSK"
+    property string cfg_diskLabels: "{}"
     property string cfg_fanLabel: "FAN"
     property string cfg_batLabel: "BAT"
 
@@ -37,6 +38,28 @@ KCM.SimpleKCM {
             return Qt.resolvedUrl("../icons/" + str + ".svg");
         }
         return name;
+    }
+
+    function getDiskDisplayName(did) {
+        if (!did) return "";
+        var custom = metricConfig.parseDiskLabels();
+        if (custom && custom[did]) return custom[did];
+
+        var disks = discovery.discoveredDisks || [];
+        var nvmeDisks = [];
+        for (var i = 0; i < disks.length; i++) {
+            if (disks[i].id.indexOf("nvme") !== -1) {
+                nvmeDisks.push(disks[i].id);
+            }
+        }
+        if (did.indexOf("nvme") !== -1) {
+            if (nvmeDisks.length > 1) {
+                var idx = nvmeDisks.indexOf(did);
+                return "NVMe " + (idx !== -1 ? (idx + 1) : did);
+            }
+            return "NVMe";
+        }
+        return did;
     }
 
     // Computed list of pinned items
@@ -157,6 +180,9 @@ KCM.SimpleKCM {
                 previewVal = subKey === "down" ? "↓ 1.2MB" : (subKey === "up" ? "↑ 240KB" : "192.168.1.1");
             }
         } else if (group === "disk") {
+            if (devId) {
+                displayName = panelOrderPage.getDiskDisplayName(devId) + " " + subLabel;
+            }
             previewVal = subKey === "read" ? "↓ 45MB" : (subKey === "write" ? "↑ 12MB" : (subKey === "usage" ? "45%" : (subKey === "space" ? "220/512G" : "54°C")));
         } else if (group === "fan") {
             previewVal = "2400 RPM";
@@ -280,7 +306,7 @@ KCM.SimpleKCM {
         ];
         for (var di = 0; di < disks.length; di++) {
             var did = disks[di].id;
-            var dName = did.indexOf("nvme") !== -1 ? "NVMe" : did;
+            var dName = panelOrderPage.getDiskDisplayName(did);
             diskItems.push({ id: "disk:" + did + "/read", label: dName + " Read", icon: "network-download-symbolic" });
             diskItems.push({ id: "disk:" + did + "/write", label: dName + " Write", icon: "network-upload-symbolic" });
             diskItems.push({ id: "disk:" + did + "/temp", label: dName + " Temp", icon: "temperature-symbolic" });
@@ -512,6 +538,7 @@ KCM.SimpleKCM {
                 id: catFlow
                 required property var modelData
                 Kirigami.FormData.label: catFlow.modelData.title + ":"
+                Kirigami.FormData.labelAlignment: Qt.AlignTop
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing
 
