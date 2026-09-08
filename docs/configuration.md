@@ -1,19 +1,36 @@
 # Configuration
 
-Right-click the widget, then select **Configure KVitals...** to open the settings dialog. Settings are organized into four tabs.
+Right-click the widget, then select **Configure KVitals...** to open the settings dialog. Settings are organized into five tabs:
+
+1. **General**: Display mode, panel layout, fonts, update interval, dividers, and unit preferences.
+2. **Panel Items**: Live panel preview, interactive chip reordering, and click-to-pin metric palette.
+3. **Sensors & Hardware**: Enable/disable telemetry categories, visibility modes, and device overrides.
+4. **Icons**: Native icon picker with bundled symbolic SVG fallbacks.
+5. **Colors**: Custom font and label colors, warning/critical thresholds, and sensor alert limits.
 
 ## General Tab
 
 | Setting | Description | Default |
 |---|---|---|
-| **Display mode** | Controls how metrics appear in the panel (Text, Icons, or Icons + Text) | Text |
+| **Display mode** | Controls how metrics appear in the panel (Text, Icons, Icons + Text, or None) | Text |
 | **Layout** | Direction of compact panel items (Horizontal or Vertical) | Horizontal |
-| **Icon size** | Icon dimensions in pixels | 12 px |
+| **Icon size** | Icon dimensions in pixels (visible when icons are enabled) | 12 px |
 | **Font** | Searchable text input with popup list of installed system fonts | monospace |
 | **Font size** | Text size in pixels. Setting `0` uses the system default | 0 |
-| **Update interval** | Refresh frequency in seconds | 2.0 s |
+| **Bold font** | Render compact panel values and text in bold font weight | Off |
+| **Panel grouping** | Combines metrics belonging to the same hardware group into a single compact tile | Enabled |
+| **Separators** | Displays `\|` divider lines between metric groups in horizontal layout | Enabled |
 | **Label opacity** | Transparency of metric labels in the compact view (0.0 to 1.0) | 0.65 |
 | **Separator opacity** | Transparency of `\|` dividers in the compact view (0.0 to 1.0) | 0.40 |
+| **Update interval** | Refresh frequency in seconds (1.0 s to 10.0 s) | 2.0 s |
+
+### Unit Preferences
+
+| Preference | Options | Default |
+|---|---|---|
+| **Temperature unit** | Celsius (°C) or Fahrenheit (°F) | Celsius (°C) |
+| **Network/Disk I/O unit** | Bytes (KB/s, MB/s) or Bits (Kb/s, Mb/s) | Bytes |
+| **Fan Speed unit** | RPM or Percentage (%) | RPM |
 
 ### Display Modes
 
@@ -22,15 +39,46 @@ Right-click the widget, then select **Configure KVitals...** to open the setting
 | **Text** | Labels and values: `CPU: 26% \| RAM: 8.8/39.0G` |
 | **Icons** | Icons and values: `🖥 26% \| 🧠 8.8/39.0G` |
 | **Icons + Text** | Icons, labels, and values: `🖥 CPU: 26% \| 🧠 RAM: 8.8/39.0G` |
+| **None** | Minimal mode hiding text and icons |
 
 ### Layout Types
 
 | Layout | Description |
 |---|---|
-| **Horizontal** | Places metrics in a single row separated by `\|` |
+| **Horizontal** | Places metrics in a single row separated by `\|` dividers |
 | **Vertical** | Stacks the value text directly above the icon |
 
-## Metrics Tab
+## Panel Items Tab
+
+The **Panel Items** tab provides an interactive visual builder for configuring what appears in your compact panel.
+
+### Live Panel Preview
+
+At the top of the tab, a live preview bar renders your pinned items exactly as they will look on your panel, reflecting your selected font, font size, bold weight, separators, colors, and display mode in real time.
+
+### Pinned Metrics
+
+The **Pinned Metrics** section displays currently active panel items as removable chips:
+
+- **Reorder**: Drag and drop chips or use the left/right arrow buttons to change the order of metrics on the panel.
+- **Unpin**: Click the **×** button on any chip to remove that item from the panel.
+
+### Available Items Palette
+
+Below the pinned list, an **Available Metrics** palette organizes all discoverable telemetry into categorized groups:
+
+- **CPU**: Usage, Frequency, Load Averages (1m, 5m, 15m), and per-core usage.
+- **Memory**: RAM Used/Total, RAM Percentage, and Swap metrics.
+- **System**: Overall Temperature and System Uptime.
+- **GPU**: Core Usage, VRAM, Temperature, Frequency, and Power across discovered GPUs.
+- **Storage**: Read rates, write rates, total usage percentage, free/used space, and drive temperatures. Multiple NVMe drives are automatically distinguished (e.g. `NVMe 1`, `NVMe 2`), and custom disk labels are respected.
+- **Fans**: Individual fan RPM and percentage items.
+- **Battery**: Charge percentage, health percentage, and power draw (watts).
+- **Network**: Download rate, upload rate, total downloaded data, total uploaded data, Wi-Fi signal percentage, and local IP.
+
+Clicking any button in the palette immediately appends it to your pinned metrics list.
+
+## Sensors & Hardware Tab
 
 ### Visibility Settings
 
@@ -68,6 +116,15 @@ You can manually select a specific interface (e.g., `wlo1`, `enp3s0`) from the d
 !!! note
     The manual interface list is populated dynamically from `HardwareDiscovery.qml` via KSystemStats.
 
+### Battery Device
+
+When **Battery Status** is enabled, the **Battery device** drop-down selector lets you control which physical power source to monitor:
+
+| Selection | Description |
+|---|---|
+| **auto** | Automatically connects to the first active battery discovered via `power/<device_id>/chargePercentage`. Works seamlessly across standard batteries, serial-numbered identifiers, and vendor names. |
+| **<device_id>** | Explicitly binds to a specific battery device (e.g. `BAT0`, `BAT1`, `CMB0`, or device serial numbers). Useful for multi-battery laptops or external UPS hardware. |
+
 ### GPU Selection
 
 When **GPU Metrics** is enabled, a **GPU Selection** section lists every GPU detected on your system. GPUs are discovered dynamically via the KDE sensor tree without requiring polling during discovery.
@@ -81,6 +138,14 @@ When **GPU Metrics** is enabled, a **GPU Selection** section lists every GPU det
 
 !!! tip "Hybrid GPU Laptops (Intel/AMD + NVIDIA)"
     On hybrid laptops using tools like `supergfxctl` or `asusctl`, KVitals only polls GPUs whose checkboxes are selected. Unchecking the discrete GPU stops all polling for it, allowing it to enter its suspended power-saving state when idle.
+
+### Storage Drives
+
+The **Disks** section lists all block devices discovered via KSystemStats and Solid, including NVMe drives (`nvme*`), SATA/SCSI disks (`sd*`), virtual drives (`vd*`, `xvd*`), and eMMC storage (`mmcblk*`):
+
+- **Per-drive enable**: Checkbox to include or exclude a particular disk.
+- **Custom label override**: Custom text field to label each drive (e.g. "Game SSD", "Backup HDD"). Custom labels are seamlessly reflected across the panel chips and popup details.
+- **Drive Temperature**: For supported drives with thermal sensors exposed via `drivetemp` or NVMe hwmon, disk temperature is automatically mapped to each respective drive.
 
 ### Expanded Popup Panel
 

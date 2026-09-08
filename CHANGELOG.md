@@ -2,6 +2,24 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [3.1.2] - 2026-09-08
+
+### Fixed
+
+- **Battery Discovery for Serial & Custom IDs**: Updated battery sensor detection to use a structural path pattern (`power/([^/]+)/chargePercentage`), fixing discovery for batteries with arbitrary hardware names, serial numbers, or vendor identifiers (Fixes #97).
+- **Multi-NVMe SSD Panel Labeling**: Added automatic differentiation for multiple NVMe solid-state drives ("NVMe 1", "NVMe 2") across the panel items palette and pinned list, while properly honoring custom disk labels (Fixes #102).
+- **Settings Form Alignment**: Aligned category labels to the top across the Panel Items configuration flows (`Kirigami.FormData.labelAlignment: Qt.AlignTop`).
+
+### Added
+
+- **Battery Device Selector**: Added a dedicated battery device drop-down selector in Settings → Sensors & Hardware allowing users to choose "Auto (first available)" or bind to a specific discovered battery device.
+- **Expanded Storage Device Support**: Extended disk discovery patterns (`DISK_READ` and `DISK_TEMP`) to detect NVMe controllers and namespaces (`nvme*c*n*`), virtual block devices (`vd*`, `xvd*`), and eMMC storage (`mmcblk*`).
+
+### Documentation
+
+- **Settings Structure Synchronization**: Updated configuration documentation to reflect all 5 settings tabs (General, Panel Items, Sensors & Hardware, Icons, Colors), documenting the visual panel order palette and new unit controls.
+- **Architecture & Troubleshooting**: Documented battery selector mechanics, structural pattern matching, and corrected tab navigation references.
+
 ## [3.1.1] - 2026-08-25
 
 ### Fixed

@@ -328,7 +328,8 @@ A static `"KVitals"` title only. Metrics are not duplicated into the tooltip.
 config/main.xml          <- config schema (keys, types, defaults)
 config/config.qml        <- tab registration
 ui/configGeneral.qml     <- display mode, layout, font, interval, units
-ui/configMetrics.qml     <- enable/disable, visibility, order, grouping, overrides
+ui/configPanelOrder.qml  <- visual panel order preview, metric palette, chip reordering
+ui/configMetrics.qml     <- enable/disable, visibility, order, grouping, overrides, device selectors
 ui/configIcons.qml       <- per-metric icon picker
 ui/configColors.qml      <- font color, warning/critical colors, thresholds
 ```
