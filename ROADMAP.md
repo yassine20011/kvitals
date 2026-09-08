@@ -13,30 +13,32 @@ Have a suggestion? Open an issue or start a discussion on GitHub.
 - Swap: usage percentage, used, free, and total swap
 - System/chipset temperature: auto-detected from lmsensors ISA bus
 - GPU: usage, VRAM, temperature, core frequency, power draw (multi-GPU supported)
-- Battery: charge percentage, power draw (watts), and health
+- Battery: charge percentage, power draw (watts), and health across standard and serial-numbered devices
 - Network: download/upload rates, cumulative data volume (total down/up), Wi-Fi signal strength, local IP address
-- Disk: read/write rates, overall usage/space, and temperature
-- Fan: speed (RPM and percentage, per-fan sparklines)
+- Disk: read/write rates, overall usage/space, and temperature (NVMe, SATA, virtual disks, eMMC)
+- Fan: speed (RPM and percentage)
 - System uptime
 
 ---
 
 ## Currently supported UX features
 
-- Custom metric order (drag to reorder)
+- Visual Panel Items builder with live preview bar and categorized click-to-pin metric palette
+- Custom metric order (drag to reorder or arrow keys)
 - Per-metric visibility: panel only, popup only, both, or disabled
+- Multi-NVMe automatic differentiation and per-drive custom label overrides
 - Metric grouping (merge CPU + temperature, battery + power, split GPU)
 - Threshold-based coloring (warning/critical, per metric)
-- Custom font color
-- Display modes: text, icons, icons + text
-- Horizontal and vertical layout
-- Unit preferences (°C/°F, bytes/bits)
-- Sparkline charts in the popup (60-sample history per metric)
+- Custom font and label colors
+- Display modes: text, icons, icons + text, none
+- Horizontal and vertical layout with optional dividers
+- Unit preferences (°C/°F, bytes/bits, RPM/%)
+- Interactive accordion popup with category summaries and click-to-pin toggles
 - Popup pin mode
 - Per-metric custom label (CPU, RAM, NET, DSK, FAN, TEMP)
 - Network interface auto-detection and manual override
 - Battery device auto-detection and manual override
-- Per-fan stable numbering and independent sparklines
+- Per-fan stable numbering
 
 ---
 
@@ -54,7 +56,6 @@ Have a suggestion? Open an issue or start a discussion on GitHub.
 
 These are ideas being evaluated — no commitment yet:
 
-- **Per-core view** — individual core usage/temperature in the popup
 - **Pressure metrics (PSI)** — CPU/IO/memory pressure via the Linux PSI interface
 - **Wayland multi-screen** — better handling across multiple monitors
 - **Tray icon mode** — minimal system tray alternative to the panel widget
@@ -63,4 +64,4 @@ These are ideas being evaluated — no commitment yet:
 
 ## Not planned
 
-- Sparklines or charts in the compact panel bar — charts are shown in the popup only
+- Sparklines or history charts — KVitals focuses on low-overhead, clean text and icon vitals rather than rendering history graphs

@@ -9,7 +9,7 @@ CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 58°C  |  🔋BAT: 78%  |  PWR: +20W  |  N
 ## Features
 
 - **Live Monitoring**: CPU, RAM, CPU/motherboard temperatures, GPU, fans, battery, network speeds, and disk I/O.
-- **Sparkline History Charts**: 60-sample real-time graphs in the expanded popup view.
+- **Interactive Popup**: Categorized accordion popup with real-time vitals and click-to-pin controls.
 - **Display Modes**: Text, Icons, or Icons + Text, with horizontal or vertical layouts.
 - **Visibility Controls**: Set each metric to show in panel and popup, panel only, popup only, or disabled.
 - **Customization**: Custom labels, icon colors, threshold coloring, and system font selection.

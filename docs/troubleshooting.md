@@ -85,12 +85,19 @@ KVitals DSK 2 temperature
 
 ## Battery/Power Shows Nothing
 
-**Cause:** No battery detected (e.g., desktop systems without a battery or UPS).
+**Cause:** No battery detected (e.g., desktop systems without a battery or UPS), or non-standard battery identifier.
 
-**Behavior in KVitals (v2.2.0+):** The widget uses KDE's native `SensorTreeModel` to dynamically scan your system's hardware tree for any connected battery (including `BAT0`, `BAT1`, `BATT`, `CMB0`, `macsmc-battery`, etc.). If nothing shows up, it means the KDE `ksystemstats` daemon cannot find a battery API on your machine.
+**Behavior in KVitals (v3.1.2+):** The widget uses structural sensor matching (`power/<device_id>/chargePercentage`) to dynamically scan your system's hardware tree for any connected battery (including `BAT0`, `BAT1`, `BATT`, `CMB0`, `macsmc-battery`, and serial-numbered battery IDs).
+
+**Troubleshooting:**
+1. Open **Settings → Sensors & Hardware** and check the **Battery device** drop-down selector. If your battery is detected under a specific ID, select it directly instead of `auto`.
+2. To test if KSystemStats detects your battery:
+   ```bash
+   qdbus --literal org.kde.ksystemstats1 /org/kde/ksystemstats1 org.kde.ksystemstats1.allSensors | grep "power/"
+   ```
 
 !!! note
-    This is expected behavior on desktop systems. Disable battery and power metrics in **Settings → Metrics** tab to hide the empty entries.
+    On desktop systems without batteries, set Battery visibility to **None** in **Settings → Sensors & Hardware** or remove it from **Settings → Panel Items**.
 
 ## Network Speed Shows 0
 
@@ -98,7 +105,7 @@ KVitals DSK 2 temperature
 
 **Fix:**
 
-1. Open **Settings → Metrics** and ensure the network interface is set to `auto`.
+1. Open **Settings → Sensors & Hardware** and ensure the network interface is set to `auto`.
 2. If you want to monitor a specific connection, select it from the dropdown list.
 
 !!! tip
@@ -128,16 +135,13 @@ qdbus --literal org.kde.ksystemstats1 /org/kde/ksystemstats1 org.kde.ksystemstat
 
 ## Metric Shows in Popup But Not Panel
 
-**Cause:** The metric is enabled, but its **Show in compact panel** checkbox is disabled in the Metrics settings.
+**Cause:** The metric is not pinned in **Panel Items**, or its visibility is set to **Popup** only in Sensors & Hardware.
 
 **Fix:**
 
-1. Open **Settings → Metrics**.
-2. Find the metric in the order list.
-3. Enable **Show in compact panel** under that metric.
-
-!!! note
-    Compact grouping also depends on compact visibility. For example, **Merge CPU & Temp** only shows temperature next to CPU when both metrics are enabled and selected for the compact panel.
+1. Open **Settings → Panel Items**.
+2. Locate the metric in the **Available Metrics** palette and click it to pin it to your panel.
+3. Alternatively, check **Settings → Sensors & Hardware** and ensure the metric's visibility is set to **All** or **Compact**.
 
 ## Widget Shows "KVitals" or "..."
 

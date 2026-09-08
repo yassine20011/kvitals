@@ -34,20 +34,22 @@ then iterates rows, reading `SensorId` via
 2. Skip `cpu/*` and `gpu/*` paths
 3. Match `lmsensors/(.+)/temp\d+`
 4. Filter adapter name:
-   - `spd5118` → DDR5 RAM (separate sensor)
-   - `-isa-` in adapter name AND not `coretemp` → Super I/O chipset candidate
+   - `spd5118` / `jc42` → DDR5/DDR4 RAM (separate sensor)
+   - `pch_*` → Intel Platform Controller Hub thermal driver (Priority 1)
+   - `-isa-` in adapter name AND not `coretemp` → Super I/O chipset candidate (Priority 2)
    - Everything else (PCI bus: k10temp, amdgpu, nvme, etc.) → deliberately ignored
 5. Read `Qt::DisplayRole` (lm-sensors label, e.g. `SYSTIN`, `CPUTIN`, `AUXTIN0`)
 6. When multiple ISA channels exist, exclude candidates whose label matches
    `/^(cputin|auxtin|peci|smbusmaster)/i` — these are CPU-adjacent or auxiliary
    sensors, not chipset board temperature
-7. Pick the first remaining candidate as `_systemSensorId`
+7. Prioritize Intel PCH over ISA Super I/O, picking the highest-priority candidate as `_systemSensorId`
 
-#### Why ISA bus?
+#### Why ISA bus and PCH?
 
 Super I/O chips (Nuvoton nct6799, ITE it87*, Winbond w83627*, Fintek f71869*)
-— the real chipset/motherboard temperature sensors — are always on the
-LPC/ISA bus, so their lm-sensors adapter name contains `-isa-`.
+— the motherboard temperature sensors — are on the LPC/ISA bus, so their
+lm-sensors adapter name contains `-isa-`. Intel chipsets expose their thermal
+readings through the dedicated `pch_*` thermal driver.
 
 CPU temperature drivers live on PCI:
 

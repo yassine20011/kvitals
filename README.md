@@ -33,12 +33,12 @@ Here is what you can track and customize:
 - **RAM & Swap**: Used/total memory and swap (percentage and absolute), with optional DDR5 temperature via the `spd5118` driver.
 - **System temperature**: Auto-detects the chipset/motherboard sensor from lmsensors. Falls back to CPU average if no ISA-bus sensor is found.
 - **GPU**: Usage, VRAM, temperature, core frequency, and power draw. Supports multiple GPUs independently with custom labels (iGPU, dGPU, etc.).
-- **Fan speed**: Per-fan RPM and percentage with stable numbering and individual sparklines.
+- **Fan speed**: Per-fan RPM and percentage with stable numbering.
 - **Battery and power**: Automatically detects battery interfaces, charge percentage, health, and power draw in watts.
 - **Network**: Download and upload speeds, session data totals (download/upload), Wi-Fi signal strength, local IP address display, and interface auto-detection.
 - **Disk I/O, space, and temperature**: Per-drive read/write rates, overall used space, and per-disk temperature monitoring (displayed when the corresponding sensor is available through KSystemStats) with hotplug detection.
 - **System uptime**: Live uptime pulled from `os/system/uptime`.
-- **Sparkline charts**: Expanded popup shows a 60-sample history graph for all active metrics.
+- **Interactive popup**: Categorized accordion view with live metric readings, click-to-pin toggles, and system shortcuts.
 - **Visibility controls**: Choose where each metric appears — panel and popup, panel only, popup only, or disabled entirely.
 - **Popup pin mode**: Keep the expanded popup open while working in other windows.
 - **Display modes**: Text, icons, or icons and text, in horizontal or vertical panel layouts.

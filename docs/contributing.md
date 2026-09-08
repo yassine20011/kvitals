@@ -43,12 +43,12 @@ For adding a sub-metric to an existing sensor group (the most common addition):
 4. **Metric store**: Push the metric in `contents/ui/models/MetricStore.qml` using `_createMetric("group.subKey", { ... })`.
 5. **Config UI**: Add `{ key: "subKey", label: i18n("...") }` to `metricMeta[group].subs` in `contents/ui/configMetrics.qml`.
 
-To add an entirely new hardware category (such as NPU or Cooler), see the module guide in [Architecture Documentation](architecture.md#workflow-b-adding-a-new-hardware-category--sensor-module).
+To add an entirely new hardware category (such as NPU or Cooler), see the module guide in [Architecture Documentation](architecture.md#workflow-b-adding-a-new-hardware-category-sensor-module).
 
 ### Adding a New Setting
 
 1. Add the entry to `contents/config/main.xml` with a default value.
-2. Add the matching `cfg_<key>` property and UI control to the appropriate config tab (`configGeneral.qml`, `configMetrics.qml`, `configIcons.qml`, or `configColors.qml`) so the KCM can load and persist the value.
+2. Add the matching `cfg_<key>` property and UI control to the appropriate config tab (`configGeneral.qml`, `configPanelOrder.qml`, `configMetrics.qml`, `configIcons.qml`, or `configColors.qml`) so the KCM can load and persist the value.
 3. Expose the value in `contents/ui/models/MetricConfig.qml` (for metric settings) or read it in `contents/ui/main.qml` (for general presentation settings).
 
 ## Pull Requests

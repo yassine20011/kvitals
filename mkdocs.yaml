@@ -49,7 +49,9 @@ nav:
   - Home: index.md
   - Installation: installation.md
   - Configuration: configuration.md
-  - Architecture: architecture.md
+  - Architecture:
+      - Overview: architecture.md
+      - Temperature Detection: temp-sensor-logic.md
   - Contributing: contributing.md
   - Troubleshooting: troubleshooting.md
   - Changelog: changelog.md
