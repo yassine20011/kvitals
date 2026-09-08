@@ -53,9 +53,10 @@ KCM.SimpleKCM {
             }
         }
         if (did.indexOf("nvme") !== -1) {
+            var idx = nvmeDisks.indexOf(did);
+            if (idx === -1) return did;
             if (nvmeDisks.length > 1) {
-                var idx = nvmeDisks.indexOf(did);
-                return "NVMe " + (idx !== -1 ? (idx + 1) : did);
+                return "NVMe " + (idx + 1);
             }
             return "NVMe";
         }
