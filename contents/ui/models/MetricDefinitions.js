@@ -155,8 +155,8 @@ function isBundledIcon(name) {
 var PATTERNS = {
     CPU_CORE: /^cpu\/(cpu\d+)\/usage$/,
     GPU: /^gpu\/(gpu\d+)\/usage$/,
-    DISK_READ: /^disk\/(nvme\d+n\d+|sd[a-z]+)\/read$/,
-    DISK_TEMP: /^(?:disk\/(?:nvme\d+n\d+|sd[a-z]+)\/temperature|lmsensors\/(?:nvme-pci-[^/]+|drivetemp-scsi-[^/]+|scsi-[^/]+|drivetemp-[^/]+)\/temp\d+)$/,
+    DISK_READ: /^disk\/(nvme\d+(?:c\d+)?n\d+|nvme\d+|sd[a-z]+|vd[a-z]+|xvd[a-z]+|mmcblk\d+)\/read$/,
+    DISK_TEMP: /^(?:disk\/(?:nvme\d+(?:c\d+)?n\d+|nvme\d+|sd[a-z]+|vd[a-z]+|xvd[a-z]+|mmcblk\d+)\/temperature|lmsensors\/(?:nvme-pci-[^/]+|drivetemp-scsi-[^/]+|scsi-[^/]+|drivetemp-[^/]+)\/temp\d+)$/,
     FAN: /^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i,
     NETWORK_IFACE: /^network\/([^/]+)\/download$/,
     TEMP_LMSENSORS: /^lmsensors\/(.+)\/temp\d+$/,

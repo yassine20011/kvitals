@@ -299,8 +299,7 @@
         property var _unplugged: ({})
 
         function _udiToDisk(udi) {
-            // e.g. /org/freedesktop/UDisks2/block_devices/sdb1 -> "sdb"
-            var m = String(udi).match(/\/(sd[a-z]+|nvme\d+n\d+)(?:p?\d+)?$/);
+            var m = String(udi).match(/\/(sd[a-z]+|nvme\d+(?:c\d+)?n\d+|nvme\d+|vd[a-z]+|xvd[a-z]+|mmcblk\d+)(?:p?\d+)?$/);
             return m ? m[1] : "";
         }
 
@@ -351,7 +350,7 @@
 
         function _refreshTempSensors() {
             if (!discovery) return;
-            var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_TEMP : /^(?:disk\/(?:nvme\d+n\d+|sd[a-z]+)\/temperature|lmsensors\/(?:nvme-pci-[^/]+|drivetemp-scsi-[^/]+|scsi-[^/]+|drivetemp-[^/]+)\/temp\d+)$/;
+            var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_TEMP : /^(?:disk\/(?:nvme\d+(?:c\d+)?n\d+|nvme\d+|sd[a-z]+|vd[a-z]+|xvd[a-z]+|mmcblk\d+)\/temperature|lmsensors\/(?:nvme-pci-[^/]+|drivetemp-scsi-[^/]+|scsi-[^/]+|drivetemp-[^/]+)\/temp\d+)$/;
             var found = discovery.queryIds(pattern);
             for (var i = 0; i < _discovered.length; i++) {
                 var direct = "disk/" + _discovered[i].id + "/temperature";
