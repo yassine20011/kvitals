@@ -337,3 +337,51 @@ function buildCompactItems(metricsList, pinnedList, mergeSameFamily) {
 
     return items;
 }
+
+// Sync compact values
+function syncCompactValues(existingItems, newItems) {
+    if (!existingItems || !newItems || existingItems.length !== newItems.length) {
+        return false;
+    }
+    for (var i = 0; i < existingItems.length; i++) {
+        var existing = existingItems[i];
+        var incoming = newItems[i];
+
+        if (!existing || !incoming) return false;
+        if (existing.key !== incoming.key || existing.label !== incoming.label) {
+            return false;
+        }
+        if (Boolean(existing.hideSeparator) !== Boolean(incoming.hideSeparator)) {
+            return false;
+        }
+        if (JSON.stringify(existing.icon) !== JSON.stringify(incoming.icon)) {
+            return false;
+        }
+
+        var hasExistingSegs = Boolean(existing.segments && existing.segments.length);
+        var hasIncomingSegs = Boolean(incoming.segments && incoming.segments.length);
+        if (hasExistingSegs !== hasIncomingSegs) {
+            return false;
+        }
+
+        if (hasExistingSegs) {
+            if (existing.segments.length !== incoming.segments.length) {
+                return false;
+            }
+            for (var s = 0; s < existing.segments.length; s++) {
+                var eSeg = existing.segments[s];
+                var iSeg = incoming.segments[s];
+                if (!eSeg || !iSeg) return false;
+                if (eSeg.key !== iSeg.key || eSeg.label !== iSeg.label || eSeg.icon !== iSeg.icon) {
+                    return false;
+                }
+                if (eSeg.value !== iSeg.value) eSeg.value = iSeg.value;
+                if (eSeg.color !== iSeg.color) eSeg.color = iSeg.color;
+            }
+        } else {
+            if (existing.value !== incoming.value) existing.value = incoming.value;
+            if (existing.color !== incoming.color) existing.color = incoming.color;
+        }
+    }
+    return true;
+}

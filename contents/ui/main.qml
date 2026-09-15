@@ -165,30 +165,127 @@ PlasmoidItem {
         sensorActivationTimer.start();
     }
 
-    // Pre-computed model caches — rebuilt once per MetricStore tick, not per binding consumer.
+    // Compact item components
+    component CompactSegment: QtObject {
+        property string value: ""
+        property color color: "transparent"
+        property string label: ""
+        property string icon: ""
+        property string key: ""
+    }
+
+    component CompactItem: QtObject {
+        property string id: ""
+        property var icon: ""
+        property string label: ""
+        property string value: ""
+        property color color: "transparent"
+        property string key: ""
+        property var segments: null
+        property bool hideSeparator: false
+        property string _groupBaseLabel: ""
+        property string _firstSubLabel: ""
+        property string _firstSubIcon: ""
+        property string _firstSubKey: ""
+    }
+
+    Component { id: compactSegComp; CompactSegment {} }
+    Component { id: compactItemComp; CompactItem {} }
+
+    function _createCompactItemObject(raw) {
+        var segs = null;
+        if (raw.segments && raw.segments.length) {
+            segs = [];
+            for (var s = 0; s < raw.segments.length; s++) {
+                var rawSeg = raw.segments[s];
+                var segObj = compactSegComp.createObject(root, {
+                    value: rawSeg.value || "",
+                    color: rawSeg.color || "transparent",
+                    label: rawSeg.label || "",
+                    icon: rawSeg.icon || "",
+                    key: rawSeg.key || ""
+                });
+                segs.push(segObj);
+            }
+        }
+        return compactItemComp.createObject(root, {
+            id: raw.id || "",
+            icon: raw.icon || "",
+            label: raw.label || "",
+            value: raw.value || "",
+            color: raw.color || "transparent",
+            key: raw.key || "",
+            segments: segs,
+            hideSeparator: Boolean(raw.hideSeparator),
+            _groupBaseLabel: raw._groupBaseLabel || "",
+            _firstSubLabel: raw._firstSubLabel || "",
+            _firstSubIcon: raw._firstSubIcon || "",
+            _firstSubKey: raw._firstSubKey || ""
+        });
+    }
+
+    function _updateCompactItems() {
+        var rawItems = ViewHelpers.buildCompactItems(metricStore.metrics, metricConfig.pinnedList, root.mergeFamilyMetrics);
+        if (ViewHelpers.syncCompactValues(root._compactItems, rawItems)) {
+            return;
+        }
+        var old = root._compactItems;
+        var newList = [];
+        for (var i = 0; i < rawItems.length; i++) {
+            newList.push(_createCompactItemObject(rawItems[i]));
+        }
+        root._compactItems = newList;
+        for (var j = 0; j < old.length; j++) {
+            if (old[j] && old[j].segments) {
+                for (var s = 0; s < old[j].segments.length; s++) {
+                    old[j].segments[s].destroy();
+                }
+            }
+            if (old[j]) old[j].destroy();
+        }
+    }
+
+    function _updatePopupGroups() {
+        if (root.expanded) {
+            root._popupGroups = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+        }
+    }
+
     property var _compactItems: []
     property var _popupGroups: []
 
+    onExpandedChanged: {
+        if (expanded) {
+            _updatePopupGroups();
+        }
+    }
+
     onMergeFamilyMetricsChanged: {
-        root._compactItems = ViewHelpers.buildCompactItems(metricStore.metrics, metricConfig.pinnedList, root.mergeFamilyMetrics);
+        root._updateCompactItems();
     }
 
     Connections {
         target: metricStore
         function onMetricsChanged() {
-            root._compactItems = ViewHelpers.buildCompactItems(metricStore.metrics, metricConfig.pinnedList, root.mergeFamilyMetrics);
-            root._popupGroups  = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+            root._updateCompactItems();
+            if (root.expanded) {
+                root._popupGroups = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+            }
         }
     }
 
     Connections {
         target: metricConfig
         function onPinnedListChanged() {
-            root._compactItems = ViewHelpers.buildCompactItems(metricStore.metrics, metricConfig.pinnedList, root.mergeFamilyMetrics);
-            root._popupGroups  = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+            root._updateCompactItems();
+            if (root.expanded) {
+                root._popupGroups = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+            }
         }
         function onOrderedKeysChanged() {
-            root._popupGroups = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+            if (root.expanded) {
+                root._popupGroups = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+            }
         }
     }
 
@@ -211,20 +308,31 @@ PlasmoidItem {
         onToggleExpanded: root.expanded = !root.expanded
     }
 
-    fullRepresentation: FullView {
-        groupsModel: root._popupGroups
-        baseTextColor: root.baseTextColor
-        labelColor: root.resolvedLabelColor
-        iconColor: root.resolvedIconColor
-        fontBold: root.fontBold
-        pinned: root.pinned
-        onTogglePinned: root.pinned = !root.pinned
-        onToggleMetricPin: function(metricId) {
-            metricConfig.togglePin(metricId);
-        }
-        onRefreshRequested: {
-            if (sensorLoader.item && sensorLoader.item.discovery) {
-                sensorLoader.item.discovery.rescan();
+    fullRepresentation: Loader {
+        id: fullRepLoader
+        Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+        Layout.preferredHeight: Kirigami.Units.gridUnit * 22
+        Layout.minimumWidth: Kirigami.Units.gridUnit * 15
+        Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+        Layout.minimumHeight: Kirigami.Units.gridUnit * 10
+        Layout.maximumHeight: Kirigami.Units.gridUnit * 36
+
+        active: root.expanded
+        sourceComponent: FullView {
+            groupsModel: root._popupGroups
+            baseTextColor: root.baseTextColor
+            labelColor: root.resolvedLabelColor
+            iconColor: root.resolvedIconColor
+            fontBold: root.fontBold
+            pinned: root.pinned
+            onTogglePinned: root.pinned = !root.pinned
+            onToggleMetricPin: function(metricId) {
+                metricConfig.togglePin(metricId);
+            }
+            onRefreshRequested: {
+                if (sensorLoader.item && sensorLoader.item.discovery) {
+                    sensorLoader.item.discovery.rescan();
+                }
             }
         }
     }
