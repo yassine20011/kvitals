@@ -57,6 +57,7 @@ PlasmoidItem {
         sensors: sensorLoader.item
         sensorsReady: sensorLoader.status === Loader.Ready
         baseTextColor: root.baseTextColor
+        popupExpanded: root.expanded
     }
 
     // Deferred sensor loader
@@ -84,6 +85,14 @@ PlasmoidItem {
                 id: _cpu
                 discovery: _discovery
                 updateInterval: metricConfig.updateInterval
+                popupExpanded: root.expanded
+                hasPinnedCores: {
+                    var pl = metricConfig.pinnedList || [];
+                    for (var i = 0; i < pl.length; i++) {
+                        if (pl[i].indexOf("/core") !== -1) return true;
+                    }
+                    return false;
+                }
             }
 
             MemorySensors {
@@ -245,18 +254,123 @@ PlasmoidItem {
         }
     }
 
-    function _updatePopupGroups() {
-        if (root.expanded) {
-            root._popupGroups = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+    // Popup item components
+    component PopupMetric: QtObject {
+        property string id: ""
+        property string label: ""
+        property string subLabel: ""
+        property var icon: ""
+        property string displayValue: ""
+        property var color: ""
+        property bool isPinned: false
+    }
+
+    component PopupSection: QtObject {
+        property string sectionLabel: ""
+        property var metrics: []
+    }
+
+    component PopupCategory: QtObject {
+        property string key: ""
+        property string groupLabel: ""
+        property var icon: ""
+        property string aggregateValue: ""
+        property var aggregateColor: ""
+        property var sections: []
+    }
+
+    Component { id: popupMetricComp; PopupMetric {} }
+    Component { id: popupSectionComp; PopupSection {} }
+    Component { id: popupCategoryComp; PopupCategory {} }
+
+    function _createPopupGroupObject(rawCat) {
+        var secList = [];
+        if (rawCat.sections && rawCat.sections.length) {
+            for (var s = 0; s < rawCat.sections.length; s++) {
+                var rawSec = rawCat.sections[s];
+                var metList = [];
+                if (rawSec.metrics && rawSec.metrics.length) {
+                    for (var m = 0; m < rawSec.metrics.length; m++) {
+                        var rawMet = rawSec.metrics[m];
+                        var metObj = popupMetricComp.createObject(root, {
+                            id: rawMet.id || "",
+                            label: rawMet.label || "",
+                            subLabel: rawMet.subLabel || "",
+                            icon: rawMet.icon || "",
+                            displayValue: rawMet.displayValue || "",
+                            color: rawMet.color || "",
+                            isPinned: Boolean(rawMet.isPinned)
+                        });
+                        metList.push(metObj);
+                    }
+                }
+                var secObj = popupSectionComp.createObject(root, {
+                    sectionLabel: rawSec.sectionLabel || "",
+                    metrics: metList
+                });
+                secList.push(secObj);
+            }
         }
+        return popupCategoryComp.createObject(root, {
+            key: rawCat.key || "",
+            groupLabel: rawCat.groupLabel || "",
+            icon: rawCat.icon || "",
+            aggregateValue: rawCat.aggregateValue || "",
+            aggregateColor: rawCat.aggregateColor || "",
+            sections: secList
+        });
+    }
+
+    function _destroyPopupGroups(groups) {
+        if (!groups) return;
+        for (var i = 0; i < groups.length; i++) {
+            var cat = groups[i];
+            if (cat) {
+                if (cat.sections) {
+                    for (var s = 0; s < cat.sections.length; s++) {
+                        var sec = cat.sections[s];
+                        if (sec) {
+                            if (sec.metrics) {
+                                for (var m = 0; m < sec.metrics.length; m++) {
+                                    if (sec.metrics[m]) sec.metrics[m].destroy();
+                                }
+                            }
+                            sec.destroy();
+                        }
+                    }
+                }
+                cat.destroy();
+            }
+        }
+    }
+
+    function _updatePopupGroups() {
+        if (!root.expanded) {
+            return;
+        }
+        var rawGroups = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+        if (ViewHelpers.syncPopupGroups(root._popupGroups, rawGroups)) {
+            return;
+        }
+        var old = root._popupGroups;
+        var newList = [];
+        for (var i = 0; i < rawGroups.length; i++) {
+            newList.push(_createPopupGroupObject(rawGroups[i]));
+        }
+        root._popupGroups = newList;
+        _destroyPopupGroups(old);
     }
 
     property var _compactItems: []
     property var _popupGroups: []
 
     onExpandedChanged: {
-        if (expanded) {
+        if (root.expanded) {
             _updatePopupGroups();
+        } else {
+            var old = root._popupGroups;
+            root._popupGroups = [];
+            _destroyPopupGroups(old);
         }
     }
 
@@ -269,7 +383,7 @@ PlasmoidItem {
         function onMetricsChanged() {
             root._updateCompactItems();
             if (root.expanded) {
-                root._popupGroups = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+                root._updatePopupGroups();
             }
         }
     }
@@ -279,12 +393,12 @@ PlasmoidItem {
         function onPinnedListChanged() {
             root._updateCompactItems();
             if (root.expanded) {
-                root._popupGroups = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+                root._updatePopupGroups();
             }
         }
         function onOrderedKeysChanged() {
             if (root.expanded) {
-                root._popupGroups = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+                root._updatePopupGroups();
             }
         }
     }

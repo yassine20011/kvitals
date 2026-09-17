@@ -136,7 +136,6 @@ ColumnLayout {
                         onClicked: fullView.toggleGroup(groupBlock.groupKey)
                     }
 
-                    // Expanded Group Sub-sections & Metric List
                     Column {
                         width: parent.width
                         visible: groupBlock.isExpanded
@@ -150,7 +149,6 @@ ColumnLayout {
                                 required property int index
                                 width: parent.width
 
-                                // Optional Sub-section header
                                 PlasmaComponents.Label {
                                     visible: !!secBlock.modelData.sectionLabel
                                     text: secBlock.modelData.sectionLabel || ""
@@ -163,7 +161,6 @@ ColumnLayout {
                                     bottomPadding: 2
                                 }
 
-                                // Metric Items in this section
                                 Repeater {
                                     model: secBlock.modelData.metrics
 
@@ -178,7 +175,6 @@ ColumnLayout {
                                             spacing: Kirigami.Units.smallSpacing
                                             anchors.verticalCenter: parent.verticalCenter
 
-                                            // Pin checkmark indicator
                                             Kirigami.Icon {
                                                 source: "dialog-ok-apply"
                                                 isMask: true
@@ -190,7 +186,6 @@ ColumnLayout {
                                                 Layout.leftMargin: 4
                                             }
 
-                                            // Metric icon
                                             Kirigami.Icon {
                                                 source: fullView.resolveIcon(metricRow.modelData.icon)
                                                 isMask: true
@@ -201,7 +196,6 @@ ColumnLayout {
                                                 Layout.alignment: Qt.AlignVCenter
                                             }
 
-                                            // Metric Sub-label
                                             PlasmaComponents.Label {
                                                 text: metricRow.modelData.subLabel || metricRow.modelData.label
                                                 color: fullView.labelColor
@@ -211,7 +205,6 @@ ColumnLayout {
                                                 Layout.alignment: Qt.AlignVCenter
                                             }
 
-                                            // Metric Value
                                             PlasmaComponents.Label {
                                                 text: metricRow.modelData.displayValue || "..."
                                                 font.bold: fullView.fontBold
