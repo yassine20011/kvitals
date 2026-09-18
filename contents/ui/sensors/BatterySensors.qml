@@ -14,7 +14,7 @@ Item {
     function refreshDiscovered() {
         if (batteryDevice && batteryDevice !== "auto") return;
         if (!discovery) return;
-        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.BATTERY : /^power\/([^/]+)\/chargePercentage$/;
+        var pattern = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.BATTERY : /^power\/(.+)\/chargePercentage$/;
         var ids = discovery.queryIds(pattern);
         if (ids.length > 0) {
             var match = ids[0].match(pattern);
@@ -42,7 +42,7 @@ Item {
         var _rev = discovery ? discovery.revision : 0;
         if (batteryDevice && batteryDevice !== "auto") {
             var dev = batteryDevice.trim();
-            dev = dev.replace(/^power\//, "").replace(/\/.*$/, "");
+            dev = dev.replace(/^power\//, "").replace(/\/(?:chargePercentage|chargeRate|capacity|health|charge)$/, "");
             if (discovery && discovery.sensorExists) {
                 if (discovery.sensorExists("power/" + dev + "/chargePercentage"))
                     return dev;
