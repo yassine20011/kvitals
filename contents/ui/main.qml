@@ -57,6 +57,7 @@ PlasmoidItem {
         sensors: sensorLoader.item
         sensorsReady: sensorLoader.status === Loader.Ready
         baseTextColor: root.baseTextColor
+        popupExpanded: root.expanded
     }
 
     // Deferred sensor loader
@@ -84,6 +85,14 @@ PlasmoidItem {
                 id: _cpu
                 discovery: _discovery
                 updateInterval: metricConfig.updateInterval
+                popupExpanded: root.expanded
+                hasPinnedCores: {
+                    var pl = metricConfig.pinnedList || [];
+                    for (var i = 0; i < pl.length; i++) {
+                        if (pl[i].indexOf("/core") !== -1) return true;
+                    }
+                    return false;
+                }
             }
 
             MemorySensors {
@@ -165,30 +174,230 @@ PlasmoidItem {
         sensorActivationTimer.start();
     }
 
-    // Pre-computed model caches — rebuilt once per MetricStore tick, not per binding consumer.
+    // Compact item components
+    component CompactSegment: QtObject {
+        property string value: ""
+        property color color: "transparent"
+        property string label: ""
+        property string icon: ""
+        property string key: ""
+    }
+
+    component CompactItem: QtObject {
+        property var icon: ""
+        property string label: ""
+        property string value: ""
+        property color color: "transparent"
+        property string key: ""
+        property var segments: null
+        property bool hideSeparator: false
+        property string _groupBaseLabel: ""
+        property string _firstSubLabel: ""
+        property string _firstSubIcon: ""
+        property string _firstSubKey: ""
+    }
+
+    Component { id: compactSegComp; CompactSegment {} }
+    Component { id: compactItemComp; CompactItem {} }
+
+    function _createCompactItemObject(raw) {
+        var segs = null;
+        if (raw.segments && raw.segments.length) {
+            segs = [];
+            for (var s = 0; s < raw.segments.length; s++) {
+                var rawSeg = raw.segments[s];
+                var segObj = compactSegComp.createObject(root, {
+                    value: rawSeg.value || "",
+                    color: rawSeg.color || "transparent",
+                    label: rawSeg.label || "",
+                    icon: rawSeg.icon || "",
+                    key: rawSeg.key || ""
+                });
+                segs.push(segObj);
+            }
+        }
+        return compactItemComp.createObject(root, {
+            icon: raw.icon || "",
+            label: raw.label || "",
+            value: raw.value || "",
+            color: raw.color || "transparent",
+            key: raw.key || "",
+            segments: segs,
+            hideSeparator: Boolean(raw.hideSeparator),
+            _groupBaseLabel: raw._groupBaseLabel || "",
+            _firstSubLabel: raw._firstSubLabel || "",
+            _firstSubIcon: raw._firstSubIcon || "",
+            _firstSubKey: raw._firstSubKey || ""
+        });
+    }
+
+    function _updateCompactItems() {
+        var rawItems = ViewHelpers.buildCompactItems(metricStore.metrics, metricConfig.pinnedList, root.mergeFamilyMetrics);
+        if (ViewHelpers.syncCompactValues(root._compactItems, rawItems)) {
+            return;
+        }
+        var old = root._compactItems;
+        var newList = [];
+        for (var i = 0; i < rawItems.length; i++) {
+            newList.push(_createCompactItemObject(rawItems[i]));
+        }
+        root._compactItems = newList;
+        for (var j = 0; j < old.length; j++) {
+            if (old[j] && old[j].segments) {
+                for (var s = 0; s < old[j].segments.length; s++) {
+                    old[j].segments[s].destroy();
+                }
+            }
+            if (old[j]) old[j].destroy();
+        }
+    }
+
+    // Popup item components
+    component PopupMetric: QtObject {
+        property string id: ""
+        property string label: ""
+        property string subLabel: ""
+        property var icon: ""
+        property string displayValue: ""
+        property var color: ""
+        property bool isPinned: false
+    }
+
+    component PopupSection: QtObject {
+        property string sectionLabel: ""
+        property var metrics: []
+    }
+
+    component PopupCategory: QtObject {
+        property string key: ""
+        property string groupLabel: ""
+        property var icon: ""
+        property string aggregateValue: ""
+        property var aggregateColor: ""
+        property var sections: []
+    }
+
+    Component { id: popupMetricComp; PopupMetric {} }
+    Component { id: popupSectionComp; PopupSection {} }
+    Component { id: popupCategoryComp; PopupCategory {} }
+
+    function _createPopupGroupObject(rawCat) {
+        var secList = [];
+        if (rawCat.sections && rawCat.sections.length) {
+            for (var s = 0; s < rawCat.sections.length; s++) {
+                var rawSec = rawCat.sections[s];
+                var metList = [];
+                if (rawSec.metrics && rawSec.metrics.length) {
+                    for (var m = 0; m < rawSec.metrics.length; m++) {
+                        var rawMet = rawSec.metrics[m];
+                        var metObj = popupMetricComp.createObject(root, {
+                            id: rawMet.id || "",
+                            label: rawMet.label || "",
+                            subLabel: rawMet.subLabel || "",
+                            icon: rawMet.icon || "",
+                            displayValue: rawMet.displayValue || "",
+                            color: rawMet.color || "",
+                            isPinned: Boolean(rawMet.isPinned)
+                        });
+                        metList.push(metObj);
+                    }
+                }
+                var secObj = popupSectionComp.createObject(root, {
+                    sectionLabel: rawSec.sectionLabel || "",
+                    metrics: metList
+                });
+                secList.push(secObj);
+            }
+        }
+        return popupCategoryComp.createObject(root, {
+            key: rawCat.key || "",
+            groupLabel: rawCat.groupLabel || "",
+            icon: rawCat.icon || "",
+            aggregateValue: rawCat.aggregateValue || "",
+            aggregateColor: rawCat.aggregateColor || "",
+            sections: secList
+        });
+    }
+
+    function _destroyPopupGroups(groups) {
+        if (!groups) return;
+        for (var i = 0; i < groups.length; i++) {
+            var cat = groups[i];
+            if (cat) {
+                if (cat.sections) {
+                    for (var s = 0; s < cat.sections.length; s++) {
+                        var sec = cat.sections[s];
+                        if (sec) {
+                            if (sec.metrics) {
+                                for (var m = 0; m < sec.metrics.length; m++) {
+                                    if (sec.metrics[m]) sec.metrics[m].destroy();
+                                }
+                            }
+                            sec.destroy();
+                        }
+                    }
+                }
+                cat.destroy();
+            }
+        }
+    }
+
+    function _updatePopupGroups() {
+        if (!root.expanded) {
+            return;
+        }
+        var rawGroups = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+        if (ViewHelpers.syncPopupGroups(root._popupGroups, rawGroups)) {
+            return;
+        }
+        var old = root._popupGroups;
+        var newList = [];
+        for (var i = 0; i < rawGroups.length; i++) {
+            newList.push(_createPopupGroupObject(rawGroups[i]));
+        }
+        root._popupGroups = newList;
+        _destroyPopupGroups(old);
+    }
+
     property var _compactItems: []
     property var _popupGroups: []
 
+    onExpandedChanged: {
+        if (root.expanded) {
+            _updatePopupGroups();
+        } else {
+            var old = root._popupGroups;
+            root._popupGroups = [];
+            _destroyPopupGroups(old);
+        }
+    }
+
     onMergeFamilyMetricsChanged: {
-        root._compactItems = ViewHelpers.buildCompactItems(metricStore.metrics, metricConfig.pinnedList, root.mergeFamilyMetrics);
+        root._updateCompactItems();
     }
 
     Connections {
         target: metricStore
         function onMetricsChanged() {
-            root._compactItems = ViewHelpers.buildCompactItems(metricStore.metrics, metricConfig.pinnedList, root.mergeFamilyMetrics);
-            root._popupGroups  = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+            root._updateCompactItems();
+            if (root.expanded) {
+                root._updatePopupGroups();
+            }
         }
     }
 
     Connections {
         target: metricConfig
         function onPinnedListChanged() {
-            root._compactItems = ViewHelpers.buildCompactItems(metricStore.metrics, metricConfig.pinnedList, root.mergeFamilyMetrics);
-            root._popupGroups  = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+            root._updateCompactItems();
+            if (root.expanded) {
+                root._updatePopupGroups();
+            }
         }
         function onOrderedKeysChanged() {
-            root._popupGroups = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+            if (root.expanded) {
+                root._updatePopupGroups();
+            }
         }
     }
 
@@ -211,20 +420,31 @@ PlasmoidItem {
         onToggleExpanded: root.expanded = !root.expanded
     }
 
-    fullRepresentation: FullView {
-        groupsModel: root._popupGroups
-        baseTextColor: root.baseTextColor
-        labelColor: root.resolvedLabelColor
-        iconColor: root.resolvedIconColor
-        fontBold: root.fontBold
-        pinned: root.pinned
-        onTogglePinned: root.pinned = !root.pinned
-        onToggleMetricPin: function(metricId) {
-            metricConfig.togglePin(metricId);
-        }
-        onRefreshRequested: {
-            if (sensorLoader.item && sensorLoader.item.discovery) {
-                sensorLoader.item.discovery.rescan();
+    fullRepresentation: Loader {
+        id: fullRepLoader
+        Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+        Layout.preferredHeight: Kirigami.Units.gridUnit * 22
+        Layout.minimumWidth: Kirigami.Units.gridUnit * 15
+        Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+        Layout.minimumHeight: Kirigami.Units.gridUnit * 10
+        Layout.maximumHeight: Kirigami.Units.gridUnit * 36
+
+        active: root.expanded
+        sourceComponent: FullView {
+            groupsModel: root._popupGroups
+            baseTextColor: root.baseTextColor
+            labelColor: root.resolvedLabelColor
+            iconColor: root.resolvedIconColor
+            fontBold: root.fontBold
+            pinned: root.pinned
+            onTogglePinned: root.pinned = !root.pinned
+            onToggleMetricPin: function(metricId) {
+                metricConfig.togglePin(metricId);
+            }
+            onRefreshRequested: {
+                if (sensorLoader.item && sensorLoader.item.discovery) {
+                    sensorLoader.item.discovery.rescan();
+                }
             }
         }
     }

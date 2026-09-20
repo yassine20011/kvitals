@@ -337,3 +337,116 @@ function buildCompactItems(metricsList, pinnedList, mergeSameFamily) {
 
     return items;
 }
+
+// Sync compact values
+function syncCompactValues(existingItems, newItems) {
+    if (!existingItems || !newItems || existingItems.length !== newItems.length) {
+        return false;
+    }
+    for (var i = 0; i < existingItems.length; i++) {
+        var existing = existingItems[i];
+        var incoming = newItems[i];
+
+        if (!existing || !incoming) return false;
+        if (existing.key !== incoming.key || existing.label !== incoming.label) {
+            return false;
+        }
+        if (Boolean(existing.hideSeparator) !== Boolean(incoming.hideSeparator)) {
+            return false;
+        }
+        if (JSON.stringify(existing.icon) !== JSON.stringify(incoming.icon)) {
+            return false;
+        }
+
+        var hasExistingSegs = Boolean(existing.segments && existing.segments.length);
+        var hasIncomingSegs = Boolean(incoming.segments && incoming.segments.length);
+        if (hasExistingSegs !== hasIncomingSegs) {
+            return false;
+        }
+
+        if (hasExistingSegs) {
+            if (existing.segments.length !== incoming.segments.length) {
+                return false;
+            }
+            for (var s = 0; s < existing.segments.length; s++) {
+                var eSeg = existing.segments[s];
+                var iSeg = incoming.segments[s];
+                if (!eSeg || !iSeg) return false;
+                if (eSeg.key !== iSeg.key || eSeg.label !== iSeg.label || eSeg.icon !== iSeg.icon) {
+                    return false;
+                }
+                if (eSeg.value !== iSeg.value) eSeg.value = iSeg.value;
+                if (eSeg.color !== iSeg.color) eSeg.color = iSeg.color;
+            }
+        } else {
+            if (existing.value !== incoming.value) existing.value = incoming.value;
+            if (existing.color !== incoming.color) existing.color = incoming.color;
+        }
+    }
+    return true;
+}
+
+// Sync popup groups
+function syncPopupGroups(existingGroups, newGroups) {
+    if (!existingGroups || !newGroups || existingGroups.length !== newGroups.length) {
+        return false;
+    }
+    for (var i = 0; i < existingGroups.length; i++) {
+        var eGrp = existingGroups[i];
+        var nGrp = newGroups[i];
+
+        if (!eGrp || !nGrp) return false;
+        if (eGrp.key !== nGrp.key || eGrp.groupLabel !== nGrp.groupLabel) {
+            return false;
+        }
+        if (eGrp.icon !== nGrp.icon) {
+            return false;
+        }
+        if (eGrp.aggregateValue !== nGrp.aggregateValue) {
+            eGrp.aggregateValue = nGrp.aggregateValue;
+        }
+        if (eGrp.aggregateColor !== nGrp.aggregateColor) {
+            eGrp.aggregateColor = nGrp.aggregateColor;
+        }
+
+        var eSections = eGrp.sections;
+        var nSections = nGrp.sections;
+        if (!eSections || !nSections || eSections.length !== nSections.length) {
+            return false;
+        }
+
+        for (var s = 0; s < eSections.length; s++) {
+            var eSec = eSections[s];
+            var nSec = nSections[s];
+            if (!eSec || !nSec) return false;
+            if (eSec.sectionLabel !== nSec.sectionLabel) {
+                return false;
+            }
+
+            var eMetrics = eSec.metrics;
+            var nMetrics = nSec.metrics;
+            if (!eMetrics || !nMetrics || eMetrics.length !== nMetrics.length) {
+                return false;
+            }
+
+            for (var m = 0; m < eMetrics.length; m++) {
+                var eMet = eMetrics[m];
+                var nMet = nMetrics[m];
+                if (!eMet || !nMet) return false;
+                if (eMet.id !== nMet.id || eMet.subLabel !== nMet.subLabel || eMet.icon !== nMet.icon) {
+                    return false;
+                }
+                if (eMet.displayValue !== nMet.displayValue) {
+                    eMet.displayValue = nMet.displayValue;
+                }
+                if (eMet.color !== nMet.color) {
+                    eMet.color = nMet.color;
+                }
+                if (Boolean(eMet.isPinned) !== Boolean(nMet.isPinned)) {
+                    eMet.isPinned = Boolean(nMet.isPinned);
+                }
+            }
+        }
+    }
+    return true;
+}

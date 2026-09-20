@@ -9,6 +9,7 @@ Item {
     required property var sensors
     required property bool sensorsReady
     required property color baseTextColor
+    property bool popupExpanded: false
 
     // Debounced metrics array: rebuilt once per flushTimer tick, not per sensor change.
     // Consumers should bind to this property, not to individual sensor values.
@@ -51,6 +52,10 @@ Item {
 
     onSensorsReadyChanged: {
         if (sensorsReady) root._rebuildMetrics();
+    }
+
+    onPopupExpandedChanged: {
+        root._rebuildMetrics();
     }
 
     Connections {
@@ -138,8 +143,27 @@ Item {
         var s = sensors;
         var cfg = config;
 
+        var neededGroups = null;
+        var hasPinnedCores = false;
+        if (!root.popupExpanded && cfg && cfg.pinnedList) {
+            neededGroups = {};
+            var pl = cfg.pinnedList;
+            for (var pi = 0; pi < pl.length; pi++) {
+                var pId = pl[pi];
+                if (!pId) continue;
+                var colonIdx = pId.indexOf(":");
+                var slashIdx = pId.indexOf("/");
+                var sepIdx = colonIdx !== -1 ? colonIdx : slashIdx;
+                var grp = sepIdx !== -1 ? pId.substring(0, sepIdx) : pId;
+                neededGroups[grp] = true;
+                if (pId.indexOf("/core") !== -1) {
+                    hasPinnedCores = true;
+                }
+            }
+        }
+
         // CPU
-        if (s.cpu) {
+        if (s.cpu && (neededGroups === null || neededGroups["cpu"])) {
             list.push(_createMetric("cpu.usage", {
                 value: s.cpu.cpuNumericValue,
                 displayValue: s.cpu.cpuValue,
@@ -191,7 +215,7 @@ Item {
                 }));
             }
 
-            if (s.cpu.coreDataList && s.cpu.coreDataList.length > 0) {
+            if (s.cpu.coreDataList && s.cpu.coreDataList.length > 0 && (neededGroups === null || hasPinnedCores)) {
                 var cList = s.cpu.coreDataList;
                 for (var ci = 0; ci < cList.length; ci++) {
                     var cd = cList[ci];
@@ -210,7 +234,7 @@ Item {
         }
 
         // RAM
-        if (s.memory) {
+        if (s.memory && (neededGroups === null || neededGroups["ram"])) {
             list.push(_createMetric("ram.percentage", {
                 value: s.memory.ramPercentage,
                 displayValue: s.memory.ramPercentValue,
@@ -240,7 +264,7 @@ Item {
         }
 
         // Swap
-        if (s.swap && s.swap.swapAvailable) {
+        if (s.swap && s.swap.swapAvailable && (neededGroups === null || neededGroups["swap"])) {
             list.push(_createMetric("swap.percent", {
                 value: s.swap.swapPercentage,
                 displayValue: s.swap.swapPercentValue,
@@ -275,7 +299,7 @@ Item {
         }
 
         // System Temperature
-        if (s.temp && s.temp.tempValue && s.temp.tempValue !== "--") {
+        if (s.temp && s.temp.tempValue && s.temp.tempValue !== "--" && (neededGroups === null || neededGroups["temp"])) {
             list.push(_createMetric("temp.system", {
                 value: s.temp.tempNumericValue,
                 displayValue: s.temp.tempValue,
@@ -286,7 +310,7 @@ Item {
         }
 
         // GPU instances
-        if (s.gpu) {
+        if (s.gpu && (neededGroups === null || neededGroups["gpu"])) {
             var gList = s.gpu.gpuDataList;
             if (gList && gList.length > 0) {
                 for (var gi = 0; gi < gList.length; gi++) {
@@ -343,7 +367,7 @@ Item {
         }
 
         // Battery
-        if (s.battery && s.battery.hasBattery) {
+        if (s.battery && s.battery.hasBattery && (neededGroups === null || neededGroups["bat"])) {
             list.push(_createMetric("bat.percentage", {
                 value: s.battery.batNumericValue,
                 displayValue: s.battery.batValue || "...",
@@ -371,7 +395,7 @@ Item {
         }
 
         // Network
-        if (s.network) {
+        if (s.network && (neededGroups === null || neededGroups["net"])) {
             list.push(_createMetric("net.down", {
                 value: s.network.netDownRaw,
                 displayValue: s.network.netDownValue,
@@ -430,7 +454,7 @@ Item {
         }
 
         // Disk instances
-        if (s.disk) {
+        if (s.disk && (neededGroups === null || neededGroups["disk"])) {
             var dList = s.disk.diskDataList;
             if (dList && dList.length > 0) {
                 for (var di = 0; di < dList.length; di++) {
@@ -485,7 +509,7 @@ Item {
         }
 
         // Fan instances
-        if (s.fans && s.fans.hasFanData) {
+        if (s.fans && s.fans.hasFanData && (neededGroups === null || neededGroups["fan"])) {
             var fList = s.fans.fanDataList;
             for (var fi = 0; fi < fList.length; fi++) {
                 var fd = fList[fi];
@@ -504,7 +528,7 @@ Item {
         }
 
         // Uptime
-        if (s.uptime && s.uptime.uptimeValue) {
+        if (s.uptime && s.uptime.uptimeValue && (neededGroups === null || neededGroups["uptime"])) {
             list.push(_createMetric("uptime.uptime", {
                 label: "Uptime",
                 groupLabel: "Uptime",

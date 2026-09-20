@@ -164,37 +164,21 @@ RowLayout {
 
     Repeater {
         model: compactRow.metricsModel
-
-        delegate: Item {
-            required property var modelData
-            required property int index
-
-            implicitWidth:  loader.implicitWidth
-            implicitHeight: loader.implicitHeight
-
-            Loader {
-                id: loader
-                anchors.fill: parent
-                sourceComponent: compactRow.isVertical ? verticalDelegate : horizontalDelegate
-
-                property var itemData:  modelData
-                property int itemIndex: index
-            }
-        }
+        delegate: compactRow.isVertical ? verticalDelegate : horizontalDelegate
     }
-
-    // ── Horizontal delegate ────────────────────────────────────────────────
 
     Component {
         id: horizontalDelegate
 
         RowLayout {
+            required property var modelData
+            required property int index
+
             spacing: Kirigami.Units.smallSpacing
             Layout.fillHeight: true
 
-            // Thin line separator between metrics
             Rectangle {
-                visible: itemIndex > 0 && compactRow.showSeparators && !itemData.hideSeparator
+                visible: index > 0 && compactRow.showSeparators && !modelData.hideSeparator
                 width: 1
                 Layout.fillHeight: true
                 color: compactRow.baseTextColor
@@ -207,7 +191,7 @@ RowLayout {
                 Layout.alignment: Qt.AlignVCenter
                 Repeater {
                     model: {
-                        var src = itemData.icon;
+                        var src = modelData.icon;
                         if (!src) return [];
                         return typeof src === "string" ? [src] : src;
                     }
@@ -223,7 +207,7 @@ RowLayout {
 
             PlasmaComponents.Label {
                 visible: compactRow.useText
-                text: itemData.label
+                text: modelData.label
                 font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
                 font.family: compactRow.fontFamily
                 color: compactRow.labelColor
@@ -233,41 +217,38 @@ RowLayout {
 
             PlasmaComponents.Label {
                 id: valueLabel
-                visible: !itemData.segments
-                text: itemData.value || ""
+                visible: !modelData.segments
+                text: modelData.value || ""
                 font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
                 font.family: compactRow.fontFamily
                 font.bold: compactRow.fontBold
-                color: itemData.color || compactRow.baseTextColor
+                color: modelData.color || compactRow.baseTextColor
                 horizontalAlignment: Text.AlignRight
                 Layout.alignment: Qt.AlignVCenter
-                // Width only ever grows within the session: avoids the panel
-                // reflowing every time a fluctuating value (e.g. RPM) crosses
-                // a digit-count boundary.
-                Layout.preferredWidth: compactRow._stickyWidth(itemData.key || ("idx:" + itemIndex), implicitWidth)
+                Layout.preferredWidth: compactRow._stickyWidth(modelData.key || ("idx:" + index), implicitWidth)
             }
 
             SegmentsRow {
-                visible: !!itemData.segments
-                segments: itemData.segments || []
-                parentKey: itemData.key || ("idx:" + itemIndex)
+                visible: !!modelData.segments
+                segments: modelData.segments || []
+                parentKey: modelData.key || ("idx:" + index)
                 Layout.alignment: Qt.AlignVCenter
             }
         }
     }
 
-    // ── Vertical delegate (value on top, icon+label below) ─────────────────
-
     Component {
         id: verticalDelegate
 
         RowLayout {
+            required property var modelData
+            required property int index
+
             spacing: Kirigami.Units.smallSpacing
             Layout.fillHeight: true
 
-            // Thin line separator between metrics
             Rectangle {
-                visible: itemIndex > 0 && compactRow.showSeparators && !itemData.hideSeparator
+                visible: index > 0 && compactRow.showSeparators && !modelData.hideSeparator
                 width: 1
                 Layout.fillHeight: true
                 color: compactRow.baseTextColor
@@ -278,34 +259,29 @@ RowLayout {
                 spacing: 1
                 Layout.alignment: Qt.AlignVCenter
 
-                // Top: value(s)
                 RowLayout {
                     spacing: 0
                     Layout.alignment: Qt.AlignHCenter
 
                     PlasmaComponents.Label {
-                        visible: !itemData.segments
-                        text: itemData.value || ""
+                        visible: !modelData.segments
+                        text: modelData.value || ""
                         font.pixelSize: compactRow.customFont ? compactRow.effectiveFontSize : -1
                         font.family: compactRow.fontFamily
                         font.bold: compactRow.fontBold
-                        color: itemData.color || compactRow.baseTextColor
+                        color: modelData.color || compactRow.baseTextColor
                         horizontalAlignment: Text.AlignHCenter
-                        // Width only ever grows within the session: avoids the panel
-                        // reflowing every time a fluctuating value (e.g. RPM) crosses
-                        // a digit-count boundary.
-                        Layout.preferredWidth: compactRow._stickyWidth(itemData.key || ("idx:" + itemIndex), implicitWidth)
+                        Layout.preferredWidth: compactRow._stickyWidth(modelData.key || ("idx:" + index), implicitWidth)
                     }
 
                     SegmentsRow {
-                        visible: !!itemData.segments
-                        segments: itemData.segments || []
-                        parentKey: itemData.key || ("idx:" + itemIndex)
+                        visible: !!modelData.segments
+                        segments: modelData.segments || []
+                        parentKey: modelData.key || ("idx:" + index)
                         Layout.alignment: Qt.AlignHCenter
                     }
                 }
 
-                // Bottom: icon + label
                 RowLayout {
                     visible: compactRow.useIcons || compactRow.useText
                     spacing: 2
@@ -317,7 +293,7 @@ RowLayout {
                         Layout.alignment: Qt.AlignVCenter
                         Repeater {
                             model: {
-                                var src = itemData.icon;
+                                var src = modelData.icon;
                                 if (!src) return [];
                                 return typeof src === "string" ? [src] : src;
                             }
@@ -334,7 +310,7 @@ RowLayout {
                     PlasmaComponents.Label {
                         visible: compactRow.useText
                         text: {
-                            var lbl = itemData.label || "";
+                            var lbl = modelData.label || "";
                             return lbl.endsWith(":") ? lbl.slice(0, -1) : lbl;
                         }
                         font.pixelSize: compactRow.customFont

@@ -7,6 +7,8 @@ Item {
 
     property var discovery: null
     property int updateInterval: 2000
+    property bool popupExpanded: false
+    property bool hasPinnedCores: false
 
     readonly property real cpuNumericValue: {
         if (cpuSensor.status !== Sensors.Sensor.Ready)
@@ -94,11 +96,17 @@ Item {
 
     readonly property var _activeSensorIds: _discoveredCores.map(function(c){ return "cpu/" + c.id + "/usage"; })
 
+    onPopupExpandedChanged: {
+        if (popupExpanded && coreData.enabled) {
+            aggregateCores();
+        }
+    }
+
     Sensors.SensorDataModel {
         id: coreData
         sensors: root._activeSensorIds
         updateRateLimit: root.updateInterval
-        enabled: root._activeSensorIds.length > 0
+        enabled: (root.popupExpanded || root.hasPinnedCores) && root._activeSensorIds.length > 0
         onDataChanged: root.aggregateCores()
         onReadyChanged: { if (ready) root.aggregateCores(); }
         onRowsInserted: root.aggregateCores()
