@@ -36,7 +36,10 @@ Item {
         interval: 500
         repeat: false
         running: true
-        onTriggered: root._bootReady = true
+        onTriggered: {
+            root._bootReady = true;
+            root._resolveActiveIface();
+        }
     }
 
     function _refreshInterfaces() {
@@ -68,19 +71,20 @@ Item {
         });
     }
 
-    // Poll IPs of all discovered interfaces at the same rate as traffic sensors.
-    // Only active in auto mode — when a specific interface is chosen there is
-    // nothing to resolve.
     Sensors.SensorDataModel {
         id: ipDiscoveryModel
-        sensors: root._ipSensorIds
+        sensors: (root._bootReady && (root.networkInterface === "auto" || root.networkInterface === ""))
+                 ? root._ipSensorIds
+                 : []
         updateRateLimit: root.updateInterval
-        enabled: root._bootReady
-                 && root._ipSensorIds.length > 0
-                 && (root.networkInterface === "auto" || root.networkInterface === "")
+        enabled: sensors.length > 0
 
         onDataChanged: root._resolveActiveIface()
         onReadyChanged: { if (ready) root._resolveActiveIface(); }
+        onRowsInserted: root._resolveActiveIface()
+        onColumnsInserted: root._resolveActiveIface()
+        onModelReset: root._resolveActiveIface()
+        onLayoutChanged: root._resolveActiveIface()
     }
 
     // Walk discovered interfaces in order; promote the first one that currently
