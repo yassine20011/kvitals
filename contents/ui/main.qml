@@ -184,7 +184,6 @@ PlasmoidItem {
     }
 
     component CompactItem: QtObject {
-        property string id: ""
         property var icon: ""
         property string label: ""
         property string value: ""
@@ -218,7 +217,6 @@ PlasmoidItem {
             }
         }
         return compactItemComp.createObject(root, {
-            id: raw.id || "",
             icon: raw.icon || "",
             label: raw.label || "",
             value: raw.value || "",
