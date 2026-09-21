@@ -2,7 +2,7 @@
 
 Right-click the widget, then select **Configure KVitals...** to open the settings dialog. Settings are organized into five tabs:
 
-1. **General**: Display mode, panel layout, fonts, update interval, dividers, and unit preferences.
+1. **General**: Display mode, panel layout, desktop background, fonts, update interval, dividers, and unit preferences.
 2. **Panel Items**: Live panel preview, interactive chip reordering, and click-to-pin metric palette.
 3. **Sensors & Hardware**: Enable/disable telemetry categories, visibility modes, and device overrides.
 4. **Icons**: Native icon picker with bundled symbolic SVG fallbacks.
@@ -14,6 +14,7 @@ Right-click the widget, then select **Configure KVitals...** to open the setting
 |---|---|---|
 | **Display mode** | Controls how metrics appear in the panel (Text, Icons, Icons + Text, or None) | Text |
 | **Layout** | Direction of compact panel items (Horizontal or Vertical) | Horizontal |
+| **Background** | Appearance of widget background when placed on desktop (Default, Translucent, Shadow Only, Fully Transparent) | Default |
 | **Icon size** | Icon dimensions in pixels (visible when icons are enabled) | 12 px |
 | **Font** | Searchable text input with popup list of installed system fonts | monospace |
 | **Font size** | Text size in pixels. Setting `0` uses the system default | 0 |
@@ -47,6 +48,20 @@ Right-click the widget, then select **Configure KVitals...** to open the setting
 |---|---|
 | **Horizontal** | Places metrics in a single row separated by `\|` dividers |
 | **Vertical** | Stacks the value text directly above the icon |
+
+### Background Styles (Desktop Placement)
+
+When placed directly on the desktop canvas, KVitals allows configuring the background appearance:
+
+| Style | Description |
+|---|---|
+| **Default** | Mostly opaque background using the active system theme, with rounded corners and a subtle border. |
+| **Translucent** | Semi-transparent dark tinted background with rounded corners and subtle border. |
+| **Shadow Only** | Frameless background with a soft drop shadow behind metrics. |
+| **Fully Transparent** | Completely transparent frameless layout, allowing wallpapers to show through unobstructed. |
+
+!!! note
+    When placed inside a panel, the widget blends seamlessly into the panel bar regardless of this setting.
 
 ## Panel Items Tab
 

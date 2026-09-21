@@ -2,6 +2,27 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [3.2.0] - 2026-09-21
+
+### Added
+
+- **Desktop Background Styles**: Configurable background appearance when placed on the desktop (Default, Translucent, Shadow Only, or Fully Transparent) via Settings → General → Background (Fixes #105).
+
+### Performance
+
+- **Eliminated Video Wallpaper Hitching**: Updated compact view items in place instead of destroying and recreating them during refresh cycles, and lazy-loaded the expanded popup view (Fixes #107).
+- **Decoupled Popup Sensor Polling**: Separated expanded popup sensors from compact panel lifecycles so hidden popup metrics do not trigger unnecessary calculations during normal polling.
+
+### Fixed
+
+- **Sensor Boot Deadlock**: Deferred IP discovery sensor listing in `NetworkSensors.qml` to prevent startup deadlocks while `ksystemstats` or network interfaces are still initializing (Fixes #106).
+- **Battery Serial Names With Slashes**: Adjusted regex pattern matching in hardware discovery and sensor bindings to support battery identifiers containing internal forward slashes (Fixes #110).
+
+### Documentation & Maintenance
+
+- **Configuration Documentation**: Documented the new desktop background style settings and desktop-specific placement behavior.
+- **CI Workflow Update**: Migrated the Cloudflare Pages documentation deployment action to `cloudflare/wrangler-action`.
+
 ## [3.1.2] - 2026-09-08
 
 ### Fixed
