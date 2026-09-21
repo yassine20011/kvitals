@@ -4,9 +4,8 @@ import org.kde.plasma.components as PlasmaComponents
 import org.kde.kirigami as Kirigami
 import "models/MetricDefinitions.js" as MetricDefinitions
 
-RowLayout {
-    id: compactRow
-    spacing: Math.round(Kirigami.Units.gridUnit * 0.65)
+Item {
+    id: compactRoot
 
     required property var metricsModel
     required property bool useIcons
@@ -22,49 +21,96 @@ RowLayout {
     required property real labelOpacity
     required property real separatorOpacity
     required property bool showSeparators
+    required property string backgroundType
+    required property bool isPlanar
 
     readonly property bool isVertical: layoutType === "vertical"
     readonly property bool customFont: effectiveFontSize > 0
 
-    // Defers isMask+color on Kirigami.Icon items until after the Plasma startup
-    // window-attachment sequence (ShellCorona::addOutput) completes. This prevents
-    // PlatformThemeData::setColor from being called while uninitialized (SIGSEGV #41).
-    property bool _themeReady: false
-    Timer {
-        interval: 0
-        repeat: false
-        running: true
-        onTriggered: compactRow._themeReady = true
-    }
+    readonly property int hPadding: (isPlanar && backgroundType !== "transparent" && backgroundType !== "shadow") ? Math.round(Kirigami.Units.gridUnit * 0.75) : 0
+    readonly property int vPadding: (isPlanar && backgroundType !== "transparent" && backgroundType !== "shadow") ? Math.round(Kirigami.Units.smallSpacing * 0.75) : 0
+
+    implicitWidth: compactRow.implicitWidth + (hPadding * 2)
+    implicitHeight: compactRow.implicitHeight + (vPadding * 2)
 
     signal toggleExpanded()
 
-    // Sticky width cache
-    property var _stickyWidths: ({})
-
-    function resetStickyWidths() {
-        _stickyWidths = ({});
-    }
-
-    onEffectiveFontSizeChanged: resetStickyWidths()
-    onFontFamilyChanged: resetStickyWidths()
-    onIconSizeChanged: resetStickyWidths()
-    onLayoutTypeChanged: resetStickyWidths()
-    onUseIconsChanged: resetStickyWidths()
-    onUseTextChanged: resetStickyWidths()
-
-    function _stickyWidth(key, w) {
-        var cur = _stickyWidths[key] || 0;
-        if (w > cur) {
-            _stickyWidths[key] = w;
-            cur = w;
+    Rectangle {
+        id: desktopBg
+        visible: compactRoot.isPlanar && compactRoot.backgroundType !== "transparent" && compactRoot.backgroundType !== "shadow"
+        anchors.centerIn: parent
+        width: Math.min(parent ? parent.width : implicitWidth, compactRow.implicitWidth + (compactRoot.hPadding * 2))
+        height: Math.min(parent ? parent.height : implicitHeight, compactRow.implicitHeight + (compactRoot.vPadding * 2))
+        radius: Math.round(height * 0.5)
+        color: {
+            if (compactRoot.backgroundType === "translucent") {
+                return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.45);
+            }
+            return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.80);
         }
-        return cur;
+        border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.15)
+        border.width: 1
     }
 
     TapHandler {
-        onTapped: compactRow.toggleExpanded()
+        onTapped: compactRoot.toggleExpanded()
     }
+
+    RowLayout {
+        id: compactRow
+        anchors.centerIn: parent
+        spacing: Math.round(Kirigami.Units.gridUnit * 0.65)
+
+        readonly property var metricsModel: compactRoot.metricsModel
+        readonly property bool useIcons: compactRoot.useIcons
+        readonly property bool useText: compactRoot.useText
+        readonly property int effectiveFontSize: compactRoot.effectiveFontSize
+        readonly property string fontFamily: compactRoot.fontFamily
+        readonly property bool fontBold: compactRoot.fontBold
+        readonly property int iconSize: compactRoot.iconSize
+        readonly property color baseTextColor: compactRoot.baseTextColor
+        readonly property color labelColor: compactRoot.labelColor
+        readonly property color iconColor: compactRoot.iconColor
+        readonly property string layoutType: compactRoot.layoutType
+        readonly property real labelOpacity: compactRoot.labelOpacity
+        readonly property real separatorOpacity: compactRoot.separatorOpacity
+        readonly property bool showSeparators: compactRoot.showSeparators
+        readonly property bool isVertical: compactRoot.isVertical
+        readonly property bool customFont: compactRoot.customFont
+
+        // Defers isMask+color on Kirigami.Icon items until after the Plasma startup
+        // window-attachment sequence (ShellCorona::addOutput) completes. This prevents
+        // PlatformThemeData::setColor from being called while uninitialized (SIGSEGV #41).
+        property bool _themeReady: false
+        Timer {
+            interval: 0
+            repeat: false
+            running: true
+            onTriggered: compactRow._themeReady = true
+        }
+
+        // Sticky width cache
+        property var _stickyWidths: ({})
+
+        function resetStickyWidths() {
+            _stickyWidths = ({});
+        }
+
+        onEffectiveFontSizeChanged: resetStickyWidths()
+        onFontFamilyChanged: resetStickyWidths()
+        onIconSizeChanged: resetStickyWidths()
+        onLayoutTypeChanged: resetStickyWidths()
+        onUseIconsChanged: resetStickyWidths()
+        onUseTextChanged: resetStickyWidths()
+
+        function _stickyWidth(key, w) {
+            var cur = _stickyWidths[key] || 0;
+            if (w > cur) {
+                _stickyWidths[key] = w;
+                cur = w;
+            }
+            return cur;
+        }
 
     function resolveIcon(name) {
         if (!name) return "";
@@ -325,4 +371,5 @@ RowLayout {
             }
         }
     }
+}
 }

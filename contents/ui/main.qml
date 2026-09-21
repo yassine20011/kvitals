@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasmoid
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.kirigami as Kirigami
@@ -19,9 +20,14 @@ PlasmoidItem {
         return typeof s === "string" && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(s);
     }
 
+    readonly property bool isPlanar: Plasmoid.formFactor === PlasmaCore.Types.Planar
+    Layout.preferredWidth: isPlanar ? (compactRepresentationItem ? compactRepresentationItem.implicitWidth : -1) : -1
+    Layout.preferredHeight: isPlanar ? (compactRepresentationItem ? compactRepresentationItem.implicitHeight : -1) : -1
+
     // Display and appearance properties
     property string displayMode: Plasmoid.configuration.displayMode
     property string layoutType:  Plasmoid.configuration.layoutType
+    property string backgroundType: Plasmoid.configuration.backgroundType || "default"
     property int iconSize:       Plasmoid.configuration.iconSize
     property string fontFamily:  Plasmoid.configuration.fontFamily
     property int fontSize:       Plasmoid.configuration.fontSize
@@ -32,6 +38,30 @@ PlasmoidItem {
     property bool mergeFamilyMetrics: Plasmoid.configuration.mergeFamilyMetrics !== undefined ? Plasmoid.configuration.mergeFamilyMetrics : true
 
     property bool showSeparators: Plasmoid.configuration.showSeparators !== undefined ? Plasmoid.configuration.showSeparators : true
+
+    Plasmoid.backgroundHints: PlasmaCore.Types.DefaultBackground | PlasmaCore.Types.ConfigurableBackground
+
+    function applyBackgroundType() {
+        if (!root.isPlanar) {
+            if (Plasmoid.userBackgroundHints !== PlasmaCore.Types.DefaultBackground) {
+                Plasmoid.userBackgroundHints = PlasmaCore.Types.DefaultBackground;
+            }
+            return;
+        }
+
+        var targetHint;
+        if (root.backgroundType === "shadow") {
+            targetHint = PlasmaCore.Types.ShadowBackground;
+        } else {
+            targetHint = PlasmaCore.Types.NoBackground;
+        }
+        if (Plasmoid.userBackgroundHints !== targetHint) {
+            Plasmoid.userBackgroundHints = targetHint;
+        }
+    }
+
+    onBackgroundTypeChanged: applyBackgroundType()
+    onIsPlanarChanged: applyBackgroundType()
 
     property bool useIcons: displayMode === "icons" || displayMode === "icons+text"
     property bool useText:  displayMode === "text"  || displayMode === "icons+text"
@@ -172,6 +202,7 @@ PlasmoidItem {
 
     Component.onCompleted: {
         sensorActivationTimer.start();
+        applyBackgroundType();
     }
 
     // Compact item components
@@ -405,6 +436,8 @@ PlasmoidItem {
     compactRepresentation: CompactView {
         metricsModel: root._compactItems
         layoutType: root.layoutType
+        backgroundType: root.backgroundType
+        isPlanar: root.isPlanar
         useIcons: root.useIcons
         useText: root.useText
         effectiveFontSize: root.effectiveFontSize
@@ -418,6 +451,11 @@ PlasmoidItem {
         separatorOpacity: root.separatorOpacity
         showSeparators: root.showSeparators
         onToggleExpanded: root.expanded = !root.expanded
+
+        Layout.preferredWidth: root.isPlanar ? implicitWidth : -1
+        Layout.preferredHeight: root.isPlanar ? implicitHeight : -1
+        Layout.minimumWidth: root.isPlanar ? implicitWidth : -1
+        Layout.minimumHeight: root.isPlanar ? implicitHeight : -1
     }
 
     fullRepresentation: Loader {

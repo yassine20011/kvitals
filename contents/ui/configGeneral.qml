@@ -16,6 +16,7 @@ KCM.SimpleKCM {
     property string cfg_displayMode: "text"
     property string cfg_fontFamily: "monospace"
     property string cfg_layoutType: "horizontal"
+    property string cfg_backgroundType: "default"
     property string cfg_tempUnit: "C"
     property string cfg_networkUnit: "bytes"
     property string cfg_fanUnit: "rpm"
@@ -28,6 +29,9 @@ KCM.SimpleKCM {
 
     readonly property var layoutTypes: ["horizontal", "vertical"]
     readonly property var layoutTypeLabels: [i18n("Horizontal"), i18n("Vertical")]
+
+    readonly property var backgroundTypes: ["default", "translucent", "shadow", "transparent"]
+    readonly property var backgroundTypeLabels: [i18n("Default"), i18n("Translucent"), i18n("Shadow Only"), i18n("Fully Transparent")]
 
     Kirigami.FormLayout {
 
@@ -54,6 +58,27 @@ KCM.SimpleKCM {
             }
             onActivated: {
                 cfg_layoutType = configPage.layoutTypes[currentIndex];
+            }
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Background:")
+            spacing: Kirigami.Units.smallSpacing
+
+            ComboBox {
+                id: backgroundTypeCombo
+                model: configPage.backgroundTypeLabels
+                currentIndex: {
+                    var idx = configPage.backgroundTypes.indexOf(cfg_backgroundType);
+                    return idx >= 0 ? idx : 0;
+                }
+                onActivated: {
+                    cfg_backgroundType = configPage.backgroundTypes[currentIndex];
+                }
+            }
+
+            Kirigami.ContextualHelpButton {
+                toolTipText: i18n("Controls the widget background when placed directly on the desktop. When placed inside a panel, the widget blends seamlessly into the panel bar.")
             }
         }
 
