@@ -55,7 +55,7 @@ When placed directly on the desktop canvas, KVitals allows configuring the backg
 
 | Style | Description |
 |---|---|
-| **Default** | Standard Plasma desktop applet frame using the active system theme. |
+| **Default** | Mostly opaque background using the active system theme, with rounded corners and a subtle border. |
 | **Translucent** | Semi-transparent dark tinted background with rounded corners and subtle border. |
 | **Shadow Only** | Frameless background with a soft drop shadow behind metrics. |
 | **Fully Transparent** | Completely transparent frameless layout, allowing wallpapers to show through unobstructed. |
