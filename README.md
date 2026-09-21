@@ -41,7 +41,7 @@ Here is what you can track and customize:
 - **Interactive popup**: Categorized accordion view with live metric readings, click-to-pin toggles, and system shortcuts.
 - **Visibility controls**: Choose where each metric appears — panel and popup, panel only, popup only, or disabled entirely.
 - **Popup pin mode**: Keep the expanded popup open while working in other windows.
-- **Display modes**: Text, icons, or icons and text, in horizontal or vertical panel layouts.
+- **Display modes**: Text, icons, or icons and text, in horizontal or vertical panel layouts, with customizable desktop background styles (default, translucent, shadow, or fully transparent).
 - **Color customization**: Font, label, and icon colors with per-metric threshold sliders for warning and critical states.
 - **Custom ordering**: Drag and drop metrics to rearrange them.
 - **Appearance**: Search system fonts and pick icons from your installed theme or bundled fallback icons.

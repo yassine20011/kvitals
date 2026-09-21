@@ -39,6 +39,8 @@ Have a suggestion? Open an issue or start a discussion on GitHub.
 - Network interface auto-detection and manual override
 - Battery device auto-detection and manual override
 - Per-fan stable numbering
+- Desktop background styling (default, translucent, shadow only, or fully transparent)
+- Hitch-free rendering with lazy loading and in-place sync for dynamic wallpapers
 
 ---
 
