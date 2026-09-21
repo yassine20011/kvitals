@@ -10,7 +10,7 @@ All notable changes to KVitals will be documented in this file.
 
 ### Performance
 
-- **Eliminated Video Wallpaper Hitching**: Converted compact view items to use lazy loaders and in-place property updates instead of destroying and recreating items on refresh cycles (Fixes #107).
+- **Eliminated Video Wallpaper Hitching**: Updated compact view items in place instead of destroying and recreating them during refresh cycles, and lazy-loaded the expanded popup view (Fixes #107).
 - **Decoupled Popup Sensor Polling**: Separated expanded popup sensors from compact panel lifecycles so hidden popup metrics do not trigger unnecessary calculations during normal polling.
 
 ### Fixed
