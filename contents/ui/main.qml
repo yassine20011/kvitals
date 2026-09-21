@@ -42,6 +42,13 @@ PlasmoidItem {
     Plasmoid.backgroundHints: PlasmaCore.Types.DefaultBackground | PlasmaCore.Types.ConfigurableBackground
 
     function applyBackgroundType() {
+        if (!root.isPlanar) {
+            if (Plasmoid.userBackgroundHints !== PlasmaCore.Types.DefaultBackground) {
+                Plasmoid.userBackgroundHints = PlasmaCore.Types.DefaultBackground;
+            }
+            return;
+        }
+
         var targetHint;
         if (root.backgroundType === "shadow") {
             targetHint = PlasmaCore.Types.ShadowBackground;
@@ -53,9 +60,8 @@ PlasmoidItem {
         }
     }
 
-    onBackgroundTypeChanged: {
-        applyBackgroundType();
-    }
+    onBackgroundTypeChanged: applyBackgroundType()
+    onIsPlanarChanged: applyBackgroundType()
 
     property bool useIcons: displayMode === "icons" || displayMode === "icons+text"
     property bool useText:  displayMode === "text"  || displayMode === "icons+text"
@@ -237,10 +243,10 @@ PlasmoidItem {
         showSeparators: root.showSeparators
         onToggleExpanded: root.expanded = !root.expanded
 
-        Layout.preferredWidth: implicitWidth
-        Layout.preferredHeight: implicitHeight
-        Layout.minimumWidth: implicitWidth
-        Layout.minimumHeight: implicitHeight
+        Layout.preferredWidth: root.isPlanar ? implicitWidth : -1
+        Layout.preferredHeight: root.isPlanar ? implicitHeight : -1
+        Layout.minimumWidth: root.isPlanar ? implicitWidth : -1
+        Layout.minimumHeight: root.isPlanar ? implicitHeight : -1
     }
 
     fullRepresentation: FullView {
