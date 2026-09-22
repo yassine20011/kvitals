@@ -38,9 +38,9 @@ Item {
     Rectangle {
         id: desktopBg
         visible: compactRoot.isPlanar && compactRoot.backgroundType !== "transparent" && compactRoot.backgroundType !== "shadow"
-        anchors.centerIn: parent
-        width: Math.min(parent ? parent.width : implicitWidth, compactRow.implicitWidth + (compactRoot.hPadding * 2))
-        height: Math.min(parent ? parent.height : implicitHeight, compactRow.implicitHeight + (compactRoot.vPadding * 2))
+        anchors.centerIn: compactRow
+        width: compactRow.implicitWidth + (compactRoot.hPadding * 2)
+        height: compactRow.implicitHeight + (compactRoot.vPadding * 2)
         radius: Math.round(height * 0.5)
         color: {
             if (compactRoot.backgroundType === "translucent") {
