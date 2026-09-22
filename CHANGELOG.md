@@ -2,6 +2,13 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [3.2.1] - 2026-09-22
+
+### Fixed
+
+- **Panel Sizing Regression**: Restored layout sizing hints for compact representation in panel mode, fixing collapsed widget width and clipped metrics (Fixes #115).
+- **Desktop Background Geometry**: Centered desktop background rectangle directly on content row and sized using padding bounds to prevent clipping under smaller saved geometries.
+
 ## [3.2.0] - 2026-09-21
 
 ### Added

@@ -21,8 +21,8 @@ PlasmoidItem {
     }
 
     readonly property bool isPlanar: Plasmoid.formFactor === PlasmaCore.Types.Planar
-    Layout.preferredWidth: isPlanar ? (compactRepresentationItem ? compactRepresentationItem.implicitWidth : -1) : -1
-    Layout.preferredHeight: isPlanar ? (compactRepresentationItem ? compactRepresentationItem.implicitHeight : -1) : -1
+    Layout.preferredWidth: compactRepresentationItem ? compactRepresentationItem.implicitWidth : -1
+    Layout.preferredHeight: compactRepresentationItem ? compactRepresentationItem.implicitHeight : -1
 
     // Display and appearance properties
     property string displayMode: Plasmoid.configuration.displayMode
@@ -452,10 +452,10 @@ PlasmoidItem {
         showSeparators: root.showSeparators
         onToggleExpanded: root.expanded = !root.expanded
 
-        Layout.preferredWidth: root.isPlanar ? implicitWidth : -1
-        Layout.preferredHeight: root.isPlanar ? implicitHeight : -1
-        Layout.minimumWidth: root.isPlanar ? implicitWidth : -1
-        Layout.minimumHeight: root.isPlanar ? implicitHeight : -1
+        Layout.preferredWidth: implicitWidth
+        Layout.preferredHeight: implicitHeight
+        Layout.minimumWidth: implicitWidth
+        Layout.minimumHeight: implicitHeight
     }
 
     fullRepresentation: Loader {
