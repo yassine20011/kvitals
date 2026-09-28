@@ -20,10 +20,10 @@ QtObject {
 
     // Meta keys excluded from profile data
     readonly property var _metaKeys: [
-        "profileList", "activeProfileId", "migrationDone", "profileListVersion"
+        "profileList", "activeProfileId", "migrationDone", "profileListVersion", "shortcutInitialized"
     ]
 
-    // Schema defaults — mirrors main.xml <default> values
+    // Schema defaults
     readonly property var _defaults: ({
         pinnedMetrics:            "cpu/usage,ram/percentage,temp/system,bat/percentage,net/down,net/up",
         cpuEnabled:               true,

@@ -12,6 +12,7 @@ PlasmoidItem {
     id: root
 
     preferredRepresentation: compactRepresentation
+    activationTogglesExpanded: false
 
     property bool pinned: false
     hideOnWindowDeactivate: !pinned
@@ -206,6 +207,10 @@ PlasmoidItem {
     }
 
     Component.onCompleted: {
+        if (!Plasmoid.configuration.shortcutInitialized) {
+            Plasmoid.globalShortcut = "Meta+Shift+V";
+            Plasmoid.configuration.shortcutInitialized = true;
+        }
         sensorActivationTimer.start();
         applyBackgroundType();
     }
@@ -400,6 +405,10 @@ PlasmoidItem {
 
     onExpandedChanged: {
         if (root.expanded) {
+            if (profileSelectorPopup && profileSelectorPopup.visible) {
+                root.expanded = false;
+                return;
+            }
             _updatePopupGroups();
         } else {
             var old = root._popupGroups;
@@ -495,6 +504,25 @@ PlasmoidItem {
                     sensorLoader.item.discovery.rescan();
                 }
             }
+        }
+    }
+
+    Connections {
+        target: Plasmoid
+        function onActivated() {
+            profileSelectorPopup.open();
+            Qt.callLater(function() {
+                root.expanded = false;
+            });
+        }
+    }
+
+    ProfileSwitcherPopup {
+        id: profileSelectorPopup
+        profileSummaries: profileManager.profileSummaries
+        activeProfileId: profileManager.activeProfileId
+        onProfileSelected: function(id) {
+            profileManager.activateProfile(id);
         }
     }
 

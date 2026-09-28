@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCM
 import org.kde.plasma.plasmoid
+import org.kde.kquickcontrols
 import "models"
 
 KCM.SimpleKCM {
@@ -14,8 +15,14 @@ KCM.SimpleKCM {
         manageOnly: true
     }
 
+    property bool unsavedChanges: false
     property string _editingId: ""
     property string _editingText: ""
+
+    function saveConfig() {
+        Plasmoid.globalShortcut = shortcutItem.keySequence;
+        unsavedChanges = false;
+    }
 
     Kirigami.PromptDialog {
         id: deleteConfirmDialog
@@ -200,6 +207,19 @@ KCM.SimpleKCM {
                 enabled: newProfileField.text.trim().length > 0
                 onClicked: newProfileField._addProfile()
             }
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18n("Shortcut")
+        }
+
+        KeySequenceItem {
+            id: shortcutItem
+            Kirigami.FormData.label: i18n("Profile switcher:")
+            keySequence: Plasmoid.globalShortcut
+            patterns: ShortcutPattern.Modifier | ShortcutPattern.ModifierAndKey
+            onKeySequenceModified: profilesPage.unsavedChanges = (keySequence !== Plasmoid.globalShortcut)
         }
     }
 }
