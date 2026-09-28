@@ -6,37 +6,41 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasmoid
 import org.kde.kirigami as Kirigami
 
-PlasmaComponents.Popup {
+PlasmaCore.Dialog {
     id: root
 
     property var profileSummaries: []
     property string activeProfileId: ""
     readonly property alias autoDismissInterval: dismissTimer.interval
+    readonly property alias listView: listView
+    readonly property bool opened: visible
     signal profileSelected(string id)
 
-    focus: true
-    closePolicy: QQC2.Popup.CloseOnEscape | QQC2.Popup.CloseOnPressOutside
-    padding: Kirigami.Units.smallSpacing
+    visualParent: parent
+    location: Plasmoid.location
+    hideOnWindowDeactivate: true
+    type: PlasmaCore.Dialog.AppletPopup
+    backgroundHints: PlasmaCore.Dialog.StandardBackground
 
-    Timer {
-        id: dismissTimer
-        interval: 3000
-        repeat: false
-        onTriggered: root.close()
-    }
-
-    onAboutToShow: {
-        _updatePosition();
+    function open() {
         _selectActiveIndex();
+        visible = true;
         dismissTimer.restart();
     }
 
-    onOpened: {
-        listView.forceActiveFocus();
+    function close() {
+        visible = false;
+        dismissTimer.stop();
     }
 
-    onClosed: {
-        dismissTimer.stop();
+    onVisibleChanged: {
+        if (visible) {
+            _selectActiveIndex();
+            dismissTimer.restart();
+            listView.forceActiveFocus();
+        } else {
+            dismissTimer.stop();
+        }
     }
 
     function _selectActiveIndex() {
@@ -49,30 +53,31 @@ PlasmaComponents.Popup {
         listView.currentIndex = 0;
     }
 
-    function _updatePosition() {
-        var loc = Plasmoid.location;
-        var spacing = Kirigami.Units.smallSpacing;
-        if (loc === PlasmaCore.Types.BottomEdge) {
-            y = -height - spacing;
-            x = Math.round((parent.width - width) / 2);
-        } else if (loc === PlasmaCore.Types.TopEdge) {
-            y = parent.height + spacing;
-            x = Math.round((parent.width - width) / 2);
-        } else if (loc === PlasmaCore.Types.LeftEdge) {
-            x = parent.width + spacing;
-            y = Math.round((parent.height - height) / 2);
-        } else if (loc === PlasmaCore.Types.RightEdge) {
-            x = -width - spacing;
-            y = Math.round((parent.height - height) / 2);
-        } else {
-            x = 0;
-            y = parent.height + spacing;
-        }
-    }
-
-    contentItem: ColumnLayout {
+    mainItem: ColumnLayout {
         spacing: Kirigami.Units.smallSpacing
-        width: Kirigami.Units.gridUnit * 12
+        Layout.minimumWidth: Kirigami.Units.gridUnit * 12
+
+        Timer {
+            id: dismissTimer
+            interval: 3000
+            repeat: false
+            onTriggered: root.close()
+        }
+
+        Shortcut {
+            sequence: "Escape"
+            onActivated: root.close()
+        }
+
+        Shortcut {
+            sequence: "Return"
+            onActivated: listView._activateCurrent()
+        }
+
+        Shortcut {
+            sequence: "Enter"
+            onActivated: listView._activateCurrent()
+        }
 
         PlasmaComponents.Label {
             text: i18n("KVitals Profile")
@@ -80,6 +85,7 @@ PlasmaComponents.Popup {
             opacity: 0.7
             Layout.fillWidth: true
             Layout.leftMargin: Kirigami.Units.smallSpacing
+            Layout.rightMargin: Kirigami.Units.smallSpacing
             Layout.topMargin: Kirigami.Units.smallSpacing / 2
         }
 
