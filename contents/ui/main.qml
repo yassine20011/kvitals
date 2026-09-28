@@ -208,7 +208,9 @@ PlasmoidItem {
 
     Component.onCompleted: {
         if (!Plasmoid.configuration.shortcutInitialized) {
-            Plasmoid.globalShortcut = "Meta+Shift+V";
+            if (String(Plasmoid.globalShortcut) === "") {
+                Plasmoid.globalShortcut = "Meta+Shift+V";
+            }
             Plasmoid.configuration.shortcutInitialized = true;
         }
         sensorActivationTimer.start();
