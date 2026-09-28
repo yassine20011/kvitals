@@ -9,12 +9,8 @@ import "models"
 KCM.SimpleKCM {
     id: profilesPage
 
-    readonly property var profileManager: (typeof plasmoid !== "undefined" && plasmoid.profileManager)
-        ? plasmoid.profileManager
-        : fallbackManager
-
     ProfileManager {
-        id: fallbackManager
+        id: profileManager
         manageOnly: true
     }
 

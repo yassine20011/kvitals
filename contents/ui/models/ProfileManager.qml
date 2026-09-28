@@ -234,24 +234,26 @@ QtObject {
     }
 
     Component.onCompleted: {
-        if (!root.manageOnly && typeof plasmoid !== "undefined") {
-            plasmoid.profileManager = root;
-        }
-        if (!root.manageOnly) {
-            Plasmoid.configuration.valueChanged.connect(function(key, value) {
-                if (root._syncing) return;
-                if (key === "profileList") {
-                    root._reloadSummariesOnly(value);
-                    return;
-                }
-                if (root._metaKeys.indexOf(key) !== -1) return;
-                var profile = root._findProfile(root._activeProfileId);
-                if (!profile) return;
-                profile.data[key] = value;
-                _activeConfig[key] = value;
-                root._flush();
-            });
-        }
+        Plasmoid.configuration.valueChanged.connect(function(key, value) {
+            if (root._syncing) return;
+            if (key === "profileList") {
+                root._reloadSummariesOnly(value);
+                return;
+            }
+            if (key === "activeProfileId") {
+                root._activeProfileId = value;
+                var act = root._findProfile(value);
+                if (act) root._activeProfileName = act.name;
+                return;
+            }
+            if (root.manageOnly) return;
+            if (root._metaKeys.indexOf(key) !== -1) return;
+            var profile = root._findProfile(root._activeProfileId);
+            if (!profile) return;
+            profile.data[key] = value;
+            _activeConfig[key] = value;
+            root._flush();
+        });
         _init();
     }
 
@@ -318,8 +320,10 @@ QtObject {
             var parsed = JSON.parse(raw);
             if (!parsed || !Array.isArray(parsed.profiles) || parsed.profiles.length === 0) return;
             _profiles = parsed.profiles;
-            var active = _findProfile(_activeProfileId);
+            var savedId = Plasmoid.configuration.activeProfileId;
+            var active = _findProfile(savedId);
             if (active) {
+                _activeProfileId = savedId;
                 _activeProfileName = active.name;
             }
             _rebuildSummaries();
