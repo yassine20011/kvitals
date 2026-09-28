@@ -521,7 +521,7 @@ PlasmoidItem {
 
     ProfileSwitcherPopup {
         id: profileSelectorPopup
-        visualParent: root
+        visualParent: root.compactRepresentationItem || root
         profileSummaries: profileManager.profileSummaries
         activeProfileId: profileManager.activeProfileId
         onProfileSelected: function(id) {

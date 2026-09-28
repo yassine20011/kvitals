@@ -18,19 +18,32 @@ PlasmaCore.Dialog {
 
     visualParent: parent
     location: Plasmoid.location
-    hideOnWindowDeactivate: true
     type: PlasmaCore.Dialog.AppletPopup
     backgroundHints: PlasmaCore.Dialog.StandardBackground
+    flags: Qt.Window | Qt.WindowStaysOnTopHint
+
+    property bool _hasBeenActive: false
 
     function open() {
+        _hasBeenActive = false;
         _selectActiveIndex();
-        visible = true;
+        show();
+        requestActivate();
         dismissTimer.restart();
     }
 
     function close() {
         visible = false;
+        _hasBeenActive = false;
         dismissTimer.stop();
+    }
+
+    onActiveChanged: {
+        if (active) {
+            _hasBeenActive = true;
+        } else if (_hasBeenActive && visible) {
+            root.close();
+        }
     }
 
     onVisibleChanged: {
@@ -54,8 +67,10 @@ PlasmaCore.Dialog {
     }
 
     mainItem: ColumnLayout {
+        id: layout
         spacing: Kirigami.Units.smallSpacing
-        Layout.minimumWidth: Kirigami.Units.gridUnit * 12
+        implicitWidth: Kirigami.Units.gridUnit * 14
+        implicitHeight: headerLabel.implicitHeight + separator.implicitHeight + listView.implicitHeight + Kirigami.Units.smallSpacing * 4
 
         Timer {
             id: dismissTimer
@@ -80,6 +95,7 @@ PlasmaCore.Dialog {
         }
 
         PlasmaComponents.Label {
+            id: headerLabel
             text: i18n("KVitals Profile")
             font.bold: true
             opacity: 0.7
@@ -90,13 +106,14 @@ PlasmaCore.Dialog {
         }
 
         Kirigami.Separator {
+            id: separator
             Layout.fillWidth: true
         }
 
         ListView {
             id: listView
             Layout.fillWidth: true
-            implicitHeight: Math.min(contentHeight, Kirigami.Units.gridUnit * 16)
+            implicitHeight: Math.min(Math.max(contentHeight, Kirigami.Units.gridUnit * 2), Kirigami.Units.gridUnit * 16)
             model: root.profileSummaries
             clip: true
             boundsBehavior: Flickable.StopAtBounds
