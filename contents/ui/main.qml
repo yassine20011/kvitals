@@ -24,20 +24,19 @@ PlasmoidItem {
     Layout.preferredWidth: compactRepresentationItem ? compactRepresentationItem.implicitWidth : -1
     Layout.preferredHeight: compactRepresentationItem ? compactRepresentationItem.implicitHeight : -1
 
-    // Display and appearance properties
-    property string displayMode: Plasmoid.configuration.displayMode
-    property string layoutType:  Plasmoid.configuration.layoutType
-    property string backgroundType: Plasmoid.configuration.backgroundType || "default"
-    property int iconSize:       Plasmoid.configuration.iconSize
-    property string fontFamily:  Plasmoid.configuration.fontFamily
-    property int fontSize:       Plasmoid.configuration.fontSize
-    property bool fontBold:      Plasmoid.configuration.fontBold
-    property real labelOpacity:  Plasmoid.configuration.labelOpacity
-    property real separatorOpacity: Plasmoid.configuration.separatorOpacity
-    property int effectiveFontSize: fontSize > 0 ? fontSize : -1
-    property bool mergeFamilyMetrics: Plasmoid.configuration.mergeFamilyMetrics !== undefined ? Plasmoid.configuration.mergeFamilyMetrics : true
-
-    property bool showSeparators: Plasmoid.configuration.showSeparators !== undefined ? Plasmoid.configuration.showSeparators : true
+    // Display and appearance properties — read from active profile via ProfileManager
+    property string displayMode:      profileManager.activeConfig.displayMode
+    property string layoutType:       profileManager.activeConfig.layoutType
+    property string backgroundType:   profileManager.activeConfig.backgroundType || "default"
+    property int iconSize:            profileManager.activeConfig.iconSize
+    property string fontFamily:       profileManager.activeConfig.fontFamily
+    property int fontSize:            profileManager.activeConfig.fontSize
+    property bool fontBold:           profileManager.activeConfig.fontBold
+    property real labelOpacity:       profileManager.activeConfig.labelOpacity
+    property real separatorOpacity:   profileManager.activeConfig.separatorOpacity
+    property int effectiveFontSize:   fontSize > 0 ? fontSize : -1
+    property bool mergeFamilyMetrics: profileManager.activeConfig.mergeFamilyMetrics
+    property bool showSeparators:     profileManager.activeConfig.showSeparators
 
     Plasmoid.backgroundHints: PlasmaCore.Types.DefaultBackground | PlasmaCore.Types.ConfigurableBackground
 
@@ -66,18 +65,24 @@ PlasmoidItem {
     property bool useIcons: displayMode === "icons" || displayMode === "icons+text"
     property bool useText:  displayMode === "text"  || displayMode === "icons+text"
 
-    // Colors
-    property bool useCustomColors: Plasmoid.configuration.useCustomColors
-    property string fontColor:     Plasmoid.configuration.fontColor
-    property string labelColor:    Plasmoid.configuration.labelColor || ""
-    property string iconColor:     Plasmoid.configuration.iconColor || ""
+    // Colors — read from active profile via ProfileManager
+    property bool useCustomColors: profileManager.activeConfig.useCustomColors
+    property string fontColor:     profileManager.activeConfig.fontColor
+    property string labelColor:    profileManager.activeConfig.labelColor || ""
+    property string iconColor:     profileManager.activeConfig.iconColor || ""
     property color baseTextColor:  (useCustomColors && isValidColor(fontColor)) ? fontColor : Kirigami.Theme.textColor
     property color resolvedLabelColor: (useCustomColors && isValidColor(labelColor)) ? labelColor : baseTextColor
     property color resolvedIconColor:  (useCustomColors && isValidColor(iconColor)) ? iconColor : resolvedLabelColor
 
-    // Metric configuration adapter
+    // Profile manager — must be instantiated before MetricConfig
+    ProfileManager {
+        id: profileManager
+    }
+
+    // Metric configuration adapter — target points to active profile config
     MetricConfig {
         id: metricConfig
+        target: profileManager.activeConfig
     }
 
     // Runtime metric store
