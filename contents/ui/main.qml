@@ -480,6 +480,12 @@ PlasmoidItem {
             iconColor: root.resolvedIconColor
             fontBold: root.fontBold
             pinned: root.pinned
+            profileSummaries: profileManager.profileSummaries
+            activeProfileId: profileManager.activeProfileId
+            activeProfileName: profileManager.activeProfileName
+            onActivateProfile: function(id) {
+                profileManager.activateProfile(id);
+            }
             onTogglePinned: root.pinned = !root.pinned
             onToggleMetricPin: function(metricId) {
                 metricConfig.togglePin(metricId);

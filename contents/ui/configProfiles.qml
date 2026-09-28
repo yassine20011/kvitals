@@ -4,38 +4,22 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCM
 import org.kde.plasma.plasmoid
+import "models"
 
 KCM.SimpleKCM {
     id: profilesPage
 
-    // ProfileManager is accessed via the plasmoid root context.
-    // This page does not use cfg_* properties because profile switching
-    // must take effect immediately (not deferred to Apply).
-    // The KCM Apply/Cancel cycle applies to the other config pages, not this one.
+    readonly property var profileManager: (typeof plasmoid !== "undefined" && plasmoid.profileManager)
+        ? plasmoid.profileManager
+        : fallbackManager
 
-    // Editing state for inline rename
+    ProfileManager {
+        id: fallbackManager
+        manageOnly: true
+    }
+
     property string _editingId: ""
     property string _editingText: ""
-
-    // Warn user before switching profiles while other pages may have unsaved changes.
-    // AppletConfiguration.qml exposes applyButton.enabled as the unsaved-changes indicator
-    // but it is not accessible from here. We use a conservative heuristic: show a
-    // confirmation dialog any time a profile switch is requested from this page.
-    // The user can dismiss it if they have no unsaved changes.
-    Kirigami.PromptDialog {
-        id: switchConfirmDialog
-        property string targetId: ""
-        title: i18n("Switch Profile")
-        subtitle: i18n("Switching profiles will overwrite any unsaved changes in the other configuration tabs. Continue?")
-        standardButtons: Kirigami.Dialog.Ok | Kirigami.Dialog.Cancel
-        onAccepted: {
-            profileManager.activateProfile(targetId);
-            targetId = "";
-        }
-        onRejected: {
-            targetId = "";
-        }
-    }
 
     Kirigami.PromptDialog {
         id: deleteConfirmDialog
@@ -57,6 +41,13 @@ KCM.SimpleKCM {
 
     Kirigami.FormLayout {
         id: form
+
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            type: Kirigami.MessageType.Information
+            text: i18n("Profile activation is disabled while settings are open. Switch profiles from the widget.")
+            visible: true
+        }
 
         // Active profile indicator
         RowLayout {
@@ -91,21 +82,19 @@ KCM.SimpleKCM {
                     readonly property bool isActive: modelData.id === profileManager.activeProfileId
                     readonly property bool isEditing: profilesPage._editingId === modelData.id
 
-                    // Active checkmark
                     Kirigami.Icon {
                         source: "dialog-ok-apply"
                         visible: profileRow.isActive
-                        implicitWidth:  Kirigami.Units.iconSizes.small
-                        implicitHeight: Kirigami.Units.iconSizes.small
-                    }
-                    // Spacer when not active
-                    Item {
-                        visible: !profileRow.isActive
-                        implicitWidth:  Kirigami.Units.iconSizes.small
+                        implicitWidth: Kirigami.Units.iconSizes.small
                         implicitHeight: Kirigami.Units.iconSizes.small
                     }
 
-                    // Name display or inline rename field
+                    Item {
+                        visible: !profileRow.isActive
+                        implicitWidth: Kirigami.Units.iconSizes.small
+                        implicitHeight: Kirigami.Units.iconSizes.small
+                    }
+
                     QQC2.TextField {
                         id: nameField
                         visible: profileRow.isEditing
@@ -137,7 +126,6 @@ KCM.SimpleKCM {
                         elide: Text.ElideRight
                     }
 
-                    // Rename button
                     QQC2.ToolButton {
                         visible: !profileRow.isEditing
                         icon.name: "document-edit"
@@ -150,7 +138,6 @@ KCM.SimpleKCM {
                         }
                     }
 
-                    // Commit rename button (shown when editing)
                     QQC2.ToolButton {
                         visible: profileRow.isEditing
                         icon.name: "dialog-ok"
@@ -160,7 +147,6 @@ KCM.SimpleKCM {
                         onClicked: nameField._commitRename()
                     }
 
-                    // Duplicate button
                     QQC2.ToolButton {
                         visible: !profileRow.isEditing
                         icon.name: "edit-copy"
@@ -173,31 +159,21 @@ KCM.SimpleKCM {
                         }
                     }
 
-                    // Delete button
                     QQC2.ToolButton {
                         visible: !profileRow.isEditing
                         icon.name: "edit-delete"
                         display: QQC2.AbstractButton.IconOnly
-                        enabled: profileManager.profileSummaries.length > 1
-                        QQC2.ToolTip.text: profileManager.profileSummaries.length > 1
-                            ? i18n("Delete")
-                            : i18n("Cannot delete the only profile")
+                        enabled: profileManager.profileSummaries.length > 1 && !profileRow.isActive
+                        QQC2.ToolTip.text: profileRow.isActive
+                            ? i18n("Cannot delete the active profile")
+                            : (profileManager.profileSummaries.length > 1
+                                ? i18n("Delete")
+                                : i18n("Cannot delete the only profile"))
                         QQC2.ToolTip.visible: hovered
                         onClicked: {
                             deleteConfirmDialog.targetId = profileRow.modelData.id;
                             deleteConfirmDialog.targetName = profileRow.modelData.name;
                             deleteConfirmDialog.open();
-                        }
-                    }
-
-                    // Activate button (shown for inactive profiles)
-                    QQC2.Button {
-                        visible: !profileRow.isActive && !profileRow.isEditing
-                        text: i18n("Activate")
-                        icon.name: "system-run"
-                        onClicked: {
-                            switchConfirmDialog.targetId = profileRow.modelData.id;
-                            switchConfirmDialog.open();
                         }
                     }
                 }

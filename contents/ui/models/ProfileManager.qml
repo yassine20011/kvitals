@@ -11,13 +11,14 @@ QtObject {
     readonly property QtObject activeConfig: _activeConfig
 
     // Internal state
+    property bool manageOnly: false
     property string _activeProfileId: ""
     property string _activeProfileName: ""
     property var _profileSummaries: []
     property var _profiles: []
     property bool _syncing: false
 
-    // Profile-system meta keys — excluded from profile data
+    // Meta keys excluded from profile data
     readonly property var _metaKeys: [
         "profileList", "activeProfileId", "migrationDone", "profileListVersion"
     ]
@@ -127,8 +128,7 @@ QtObject {
         separatorOpacity:         0.4
     })
 
-    // Live config object that MetricConfig.target binds to.
-    // Same object instance always — properties are reassigned on profile switch.
+    // Live config object that MetricConfig.target binds to
     property QtObject _activeConfig: QtObject {
         property string pinnedMetrics:            "cpu/usage,ram/percentage,temp/system,bat/percentage,net/down,net/up"
         property bool   cpuEnabled:               true
@@ -233,26 +233,29 @@ QtObject {
         property real   separatorOpacity:         0.4
     }
 
-    // QtObject has no default property in Qt 6, so Connections children are not allowed.
-    // Wire valueChanged manually in Component.onCompleted instead.
-    // Verified from installed AppletConfiguration.qml:
-    //   Apply/OK: saveConfig() writes cfg_* -> Plasmoid.configuration, fires valueChanged per key
-    //   Cancel:   calls closing() -> configDialog.close() with NO write to Plasmoid.configuration
-    // So this handler only fires for actual committed saves, not cancels.
     Component.onCompleted: {
-        Plasmoid.configuration.valueChanged.connect(function(key, value) {
-            if (root._syncing) return;
-            if (root._metaKeys.indexOf(key) !== -1) return;
-            var profile = root._findProfile(root._activeProfileId);
-            if (!profile) return;
-            profile.data[key] = value;
-            _activeConfig[key] = value;
-            root._flush();
-        });
+        if (!root.manageOnly && typeof plasmoid !== "undefined") {
+            plasmoid.profileManager = root;
+        }
+        if (!root.manageOnly) {
+            Plasmoid.configuration.valueChanged.connect(function(key, value) {
+                if (root._syncing) return;
+                if (key === "profileList") {
+                    root._reloadSummariesOnly(value);
+                    return;
+                }
+                if (root._metaKeys.indexOf(key) !== -1) return;
+                var profile = root._findProfile(root._activeProfileId);
+                if (!profile) return;
+                profile.data[key] = value;
+                _activeConfig[key] = value;
+                root._flush();
+            });
+        }
         _init();
     }
 
-    // --- Private implementation ---
+    // Private implementation
 
     function _init() {
         var raw = Plasmoid.configuration.profileList;
@@ -264,8 +267,6 @@ QtObject {
     }
 
     function _migrate() {
-        // Snapshot every current value from Plasmoid.configuration.
-        // Existing user config becomes the "Default" profile unchanged.
         var snap = {};
         var defs = _defaults;
         for (var key in defs) {
@@ -300,10 +301,30 @@ QtObject {
         var savedId = Plasmoid.configuration.activeProfileId;
         var found = _findProfile(savedId);
         var targetId = found ? savedId : _profiles[0].id;
-        _syncing = true;
-        _activateProfileInternal(targetId);
-        _syncing = false;
+        if (!root.manageOnly) {
+            _syncing = true;
+            _activateProfileInternal(targetId);
+            _syncing = false;
+        } else {
+            _activeProfileId = targetId;
+            var prof = _findProfile(targetId);
+            _activeProfileName = prof ? prof.name : "";
+        }
         _rebuildSummaries();
+    }
+
+    function _reloadSummariesOnly(raw) {
+        try {
+            var parsed = JSON.parse(raw);
+            if (!parsed || !Array.isArray(parsed.profiles) || parsed.profiles.length === 0) return;
+            _profiles = parsed.profiles;
+            var active = _findProfile(_activeProfileId);
+            if (active) {
+                _activeProfileName = active.name;
+            }
+            _rebuildSummaries();
+        } catch (e) {
+        }
     }
 
     function _flush() {
@@ -315,9 +336,6 @@ QtObject {
         if (!profile) return;
         var data = profile.data;
         var defs = _defaults;
-        // Write profile values into Plasmoid.configuration flat keys so KCM
-        // pages read the correct profile values when the config dialog opens.
-        // Also populate _activeConfig for live MetricConfig reactive bindings.
         for (var key in defs) {
             var val = (data[key] !== undefined) ? data[key] : defs[key];
             Plasmoid.configuration[key] = val;
@@ -356,10 +374,10 @@ QtObject {
         });
     }
 
-    // --- Public CRUD ---
+    // Public CRUD
 
     function activateProfile(id) {
-        if (id === _activeProfileId) return;
+        if (root.manageOnly || id === _activeProfileId) return;
         _syncing = true;
         _activateProfileInternal(id);
         _flush();
