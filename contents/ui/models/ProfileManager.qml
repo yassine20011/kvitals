@@ -233,14 +233,14 @@ QtObject {
         property real   separatorOpacity:         0.4
     }
 
-    // Intercept Apply/OK writes from the KCM config dialog.
-    // Verified from AppletConfiguration.qml (installed Plasma 6):
+    // QtObject has no default property in Qt 6, so Connections children are not allowed.
+    // Wire valueChanged manually in Component.onCompleted instead.
+    // Verified from installed AppletConfiguration.qml:
     //   Apply/OK: saveConfig() writes cfg_* -> Plasmoid.configuration, fires valueChanged per key
     //   Cancel:   calls closing() -> configDialog.close() with NO write to Plasmoid.configuration
     // So this handler only fires for actual committed saves, not cancels.
-    Connections {
-        target: Plasmoid.configuration
-        function onValueChanged(key, value) {
+    Component.onCompleted: {
+        Plasmoid.configuration.valueChanged.connect(function(key, value) {
             if (root._syncing) return;
             if (root._metaKeys.indexOf(key) !== -1) return;
             var profile = root._findProfile(root._activeProfileId);
@@ -248,10 +248,9 @@ QtObject {
             profile.data[key] = value;
             _activeConfig[key] = value;
             root._flush();
-        }
+        });
+        _init();
     }
-
-    Component.onCompleted: _init()
 
     // --- Private implementation ---
 
