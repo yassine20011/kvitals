@@ -2,6 +2,28 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [3.3.0] - 2026-09-30
+
+### Added
+
+- **Configuration Profiles**: Support for multiple named profiles, allowing independent configurations for different workflows (such as Gaming, Work, Minimal, or Battery Saver).
+  - **Profile Management**: Create, rename, duplicate, and delete profiles directly from the dedicated Profiles settings page.
+  - **Independent Settings**: Each profile maintains its own panel items, metric selection, sensor thresholds, colors, and layout preferences.
+  - **Seamless Migration**: Existing widget configurations automatically migrate into a Default profile on first launch with zero configuration loss.
+  - **Persistent State**: Active profile selection and profile definitions persist across system restarts and plasmashell reloads.
+- **Global Profile Shortcut & Quick Switcher**:
+  - **Dedicated Shortcut**: Switch active profiles instantly from anywhere via a global shortcut (defaults to `Meta+Shift+V`).
+  - **Configurable Shortcut**: Customize or reassign the global key sequence directly from Settings → Profiles via native KDE shortcut configuration.
+  - **Floating Profile Selector**: Fast popup dialog positioned adjacent to the panel widget showing all profiles with the active profile highlighted.
+  - **Keyboard & Mouse Navigation**: Navigate profiles using Up/Down arrow keys, activate with Enter, cancel with Escape, or click any profile directly with the mouse.
+  - **Automatic Dismissal**: Automatically dismisses after 3 seconds of inactivity, or immediately when clicking outside once active.
+- **Profiles Settings Page**: Added a new Profiles tab to the configuration dialog (Settings → Profiles), featuring real-time synchronization with the live widget.
+
+### Fixed
+
+- **Panel Boundary Clipping**: Resolved popup clipping issues near screen and panel edges by anchoring the switcher dialog to the applet containment.
+- **External Window Focus**: Preserved switcher popup focus and interaction stability when activated while external applications have focus.
+
 ## [3.2.1] - 2026-09-22
 
 ### Fixed
