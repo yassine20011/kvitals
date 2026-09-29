@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls as QQC2
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasmoid
@@ -11,9 +10,6 @@ PlasmaCore.Dialog {
 
     property var profileSummaries: []
     property string activeProfileId: ""
-    readonly property alias autoDismissInterval: dismissTimer.interval
-    readonly property alias listView: listView
-    readonly property bool opened: visible
     signal profileSelected(string id)
 
     visualParent: parent

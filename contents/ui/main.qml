@@ -25,7 +25,7 @@ PlasmoidItem {
     Layout.preferredWidth: compactRepresentationItem ? compactRepresentationItem.implicitWidth : -1
     Layout.preferredHeight: compactRepresentationItem ? compactRepresentationItem.implicitHeight : -1
 
-    // Display and appearance properties — read from active profile via ProfileManager
+    // Display and appearance properties
     property string displayMode:      profileManager.activeConfig.displayMode
     property string layoutType:       profileManager.activeConfig.layoutType
     property string backgroundType:   profileManager.activeConfig.backgroundType || "default"
@@ -66,7 +66,7 @@ PlasmoidItem {
     property bool useIcons: displayMode === "icons" || displayMode === "icons+text"
     property bool useText:  displayMode === "text"  || displayMode === "icons+text"
 
-    // Colors — read from active profile via ProfileManager
+    // Colors
     property bool useCustomColors: profileManager.activeConfig.useCustomColors
     property string fontColor:     profileManager.activeConfig.fontColor
     property string labelColor:    profileManager.activeConfig.labelColor || ""
@@ -75,12 +75,12 @@ PlasmoidItem {
     property color resolvedLabelColor: (useCustomColors && isValidColor(labelColor)) ? labelColor : baseTextColor
     property color resolvedIconColor:  (useCustomColors && isValidColor(iconColor)) ? iconColor : resolvedLabelColor
 
-    // Profile manager — must be instantiated before MetricConfig
+    // Profile manager
     ProfileManager {
         id: profileManager
     }
 
-    // Metric configuration adapter — target points to active profile config
+    // Metric configuration adapter
     MetricConfig {
         id: metricConfig
         target: profileManager.activeConfig
