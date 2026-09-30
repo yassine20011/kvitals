@@ -20,7 +20,7 @@ QtObject {
 
     // Meta keys excluded from profile data
     readonly property var _metaKeys: [
-        "profileList", "activeProfileId", "migrationDone", "profileListVersion", "shortcutInitialized"
+        "profileList", "activeProfileId", "migrationDone", "profileListVersion", "shortcutInitialized", "corruptedProfileListBackup"
     ]
 
     // Schema defaults
@@ -231,6 +231,24 @@ QtObject {
         property int    fanMaxRpm:                2000
         property real   labelOpacity:             0.65
         property real   separatorOpacity:         0.4
+
+        onPinnedMetricsChanged: root._saveActiveConfigKey("pinnedMetrics", pinnedMetrics)
+        onGpuLabelsChanged:     root._saveActiveConfigKey("gpuLabels", gpuLabels)
+        onGpuSelectionChanged:  root._saveActiveConfigKey("gpuSelection", gpuSelection)
+        onDiskLabelsChanged:    root._saveActiveConfigKey("diskLabels", diskLabels)
+        onFanLabelsChanged:     root._saveActiveConfigKey("fanLabels", fanLabels)
+    }
+
+    function _saveActiveConfigKey(key, value) {
+        if (root._syncing) return;
+        var profile = root._findProfile(root._activeProfileId);
+        if (profile) {
+            profile.data[key] = value;
+        }
+        root._syncing = true;
+        Plasmoid.configuration[key] = value;
+        root._flush();
+        root._syncing = false;
     }
 
     Component.onCompleted: {
@@ -250,9 +268,11 @@ QtObject {
             if (root._metaKeys.indexOf(key) !== -1) return;
             var profile = root._findProfile(root._activeProfileId);
             if (!profile) return;
+            root._syncing = true;
             profile.data[key] = value;
             _activeConfig[key] = value;
             root._flush();
+            root._syncing = false;
         });
         _init();
     }
@@ -287,22 +307,53 @@ QtObject {
         _rebuildSummaries();
     }
 
+    function _validateProfiles(profiles) {
+        if (!Array.isArray(profiles) || profiles.length === 0) return false;
+        for (var i = 0; i < profiles.length; i++) {
+            var p = profiles[i];
+            if (!p || typeof p !== "object") return false;
+            if (typeof p.id !== "string" || p.id === "") return false;
+            if (typeof p.name !== "string" || p.name === "") return false;
+            if (!p.data || typeof p.data !== "object") return false;
+        }
+        return true;
+    }
+
+    function _preserveCorruptedData(raw) {
+        var existingBackup = Plasmoid.configuration.corruptedProfileListBackup;
+        if (!existingBackup || existingBackup === "") {
+            Plasmoid.configuration.corruptedProfileListBackup = String(raw);
+        }
+    }
+
     function _loadFromRaw(raw) {
+        var parsed = null;
+        var isCorrupted = false;
         try {
-            var parsed = JSON.parse(raw);
-            if (!parsed || !Array.isArray(parsed.profiles) || parsed.profiles.length === 0) {
-                _migrate();
-                return;
+            parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed !== "object" || !_validateProfiles(parsed.profiles)) {
+                isCorrupted = true;
             }
-            _profiles = parsed.profiles;
         } catch (e) {
-            console.warn("KVitals ProfileManager: corrupted profileList, resetting:", e);
+            isCorrupted = true;
+        }
+
+        if (isCorrupted) {
+            console.warn("KVitals ProfileManager: corrupted profileList detected; preserving backup and recovering Default profile.");
+            _preserveCorruptedData(raw);
             _migrate();
             return;
         }
+
+        _profiles = parsed.profiles;
         var savedId = Plasmoid.configuration.activeProfileId;
         var found = _findProfile(savedId);
         var targetId = found ? savedId : _profiles[0].id;
+        if (!found) {
+            console.warn("KVitals ProfileManager: activeProfileId not found, falling back to first profile:", targetId);
+            Plasmoid.configuration.activeProfileId = targetId;
+        }
+
         if (!root.manageOnly) {
             _syncing = true;
             _activateProfileInternal(targetId);
@@ -318,7 +369,7 @@ QtObject {
     function _reloadSummariesOnly(raw) {
         try {
             var parsed = JSON.parse(raw);
-            if (!parsed || !Array.isArray(parsed.profiles) || parsed.profiles.length === 0) return;
+            if (!parsed || !_validateProfiles(parsed.profiles)) return;
             _profiles = parsed.profiles;
             var savedId = Plasmoid.configuration.activeProfileId;
             var active = _findProfile(savedId);

@@ -207,17 +207,20 @@ Threshold sliders are available for CPU usage, CPU temperature, System temperatu
 
 ## Profiles Tab
 
-The **Profiles** tab allows saving, duplicating, and switching between independent configurations.
+The **Profiles** tab allows creating, duplicating, renaming, and organizing independent widget configurations.
 
 | Feature | Description |
 |---|---|
 | **Profile list** | Displays all configured profiles. The active profile is marked with a checkmark badge. |
 | **Add Profile** | Creates a new named profile with default settings. |
-| **Activate** | Switches the active profile immediately. All panel items, sensors, colors, and thresholds update in real time. |
 | **Duplicate** | Copies the selected profile's full configuration to a new profile. |
 | **Rename** | Updates the display name of the selected profile. |
-| **Delete** | Removes a profile. The Default profile is protected and cannot be deleted. |
+| **Delete** | Removes a profile. The currently active profile and the last remaining profile cannot be deleted. |
 | **Global shortcut** | Configures the keyboard shortcut used to summon the profile switcher popup (defaults to `Meta+Shift+V`). |
+
+Profile management actions (adding, duplicating, renaming, and deleting profiles) apply immediately upon confirmation. Closing the configuration window with Cancel does not undo profile list changes.
+
+To switch the active profile, use the widget popup or the global keyboard shortcut (`Meta+Shift+V`). Profile activation is intentionally disabled inside the settings dialog to keep active configuration pages safe.
 
 ### Quick Switcher Popup
 

@@ -84,7 +84,7 @@ A `QtObject` component that orchestrates profile lifecycles, configuration seria
 - **State management**: Tracks the active profile ID, ordered profile list, and active index.
 - **CRUD operations**: Supports `createProfile(name)`, `activateProfile(id)`, `duplicateProfile(id)`, `renameProfile(id, newName)`, and `deleteProfile(id)`.
 - **Bidirectional synchronization**: Synchronizes `Plasmoid.configuration` keys when switching profiles and writes back configuration updates.
-- **Migration & Persistence**: Migrates legacy flat configurations into the Default profile on startup without data loss and serializes profile data to `Plasmoid.configuration.profilesJson`.
+- **Migration & Persistence**: Migrates legacy flat configurations into the Default profile on startup without data loss and serializes profile data to `Plasmoid.configuration.profileList`.
 
 ## Metric Contract
 

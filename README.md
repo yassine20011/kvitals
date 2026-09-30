@@ -110,7 +110,7 @@ Right-click the widget and select **Configure KVitals...** to open the settings 
 | **Sensors & Hardware** | Custom device labels, per-GPU selection and discrete GPU power suspension, per-fan max RPM fallback, and network interface selection. |
 | **Icons** | Custom symbolic icon selectors mapped to your active system icon theme with bundled SVG fallback support. |
 | **Colors** | Font, label, and icon colors, per-metric warning and critical threshold sliders, and custom highlight colors. |
-| **Profiles** | Named configuration profiles (create, duplicate, rename, delete, activate) and global shortcut configuration. |
+| **Profiles** | Named configuration profiles (create, duplicate, rename, delete) and global shortcut configuration. |
 
 ### Configuration Profiles
 
@@ -121,11 +121,10 @@ KVitals supports multiple independent configuration profiles. You can configure 
 Open widget settings and switch to the **Profiles** tab:
 
 - **Create**: Enter a profile name and click **Add**.
-- **Activate**: Select any profile in the list to switch to it immediately.
-- **Duplicate**: Clone your current configuration to quickly create a customized variant.
-- **Rename & Delete**: Rename existing profiles or delete profiles you no longer need (the Default profile is protected and cannot be deleted).
+- **Duplicate**: Clone an existing profile to quickly create a customized variant.
+- **Rename & Delete**: Rename profiles or delete profiles you no longer need. The currently active profile and the last remaining profile cannot be deleted.
 
-Every profile stores its settings independently. Switching profiles instantly updates your panel items, sensor polling, appearance, and thresholds.
+Profile management operations apply immediately upon confirmation. To switch the active profile, use the widget popup or the global keyboard shortcut (`Meta+Shift+V`). Every profile stores its settings independently.
 
 #### Quick Switcher Shortcut
 

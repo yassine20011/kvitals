@@ -21,6 +21,8 @@ All notable changes to KVitals will be documented in this file.
 
 ### Fixed
 
+- **Pinned Metrics Persistence**: Ensured metric pin and unpin toggles performed from the interactive popup persist to the active configuration profile and survive profile switches and restarts.
+- **Corrupted Profile Recovery**: Hardened profile list loading with schema validation and automatic preservation of corrupted configuration data in `corruptedProfileListBackup` before recovering to a Default profile.
 - **Panel Boundary Clipping**: Resolved popup clipping issues near screen and panel edges by anchoring the switcher dialog to the applet containment.
 - **External Window Focus**: Preserved switcher popup focus and interaction stability when activated while external applications have focus.
 
