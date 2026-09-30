@@ -21,15 +21,10 @@ KCM.SimpleKCM {
 
     function saveConfig() {
         var seq = shortcutItem.keySequence;
-        Plasmoid.globalShortcut = seq;
-        Plasmoid.configuration.configuredShortcut = (seq && String(seq) !== "") ? String(seq) : "none";
+        var seqStr = (seq && String(seq) !== "") ? String(seq) : "none";
+        Plasmoid.configuration.configuredShortcut = seqStr;
+        Plasmoid.globalShortcut = (seqStr !== "none") ? seqStr : "";
         unsavedChanges = false;
-    }
-
-    Component.onDestruction: {
-        if (unsavedChanges) {
-            saveConfig();
-        }
     }
 
     Kirigami.PromptDialog {
@@ -174,12 +169,14 @@ KCM.SimpleKCM {
                         visible: !profileRow.isEditing
                         icon.name: "edit-delete"
                         display: QQC2.AbstractButton.IconOnly
-                        enabled: profileManager.profileSummaries.length > 1 && !profileRow.isActive
-                        QQC2.ToolTip.text: profileRow.isActive
-                            ? i18n("Cannot delete the active profile")
-                            : (profileManager.profileSummaries.length > 1
-                                ? i18n("Delete")
-                                : i18n("Cannot delete the only profile"))
+                        enabled: profileManager.profileSummaries.length > 1 && !profileRow.isActive && modelData.name !== "Default"
+                        QQC2.ToolTip.text: modelData.name === "Default"
+                            ? i18n("Cannot delete the Default profile")
+                            : (profileRow.isActive
+                                ? i18n("Cannot delete the active profile")
+                                : (profileManager.profileSummaries.length > 1
+                                    ? i18n("Delete")
+                                    : i18n("Cannot delete the only profile")))
                         QQC2.ToolTip.visible: hovered
                         onClicked: {
                             deleteConfirmDialog.targetId = profileRow.modelData.id;

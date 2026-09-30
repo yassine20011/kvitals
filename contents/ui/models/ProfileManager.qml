@@ -320,10 +320,7 @@ QtObject {
     }
 
     function _preserveCorruptedData(raw) {
-        var existingBackup = Plasmoid.configuration.corruptedProfileListBackup;
-        if (!existingBackup || existingBackup === "") {
-            Plasmoid.configuration.corruptedProfileListBackup = String(raw);
-        }
+        Plasmoid.configuration.corruptedProfileListBackup = String(raw);
     }
 
     function _loadFromRaw(raw) {
@@ -479,6 +476,7 @@ QtObject {
             if (_profiles[i].id === id) { idx = i; break; }
         }
         if (idx === -1) return;
+        if (_profiles[idx].name === "Default") return;
         _profiles.splice(idx, 1);
         if (id === _activeProfileId) {
             _syncing = true;
