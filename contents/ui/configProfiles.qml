@@ -169,9 +169,9 @@ KCM.SimpleKCM {
                         visible: !profileRow.isEditing
                         icon.name: "edit-delete"
                         display: QQC2.AbstractButton.IconOnly
-                        enabled: profileManager.profileSummaries.length > 1 && !profileRow.isActive && modelData.name !== "Default"
-                        QQC2.ToolTip.text: modelData.name === "Default"
-                            ? i18n("Cannot delete the Default profile")
+                        enabled: profileManager.profileSummaries.length > 1 && !profileRow.isActive && !modelData.isDefault
+                        QQC2.ToolTip.text: modelData.isDefault
+                            ? i18n("Cannot delete the original Default profile")
                             : (profileRow.isActive
                                 ? i18n("Cannot delete the active profile")
                                 : (profileManager.profileSummaries.length > 1

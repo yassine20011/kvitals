@@ -296,7 +296,7 @@ QtObject {
             snap[key] = (val !== undefined) ? val : defs[key];
         }
         var id = _uuid();
-        var profile = { id: id, name: "Default", createdAt: Date.now(), data: snap };
+        var profile = { id: id, name: "Default", createdAt: Date.now(), isDefault: true, data: snap };
         _profiles = [profile];
         _syncing = true;
         Plasmoid.configuration.profileListVersion = 1;
@@ -404,7 +404,8 @@ QtObject {
             result.push({
                 id: _profiles[i].id,
                 name: _profiles[i].name,
-                createdAt: _profiles[i].createdAt
+                createdAt: _profiles[i].createdAt,
+                isDefault: !!_profiles[i].isDefault
             });
         }
         _profileSummaries = result;
@@ -476,7 +477,7 @@ QtObject {
             if (_profiles[i].id === id) { idx = i; break; }
         }
         if (idx === -1) return;
-        if (_profiles[idx].name === "Default") return;
+        if (_profiles[idx].isDefault) return;
         _profiles.splice(idx, 1);
         if (id === _activeProfileId) {
             _syncing = true;
