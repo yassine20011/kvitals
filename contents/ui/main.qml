@@ -207,12 +207,15 @@ PlasmoidItem {
     }
 
     Component.onCompleted: {
-        if (!Plasmoid.configuration.shortcutInitialized) {
-            if (String(Plasmoid.globalShortcut) === "") {
-                Plasmoid.globalShortcut = "Meta+Shift+V";
-            }
-            Plasmoid.configuration.shortcutInitialized = true;
+        var targetShortcut = Plasmoid.configuration.configuredShortcut;
+        if (!targetShortcut || targetShortcut === "") {
+            targetShortcut = "Meta+Shift+V";
+            Plasmoid.configuration.configuredShortcut = targetShortcut;
         }
+        if (targetShortcut !== "none" && String(Plasmoid.globalShortcut) === "") {
+            Plasmoid.globalShortcut = targetShortcut;
+        }
+        Plasmoid.configuration.shortcutInitialized = true;
         sensorActivationTimer.start();
         applyBackgroundType();
     }
@@ -511,11 +514,21 @@ PlasmoidItem {
 
     Connections {
         target: Plasmoid
+        function onGlobalShortcutChanged(shortcut) {
+            var s = String(shortcut);
+            if (s !== "") {
+                Plasmoid.configuration.configuredShortcut = s;
+            } else if (Plasmoid.configuration.configuredShortcut !== "none") {
+                Plasmoid.globalShortcut = Plasmoid.configuration.configuredShortcut;
+            }
+        }
         function onActivated() {
+            if (profileSelectorPopup.visible) {
+                profileSelectorPopup.close();
+                return;
+            }
+            root.expanded = false;
             profileSelectorPopup.open();
-            Qt.callLater(function() {
-                root.expanded = false;
-            });
         }
     }
 

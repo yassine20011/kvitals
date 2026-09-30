@@ -20,8 +20,16 @@ KCM.SimpleKCM {
     property string _editingText: ""
 
     function saveConfig() {
-        Plasmoid.globalShortcut = shortcutItem.keySequence;
+        var seq = shortcutItem.keySequence;
+        Plasmoid.globalShortcut = seq;
+        Plasmoid.configuration.configuredShortcut = (seq && String(seq) !== "") ? String(seq) : "none";
         unsavedChanges = false;
+    }
+
+    Component.onDestruction: {
+        if (unsavedChanges) {
+            saveConfig();
+        }
     }
 
     Kirigami.PromptDialog {
@@ -217,7 +225,13 @@ KCM.SimpleKCM {
         KeySequenceItem {
             id: shortcutItem
             Kirigami.FormData.label: i18n("Profile switcher:")
-            keySequence: Plasmoid.globalShortcut
+            keySequence: {
+                var cfg = Plasmoid.configuration.configuredShortcut;
+                if (cfg && cfg !== "" && cfg !== "none") {
+                    return cfg;
+                }
+                return Plasmoid.globalShortcut;
+            }
             patterns: ShortcutPattern.Modifier | ShortcutPattern.ModifierAndKey
             onKeySequenceModified: profilesPage.unsavedChanges = (keySequence !== Plasmoid.globalShortcut)
         }

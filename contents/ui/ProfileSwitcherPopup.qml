@@ -26,18 +26,20 @@ PlasmaCore.Dialog {
         show();
         requestActivate();
         dismissTimer.restart();
+        focusGraceTimer.restart();
     }
 
     function close() {
         visible = false;
         _hasBeenActive = false;
+        focusGraceTimer.stop();
         dismissTimer.stop();
     }
 
     onActiveChanged: {
         if (active) {
             _hasBeenActive = true;
-        } else if (_hasBeenActive && visible) {
+        } else if (_hasBeenActive && visible && !focusGraceTimer.running) {
             root.close();
         }
     }
@@ -73,6 +75,17 @@ PlasmaCore.Dialog {
             interval: 3000
             repeat: false
             onTriggered: root.close()
+        }
+
+        Timer {
+            id: focusGraceTimer
+            interval: 200
+            repeat: false
+            onTriggered: {
+                if (root.visible && root._hasBeenActive && !root.active) {
+                    root.close();
+                }
+            }
         }
 
         Shortcut {

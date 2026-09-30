@@ -20,7 +20,7 @@ QtObject {
 
     // Meta keys excluded from profile data
     readonly property var _metaKeys: [
-        "profileList", "activeProfileId", "migrationDone", "profileListVersion", "shortcutInitialized", "corruptedProfileListBackup"
+        "profileList", "activeProfileId", "migrationDone", "profileListVersion", "shortcutInitialized", "corruptedProfileListBackup", "configuredShortcut"
     ]
 
     // Schema defaults

@@ -350,5 +350,8 @@
         <entry name="corruptedProfileListBackup" type="String">
             <default></default>
         </entry>
+        <entry name="configuredShortcut" type="String">
+            <default>Meta+Shift+V</default>
+        </entry>
     </group>
 </kcfg>
