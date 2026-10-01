@@ -18,12 +18,11 @@ KCM.SimpleKCM {
     property bool unsavedChanges: false
     property string _editingId: ""
     property string _editingText: ""
+    property string cfg_configuredShortcut: ""
 
     function saveConfig() {
-        var seq = shortcutItem.keySequence;
-        var seqStr = (seq && String(seq) !== "") ? String(seq) : "none";
-        Plasmoid.configuration.configuredShortcut = seqStr;
-        Plasmoid.globalShortcut = (seqStr !== "none") ? seqStr : "";
+        var seqStr = cfg_configuredShortcut;
+        Plasmoid.globalShortcut = (seqStr && seqStr !== "none") ? seqStr : "";
         unsavedChanges = false;
     }
 
@@ -223,14 +222,16 @@ KCM.SimpleKCM {
             id: shortcutItem
             Kirigami.FormData.label: i18n("Profile switcher:")
             keySequence: {
-                var cfg = Plasmoid.configuration.configuredShortcut;
-                if (cfg && cfg !== "" && cfg !== "none") {
-                    return cfg;
-                }
+                var cfg = cfg_configuredShortcut;
+                if (cfg && cfg !== "" && cfg !== "none") return cfg;
                 return Plasmoid.globalShortcut;
             }
             patterns: ShortcutPattern.Modifier | ShortcutPattern.ModifierAndKey
-            onKeySequenceModified: profilesPage.unsavedChanges = (keySequence !== Plasmoid.globalShortcut)
+            onKeySequenceModified: {
+                var s = String(keySequence);
+                cfg_configuredShortcut = (s !== "") ? s : "none";
+                profilesPage.unsavedChanges = true;
+            }
         }
     }
 }

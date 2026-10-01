@@ -343,6 +343,27 @@ QtObject {
         }
 
         _profiles = parsed.profiles;
+
+        // Backfill isDefault for profile lists saved before this field was introduced
+        var hasIsDefault = false;
+        for (var di = 0; di < _profiles.length; di++) {
+            if (_profiles[di].isDefault) { hasIsDefault = true; break; }
+        }
+        if (!hasIsDefault) {
+            var target = null;
+            for (var ni = 0; ni < _profiles.length; ni++) {
+                if (_profiles[ni].name === "Default") { target = _profiles[ni]; break; }
+            }
+            if (!target) {
+                target = _profiles[0];
+                for (var ei = 1; ei < _profiles.length; ei++) {
+                    if (_profiles[ei].createdAt < target.createdAt) target = _profiles[ei];
+                }
+            }
+            target.isDefault = true;
+            _flush();
+        }
+
         var savedId = Plasmoid.configuration.activeProfileId;
         var found = _findProfile(savedId);
         var targetId = found ? savedId : _profiles[0].id;
