@@ -212,3 +212,13 @@ kquitapp6 plasmashell && kstart plasmashell &
 
 !!! tip
     The font dropdown is searchable — start typing the font name to filter the list. You can also type a custom font name directly.
+
+## Profile Switcher Shortcut Not Responding
+
+**Cause:** Another desktop shortcut or application is capturing `Meta+Shift+V`, or the shortcut assignment was cleared.
+
+**Fix:**
+
+1. Open **Settings → Profiles**.
+2. Click the **Global shortcut** input button and record a new shortcut sequence.
+3. Test pressing the newly configured shortcut to summon the profile switcher popup.

@@ -77,6 +77,15 @@ A `QtObject` that wraps every `Plasmoid.configuration` value and provides typed 
 
 The central aggregator. On every sensor change it recomputes `metrics`, a `readonly` property holding a flat array of metric objects conforming to the Metric Contract.
 
+### `ProfileManager.qml`
+
+A `QtObject` component that orchestrates profile lifecycles, configuration serialization, and active profile synchronization:
+
+- **State management**: Tracks the active profile ID, ordered profile list, and active index.
+- **CRUD operations**: Supports `createProfile(name)`, `activateProfile(id)`, `duplicateProfile(id)`, `renameProfile(id, newName)`, and `deleteProfile(id)`.
+- **Bidirectional synchronization**: Synchronizes `Plasmoid.configuration` keys when switching profiles and writes back configuration updates.
+- **Migration & Persistence**: Migrates legacy flat configurations into the Default profile on startup without data loss and serializes profile data to `Plasmoid.configuration.profileList`.
+
 ## Metric Contract
 
 `MetricStore` serves as the normalization boundary between sensor modules and generic views:
@@ -301,6 +310,10 @@ A `RowLayout` with a `Repeater` driven by `buildCompactItems`. Each item renders
 
 An interactive accordion popup driven by `buildPopupGroups`. Each category features aggregate values, expandable sub-sections, and individual metric rows with click-to-pin controls. Footer buttons provide quick actions to refresh sensors and open KDE System Monitor.
 
+### ProfileSwitcherPopup
+
+A dedicated `PlasmaCore.Dialog` popup activated via the global shortcut (`Meta+Shift+V`), anchored to the panel icon. Provides rapid keyboard (Up/Down/Enter/Escape) and mouse profile selection with auto-dismissal.
+
 ### Tooltip
 
 A static `"KVitals"` title only. Metrics are not duplicated into the tooltip.
@@ -315,6 +328,7 @@ ui/configPanelOrder.qml  <- visual panel order preview, metric palette, chip reo
 ui/configMetrics.qml     <- enable/disable, visibility, order, grouping, overrides, device selectors
 ui/configIcons.qml       <- per-metric icon picker
 ui/configColors.qml      <- font color, warning/critical colors, thresholds
+ui/configProfiles.qml    <- profile management, global shortcut configuration
 ```
 
 All values flow through `MetricConfig.qml`. Nothing in the sensor or view layer reads `Plasmoid.configuration` directly.
@@ -451,14 +465,18 @@ kvitals/
         ├── main.qml               <- widget root, wires sensors to MetricStore
         ├── CompactView.qml
         ├── FullView.qml
+        ├── ProfileSwitcherPopup.qml  <- floating quick profile selector popup
         ├── configGeneral.qml
+        ├── configPanelOrder.qml
         ├── configMetrics.qml
         ├── configIcons.qml
         ├── configColors.qml
+        ├── configProfiles.qml     <- profile management & shortcut settings
         ├── models/
         │   ├── MetricDefinitions.js  <- shared metric catalog
         │   ├── MetricConfig.qml      <- Plasmoid.configuration adapter
         │   ├── MetricStore.qml       <- flat normalized metrics list
+        │   ├── ProfileManager.qml    <- profile lifecycle & persistence
         │   └── ViewHelpers.js        <- grouping/ordering for each view
         └── sensors/
             ├── qmldir

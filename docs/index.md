@@ -12,6 +12,7 @@ CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 58°C  |  🔋BAT: 78%  |  PWR: +20W  |  N
 - **Interactive Popup**: Categorized accordion popup with real-time vitals and click-to-pin controls.
 - **Display Modes**: Text, Icons, or Icons + Text, with horizontal or vertical layouts.
 - **Visibility Controls**: Set each metric to show in panel and popup, panel only, popup only, or disabled.
+- **Configuration Profiles**: Multiple named profiles with independent metrics, layouts, and colors, switchable via a global shortcut.
 - **Customization**: Custom labels, icon colors, threshold coloring, and system font selection.
 - **Minimal Footprint**: Native KSysGuard integration with pure QML and no background scripts.
 

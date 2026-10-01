@@ -23,9 +23,13 @@ ColumnLayout {
     required property color iconColor
     required property bool fontBold
     required property bool pinned
+    property var profileSummaries: []
+    property string activeProfileId: ""
+    property string activeProfileName: ""
     signal togglePinned()
     signal toggleMetricPin(string metricId)
     signal refreshRequested()
+    signal activateProfile(string id)
 
     readonly property int _rowHeight: Math.round(Kirigami.Units.gridUnit * 1.6)
     readonly property int _iconSz: Kirigami.Units.iconSizes.small
@@ -269,6 +273,34 @@ ColumnLayout {
                     ToolTip.delay: Kirigami.Units.toolTipDelay
                     onClicked: {
                         executable.exec("plasma-systemmonitor || ksysguard");
+                    }
+                }
+
+                PlasmaComponents.ToolButton {
+                    id: profileBtn
+                    icon.name: "preferences-system-session-services"
+                    implicitWidth: fullView._rowHeight
+                    implicitHeight: fullView._rowHeight
+                    ToolTip.text: i18n("Profile: %1", fullView.activeProfileName)
+                    ToolTip.visible: hovered
+                    ToolTip.delay: Kirigami.Units.toolTipDelay
+                    onClicked: profileMenu.open()
+
+                    Menu {
+                        id: profileMenu
+                        y: profileBtn.height
+                        Instantiator {
+                            model: fullView.profileSummaries
+                            delegate: MenuItem {
+                                text: modelData.name
+                                icon.name: modelData.id === fullView.activeProfileId ? "dialog-ok-apply" : ""
+                                checkable: true
+                                checked: modelData.id === fullView.activeProfileId
+                                onClicked: fullView.activateProfile(modelData.id)
+                            }
+                            onObjectAdded: (index, object) => profileMenu.insertItem(index, object)
+                            onObjectRemoved: (index, object) => profileMenu.removeItem(object)
+                        }
                     }
                 }
 

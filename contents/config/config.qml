@@ -28,4 +28,9 @@ ConfigModel {
         icon: "color-management"
         source: "configColors.qml"
     }
+    ConfigCategory {
+        name: i18n("Profiles")
+        icon: "bookmarks"
+        source: "configProfiles.qml"
+    }
 }

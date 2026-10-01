@@ -45,6 +45,8 @@ Here is what you can track and customize:
 - **Color customization**: Font, label, and icon colors with per-metric threshold sliders for warning and critical states.
 - **Custom ordering**: Drag and drop metrics to rearrange them.
 - **Appearance**: Search system fonts and pick icons from your installed theme or bundled fallback icons.
+- **Configuration profiles**: Save and switch between multiple named configurations (such as Gaming, Work, Minimal, or Battery) with independent panel layouts, metrics, and colors.
+- **Quick profile switcher**: Switch active profiles instantly using a global keyboard shortcut (default: `Meta+Shift+V`) or from the settings page.
 - **Resource efficiency**: Disabling a sensor stops all subscriptions — zero background overhead.
 
 ## Requirements
@@ -108,6 +110,33 @@ Right-click the widget and select **Configure KVitals...** to open the settings 
 | **Sensors & Hardware** | Custom device labels, per-GPU selection and discrete GPU power suspension, per-fan max RPM fallback, and network interface selection. |
 | **Icons** | Custom symbolic icon selectors mapped to your active system icon theme with bundled SVG fallback support. |
 | **Colors** | Font, label, and icon colors, per-metric warning and critical threshold sliders, and custom highlight colors. |
+| **Profiles** | Named configuration profiles (create, duplicate, rename, delete) and global shortcut configuration. |
+
+### Configuration Profiles
+
+KVitals supports multiple independent configuration profiles. You can configure separate metric sets, layouts, colors, and thresholds for different activities (such as full monitoring during gaming, a clean minimal setup for work, or low-overhead stats on battery).
+
+#### Managing Profiles
+
+Open widget settings and switch to the **Profiles** tab:
+
+- **Create**: Enter a profile name and click **Add**.
+- **Duplicate**: Clone an existing profile to quickly create a customized variant.
+- **Rename & Delete**: Rename profiles or delete profiles you no longer need. The currently active profile and the last remaining profile cannot be deleted.
+
+Profile management operations apply immediately upon confirmation. To switch the active profile, use the widget popup or the global keyboard shortcut (`Meta+Shift+V`). Every profile stores its settings independently.
+
+#### Quick Switcher Shortcut
+
+Press `Meta+Shift+V` from anywhere on your desktop to open the profile switcher popup:
+
+- Use **Up** and **Down** arrow keys to browse profiles.
+- Press **Enter** to activate the selected profile.
+- Press **Escape** or click outside to dismiss without changes.
+- You can also click directly on any profile using your mouse.
+- The switcher automatically dismisses after 3 seconds of inactivity.
+
+To change or disable the global shortcut, navigate to **Settings → Profiles** and record a new key sequence using the shortcut field.
 
 You can find more details on [kvitals.dev](https://kvitals.dev) or in the [local configuration guide](docs/configuration.md).
 

@@ -330,5 +330,28 @@
         <entry name="separatorOpacity" type="Double">
             <default>0.4</default>
         </entry>
+
+        <!-- Profile system -->
+        <entry name="profileList" type="String">
+            <default></default>
+        </entry>
+        <entry name="activeProfileId" type="String">
+            <default></default>
+        </entry>
+        <entry name="migrationDone" type="Bool">
+            <default>false</default>
+        </entry>
+        <entry name="profileListVersion" type="Int">
+            <default>1</default>
+        </entry>
+        <entry name="shortcutInitialized" type="Bool">
+            <default>false</default>
+        </entry>
+        <entry name="corruptedProfileListBackup" type="String">
+            <default></default>
+        </entry>
+        <entry name="configuredShortcut" type="String">
+            <default>Meta+Shift+V</default>
+        </entry>
     </group>
 </kcfg>

@@ -1,12 +1,13 @@
 # Configuration
 
-Right-click the widget, then select **Configure KVitals...** to open the settings dialog. Settings are organized into five tabs:
+Right-click the widget, then select **Configure KVitals...** to open the settings dialog. Settings are organized into six tabs:
 
 1. **General**: Display mode, panel layout, desktop background, fonts, update interval, dividers, and unit preferences.
 2. **Panel Items**: Live panel preview, interactive chip reordering, and click-to-pin metric palette.
 3. **Sensors & Hardware**: Enable/disable telemetry categories, visibility modes, and device overrides.
 4. **Icons**: Native icon picker with bundled symbolic SVG fallbacks.
 5. **Colors**: Custom font and label colors, warning/critical thresholds, and sensor alert limits.
+6. **Profiles**: Multiple named profiles, profile cloning/deletion, and global shortcut assignment.
 
 ## General Tab
 
@@ -203,3 +204,31 @@ Click **Reset to defaults** to restore the default icon assignments. If an icon 
 | **Critical color** | Color when a critical threshold is met | `#da4453` |
 
 Threshold sliders are available for CPU usage, CPU temperature, System temperature, RAM usage, RAM temperature, GPU usage, GPU temperature, and battery level.
+
+## Profiles Tab
+
+The **Profiles** tab allows creating, duplicating, renaming, and organizing independent widget configurations.
+
+| Feature | Description |
+|---|---|
+| **Profile list** | Displays all configured profiles. The active profile is marked with a checkmark badge. |
+| **Add Profile** | Creates a new named profile with default settings. |
+| **Duplicate** | Copies the selected profile's full configuration to a new profile. |
+| **Rename** | Updates the display name of the selected profile. |
+| **Delete** | Removes a profile. The currently active profile and the last remaining profile cannot be deleted. |
+| **Global shortcut** | Configures the keyboard shortcut used to summon the profile switcher popup (defaults to `Meta+Shift+V`). |
+
+Profile management actions (adding, duplicating, renaming, and deleting profiles) apply immediately upon confirmation. Closing the configuration window with Cancel does not undo profile list changes.
+
+To switch the active profile, use the widget popup or the global keyboard shortcut (`Meta+Shift+V`). Profile activation is intentionally disabled inside the settings dialog to keep active configuration pages safe.
+
+### Quick Switcher Popup
+
+When the global shortcut is pressed:
+
+- A floating profile switcher dialog appears anchored to the KVitals panel icon.
+- Navigate the list with the **Up** and **Down** arrow keys.
+- Press **Enter** to activate the selected profile and close the popup.
+- Press **Escape** or click outside to dismiss without changing the active profile.
+- You can also click any profile directly with the mouse.
+- If left unattended, the popup automatically dismisses after 3 seconds of inactivity.
