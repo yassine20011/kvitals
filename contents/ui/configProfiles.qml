@@ -257,30 +257,11 @@ KCM.SimpleKCM {
             }
         }
 
-        RowLayout {
-            id: fallbackShortcutRow
+        Kirigami.InlineMessage {
             visible: shortcutLoader.status === Loader.Error
-            Kirigami.FormData.label: i18n("Profile switcher:")
-            spacing: Kirigami.Units.smallSpacing
-
-            QQC2.TextField {
-                id: fallbackShortcutField
-                placeholderText: i18n("e.g. Meta+Alt+P")
-                text: {
-                    var cfg = cfg_configuredShortcut;
-                    if (cfg && cfg !== "" && cfg !== "none") return cfg;
-                    return Plasmoid.globalShortcut || "";
-                }
-                onEditingFinished: {
-                    var s = text.trim();
-                    cfg_configuredShortcut = (s !== "") ? s : "none";
-                    profilesPage.unsavedChanges = true;
-                }
-            }
-
-            Kirigami.ContextualHelpButton {
-                toolTipText: i18n("Install qml6-module-org-kde-kquickcontrols to use the interactive shortcut recorder.")
-            }
+            Layout.fillWidth: true
+            type: Kirigami.MessageType.Information
+            text: i18n("Shortcut configuration requires the KDE Quick Controls package:\n• Debian / Ubuntu: sudo apt install qml6-module-org-kde-kquickcontrols\n• Fedora: sudo dnf install kf6-kdeclarative")
         }
     }
 }
