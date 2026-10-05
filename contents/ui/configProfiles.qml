@@ -4,7 +4,6 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCM
 import org.kde.plasma.plasmoid
-import org.kde.kquickcontrols
 import "models"
 
 KCM.SimpleKCM {
@@ -218,19 +217,85 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: i18n("Shortcut")
         }
 
-        KeySequenceItem {
-            id: shortcutItem
+        Loader {
+            id: shortcutLoader
+            visible: status !== Loader.Error
             Kirigami.FormData.label: i18n("Profile switcher:")
-            keySequence: {
-                var cfg = cfg_configuredShortcut;
-                if (cfg && cfg !== "" && cfg !== "none") return cfg;
-                return Plasmoid.globalShortcut;
+            source: "ProfileShortcutItem.qml"
+
+            onLoaded: _sync()
+
+            function _sync() {
+                if (item) {
+                    item.configuredShortcut = cfg_configuredShortcut;
+                    item.globalShortcut = Plasmoid.globalShortcut || "";
+                }
             }
-            patterns: ShortcutPattern.Modifier | ShortcutPattern.ModifierAndKey
-            onKeySequenceModified: {
-                var s = String(keySequence);
-                cfg_configuredShortcut = (s !== "") ? s : "none";
-                profilesPage.unsavedChanges = true;
+
+            Connections {
+                target: profilesPage
+                function onCfg_configuredShortcutChanged() {
+                    shortcutLoader._sync();
+                }
+            }
+
+            Connections {
+                target: Plasmoid
+                ignoreUnknownSignals: true
+                function onGlobalShortcutChanged() {
+                    shortcutLoader._sync();
+                }
+            }
+
+            Connections {
+                target: shortcutLoader.item
+                ignoreUnknownSignals: true
+                function onModified(newShortcut) {
+                    cfg_configuredShortcut = newShortcut;
+                    profilesPage.unsavedChanges = true;
+                }
+            }
+        }
+
+        Kirigami.InlineMessage {
+            visible: shortcutLoader.status === Loader.Error
+            Layout.fillWidth: true
+            type: Kirigami.MessageType.Information
+            text: i18n("Graphical shortcut recorder requires KDE Quick Controls (e.g. sudo apt install qml6-module-org-kde-kquickcontrols or sudo dnf install kf6-kdeclarative). You can also enter or clear the shortcut manually below.")
+        }
+
+        RowLayout {
+            id: fallbackShortcutRow
+            visible: shortcutLoader.status === Loader.Error
+            Kirigami.FormData.label: i18n("Profile switcher:")
+            spacing: Kirigami.Units.smallSpacing
+
+            QQC2.TextField {
+                id: fallbackShortcutField
+                placeholderText: i18n("e.g. Meta+Alt+P")
+                text: {
+                    var cfg = cfg_configuredShortcut;
+                    if (cfg && cfg !== "" && cfg !== "none") return cfg;
+                    return Plasmoid.globalShortcut || "";
+                }
+                onEditingFinished: {
+                    var s = text.trim();
+                    cfg_configuredShortcut = (s !== "") ? s : "none";
+                    profilesPage.unsavedChanges = true;
+                }
+            }
+
+            QQC2.ToolButton {
+                icon.name: "edit-clear"
+                display: QQC2.AbstractButton.IconOnly
+                QQC2.ToolTip.text: i18n("Clear shortcut")
+                QQC2.ToolTip.visible: hovered
+                enabled: fallbackShortcutField.text.length > 0 && cfg_configuredShortcut !== "none"
+                onClicked: {
+                    fallbackShortcutField.text = "";
+                    cfg_configuredShortcut = "none";
+                    profilesPage.unsavedChanges = true;
+                }
             }
         }
     }
