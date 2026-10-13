@@ -9,6 +9,7 @@ KCM.SimpleKCM {
 
     property alias cfg_updateInterval: intervalSlider.value
     property alias cfg_iconSize: iconSizeSlider.value
+    property alias cfg_panelPadding: panelPaddingSlider.value
     property alias cfg_fontSize: fontSizeSlider.value
     property alias cfg_fontBold: fontBoldCheck.checked
     property alias cfg_labelOpacity: labelOpacitySlider.value
@@ -80,6 +81,20 @@ KCM.SimpleKCM {
             Kirigami.ContextualHelpButton {
                 toolTipText: i18n("Controls the widget background when placed directly on the desktop. When placed inside a panel, the widget blends seamlessly into the panel bar.")
             }
+        }
+
+        Slider {
+            id: panelPaddingSlider
+            Kirigami.FormData.label: i18n("Panel padding:")
+            from: 0
+            to: 30
+            stepSize: 1
+            value: 0
+        }
+
+        Label {
+            text: panelPaddingSlider.value + " px"
+            opacity: 0.7
         }
 
         Slider {
