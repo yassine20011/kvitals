@@ -75,6 +75,7 @@ QtObject {
         mergeFamilyMetrics:       true,
         showSeparators:           true,
         backgroundType:           "default",
+        panelPadding:             0,
         cpuIcon:                  "cpu-symbolic",
         ramIcon:                  "memory-symbolic",
         swapIcon:                 "memory-symbolic",
@@ -180,6 +181,7 @@ QtObject {
         property bool   mergeFamilyMetrics:       true
         property bool   showSeparators:           true
         property string backgroundType:           "default"
+        property int    panelPadding:             0
         property string cpuIcon:                  "cpu-symbolic"
         property string ramIcon:                  "memory-symbolic"
         property string swapIcon:                 "memory-symbolic"
