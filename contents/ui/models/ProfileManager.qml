@@ -1,5 +1,6 @@
 import QtQuick
 import org.kde.plasma.plasmoid
+import "./ProfileLogic.js" as ProfileLogic
 
 QtObject {
     id: root
@@ -308,15 +309,7 @@ QtObject {
     }
 
     function _validateProfiles(profiles) {
-        if (!Array.isArray(profiles) || profiles.length === 0) return false;
-        for (var i = 0; i < profiles.length; i++) {
-            var p = profiles[i];
-            if (!p || typeof p !== "object") return false;
-            if (typeof p.id !== "string" || p.id === "") return false;
-            if (typeof p.name !== "string" || p.name === "") return false;
-            if (!p.data || typeof p.data !== "object") return false;
-        }
-        return true;
+        return ProfileLogic.validateProfiles(profiles);
     }
 
     function _preserveCorruptedData(raw) {
@@ -345,29 +338,15 @@ QtObject {
         _profiles = parsed.profiles;
 
         // Backfill isDefault for profile lists saved before this field was introduced
-        var hasIsDefault = false;
-        for (var di = 0; di < _profiles.length; di++) {
-            if (_profiles[di].isDefault) { hasIsDefault = true; break; }
-        }
-        if (!hasIsDefault) {
-            var target = null;
-            for (var ni = 0; ni < _profiles.length; ni++) {
-                if (_profiles[ni].name === "Default") { target = _profiles[ni]; break; }
-            }
-            if (!target) {
-                target = _profiles[0];
-                for (var ei = 1; ei < _profiles.length; ei++) {
-                    if (_profiles[ei].createdAt < target.createdAt) target = _profiles[ei];
-                }
-            }
-            target.isDefault = true;
+        var defaultIndex = ProfileLogic.defaultProfileIndex(_profiles);
+        if (!_profiles[defaultIndex].isDefault) {
+            _profiles[defaultIndex].isDefault = true;
             _flush();
         }
 
         var savedId = Plasmoid.configuration.activeProfileId;
-        var found = _findProfile(savedId);
-        var targetId = found ? savedId : _profiles[0].id;
-        if (!found) {
+        var targetId = ProfileLogic.activeProfileId(_profiles, savedId);
+        if (targetId !== savedId) {
             console.warn("KVitals ProfileManager: activeProfileId not found, falling back to first profile:", targetId);
             Plasmoid.configuration.activeProfileId = targetId;
         }
@@ -401,7 +380,7 @@ QtObject {
     }
 
     function _flush() {
-        Plasmoid.configuration.profileList = JSON.stringify({ version: 1, profiles: _profiles });
+        Plasmoid.configuration.profileList = ProfileLogic.serializeProfiles(_profiles);
     }
 
     function _activateProfileInternal(id) {
@@ -492,13 +471,11 @@ QtObject {
     }
 
     function deleteProfile(id) {
-        if (_profiles.length <= 1) return;
+        if (!ProfileLogic.canDeleteProfile(_profiles, id)) return;
         var idx = -1;
         for (var i = 0; i < _profiles.length; i++) {
             if (_profiles[i].id === id) { idx = i; break; }
         }
-        if (idx === -1) return;
-        if (_profiles[idx].isDefault) return;
         _profiles.splice(idx, 1);
         if (id === _activeProfileId) {
             _syncing = true;

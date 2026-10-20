@@ -1,6 +1,7 @@
 import QtQuick
 import "../sensors"
 import "./MetricDefinitions.js" as Defs
+import "./MetricLogic.js" as MetricLogic
 
 Item {
     id: root
@@ -16,17 +17,11 @@ Item {
     property var metrics: []
 
     function _normalizeValue(val) {
-        if (typeof val === "number" && isFinite(val) && !isNaN(val))
-            return val;
-        return NaN;
+        return MetricLogic.normalizeValue(val);
     }
 
     function _normalizeString(val, fallback) {
-        if (typeof val === "string")
-            return val;
-        if (val !== undefined && val !== null)
-            return String(val);
-        return fallback !== undefined ? fallback : "";
+        return MetricLogic.normalizeString(val, fallback);
     }
 
     function _rebuildMetrics() {
@@ -88,7 +83,7 @@ Item {
         var crit = root.config.getCriticalThreshold(thresholdKey);
         var inverted = (thresholdType === "inverted");
 
-        return Utils.resolveColor(numVal, warn, crit, root.config.warningColor, root.config.criticalColor, root.baseTextColor, inverted);
+        return MetricLogic.resolveThresholdColor(numVal, warn, crit, root.config.warningColor, root.config.criticalColor, root.baseTextColor, inverted);
     }
 
     function _createMetric(defId, overrides) {

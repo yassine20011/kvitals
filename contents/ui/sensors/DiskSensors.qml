@@ -2,6 +2,7 @@
     import org.kde.ksysguard.sensors as Sensors
     import org.kde.plasma.plasma5support as P5Support
     import "../models/MetricDefinitions.js" as MetricDefinitions
+    import "../models/DiskSensorLogic.js" as DiskSensorLogic
 
     Item {
         id: root
@@ -194,75 +195,14 @@
         property var _sysfsDiskSensorMap: ({})
 
         function _parseSysfsOutput(rawOutput) {
-            if (!rawOutput) return;
-            var availableSensors = root._tempSensorIds;
-            var map = {};
-            var lines = String(rawOutput).split("\n");
-            for (var i = 0; i < lines.length; i++) {
-                var line = lines[i].trim();
-                if (!line) continue;
-                var parts = line.split(":");
-                if (parts.length < 3) continue;
-                var bname = parts[0].trim();
-                var hname = parts[1].trim();
-                var hdev = parts.slice(2).join(":").trim();
-
-                var adapterPrefix = "";
-                if (hname === "nvme") {
-                    var pciMatches = hdev.match(/[0-9a-fA-F]{4}:([0-9a-fA-F]{2}):([0-9a-fA-F]{2})\.([0-9a-fA-F])/g);
-                    if (pciMatches && pciMatches.length > 0) {
-                        var lastPci = pciMatches[pciMatches.length - 1];
-                        var m = lastPci.match(/([0-9a-fA-F]{2}):([0-9a-fA-F]{2})\.([0-9a-fA-F])/);
-                        if (m) {
-                            var pciAddr = m[1] + m[2];
-                            adapterPrefix = "lmsensors/nvme-pci-" + pciAddr.toLowerCase();
-                        }
-                    }
-                } else if (hname === "drivetemp") {
-                    var scsiMatch = hdev.match(/host(\d+)\/target\d+:\d+:(\d+)\/(\d+):(\d+):(\d+):(\d+)/);
-                    if (scsiMatch) {
-                        adapterPrefix = "lmsensors/drivetemp-scsi-" + scsiMatch[1] + "-" + scsiMatch[2];
-                    } else {
-                        var scsiDevMatch = hdev.match(/(\d+):(\d+):(\d+):(\d+)$/);
-                        if (scsiDevMatch) {
-                            adapterPrefix = "lmsensors/drivetemp-scsi-" + scsiDevMatch[1] + "-" + scsiDevMatch[3];
-                        }
-                    }
-                }
-
-                if (adapterPrefix) {
-                    var targetSensor = adapterPrefix + "/temp1";
-                    if (availableSensors && availableSensors.length > 0) {
-                        if (availableSensors.indexOf(targetSensor) !== -1) {
-                            map[bname] = targetSensor;
-                        } else {
-                            for (var s = 0; s < availableSensors.length; s++) {
-                                if (availableSensors[s].indexOf(adapterPrefix) === 0) {
-                                    map[bname] = availableSensors[s];
-                                    break;
-                                }
-                            }
-                        }
-                    } else {
-                        map[bname] = targetSensor;
-                    }
-                }
-            }
-            _sysfsDiskSensorMap = map;
+            _sysfsDiskSensorMap = DiskSensorLogic.parseSysfsOutput(rawOutput, root._tempSensorIds);
             root.aggregatePerDisk();
         }
 
         function _findTempSensorForDisk(diskId) {
-            if (!diskId) return "";
-
-            // Direct sensor
-            var directId = "disk/" + diskId + "/temperature";
-            if (discovery && discovery.sensorExists(directId)) return directId;
-
-            // Sysfs-derived hardware mapping
-            if (_sysfsDiskSensorMap[diskId]) return _sysfsDiskSensorMap[diskId];
-
-            return "";
+            return DiskSensorLogic.resolveTemperatureSensor(diskId, _sysfsDiskSensorMap, function(sensorId) {
+                return Boolean(discovery && discovery.sensorExists(sensorId));
+            });
         }
 
         function aggregatePerDisk() {

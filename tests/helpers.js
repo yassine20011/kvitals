@@ -19,6 +19,10 @@ export function loadQmlLibrary(relPath) {
         }
     };
     createContext(sandbox);
-    runInContext(code, sandbox);
+    runInContext(code, sandbox, { filename: fullPath });
     return sandbox;
+}
+
+export function readProjectFile(relPath) {
+    return readFileSync(resolve(__dirname, "..", relPath), "utf8");
 }

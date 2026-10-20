@@ -1,47 +1,35 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { loadQmlLibrary } from "../helpers.js";
 
-test("Global shortcut initializes default and persists edits", () => {
-    const plasmoid = {
-        configuration: {
-            configuredShortcut: "Meta+Shift+V",
-            shortcutInitialized: false
-        },
-        globalShortcut: ""
-    };
+const Shortcuts = loadQmlLibrary("contents/ui/models/ShortcutLogic.js");
 
-    function simulateInit(p) {
-        let targetShortcut = p.configuration.configuredShortcut;
-        if (!targetShortcut || targetShortcut === "") {
-            targetShortcut = "Meta+Shift+V";
-            p.configuration.configuredShortcut = targetShortcut;
-        }
-        if (targetShortcut !== "none" && String(p.globalShortcut) === "") {
-            p.globalShortcut = targetShortcut;
-        }
-        p.configuration.shortcutInitialized = true;
-    }
-
-    simulateInit(plasmoid);
-    assert.equal(plasmoid.globalShortcut, "Meta+Shift+V");
-    assert.equal(plasmoid.configuration.shortcutInitialized, true);
-
-    plasmoid.globalShortcut = "";
-    plasmoid.configuration.configuredShortcut = "none";
-    simulateInit(plasmoid);
-    assert.equal(plasmoid.globalShortcut, "");
+test("shortcut initialization supplies the default only when needed", () => {
+    assert.deepEqual({ ...Shortcuts.initializeShortcut("", "") }, {
+        configuredShortcut: Shortcuts.DEFAULT_SHORTCUT,
+        globalShortcut: Shortcuts.DEFAULT_SHORTCUT
+    });
+    assert.deepEqual({ ...Shortcuts.initializeShortcut("Meta+F8", "") }, {
+        configuredShortcut: "Meta+F8",
+        globalShortcut: "Meta+F8"
+    });
 });
 
-test("Shortcut trigger toggles popup visibility state", () => {
-    const popup = { visible: false };
+test("explicitly disabling the shortcut survives initialization and change events", () => {
+    assert.deepEqual({ ...Shortcuts.initializeShortcut(Shortcuts.DISABLED_SHORTCUT, "Meta+Shift+V") }, {
+        configuredShortcut: Shortcuts.DISABLED_SHORTCUT,
+        globalShortcut: ""
+    });
+    assert.deepEqual({ ...Shortcuts.shortcutAfterGlobalChange("", Shortcuts.DISABLED_SHORTCUT) }, {
+        configuredShortcut: Shortcuts.DISABLED_SHORTCUT,
+        globalShortcut: ""
+    });
+});
 
-    function triggerShortcut() {
-        popup.visible = !popup.visible;
-    }
-
-    triggerShortcut();
-    assert.equal(popup.visible, true);
-
-    triggerShortcut();
-    assert.equal(popup.visible, false);
+test("a cleared live shortcut self-heals from persisted configuration", () => {
+    assert.deepEqual({ ...Shortcuts.shortcutAfterGlobalChange("", "Meta+F8") }, {
+        configuredShortcut: "Meta+F8",
+        globalShortcut: "Meta+F8"
+    });
+    assert.equal(Shortcuts.shortcutAfterGlobalChange("Alt+V", "Meta+F8").configuredShortcut, "Alt+V");
 });

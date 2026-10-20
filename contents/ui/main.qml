@@ -7,6 +7,7 @@ import org.kde.kirigami as Kirigami
 import "./sensors"
 import "./models"
 import "./models/ViewHelpers.js" as ViewHelpers
+import "./models/ShortcutLogic.js" as ShortcutLogic
 
 PlasmoidItem {
     id: root
@@ -207,14 +208,9 @@ PlasmoidItem {
     }
 
     Component.onCompleted: {
-        var targetShortcut = Plasmoid.configuration.configuredShortcut;
-        if (!targetShortcut || targetShortcut === "") {
-            targetShortcut = "Meta+Shift+V";
-            Plasmoid.configuration.configuredShortcut = targetShortcut;
-        }
-        if (targetShortcut !== "none" && String(Plasmoid.globalShortcut) === "") {
-            Plasmoid.globalShortcut = targetShortcut;
-        }
+        var shortcutState = ShortcutLogic.initializeShortcut(Plasmoid.configuration.configuredShortcut, Plasmoid.globalShortcut);
+        Plasmoid.configuration.configuredShortcut = shortcutState.configuredShortcut;
+        Plasmoid.globalShortcut = shortcutState.globalShortcut;
         Plasmoid.configuration.shortcutInitialized = true;
         sensorActivationTimer.start();
         applyBackgroundType();
@@ -515,12 +511,10 @@ PlasmoidItem {
     Connections {
         target: Plasmoid
         function onGlobalShortcutChanged(shortcut) {
-            var s = String(shortcut);
-            if (s !== "") {
-                Plasmoid.configuration.configuredShortcut = s;
-            } else if (Plasmoid.configuration.configuredShortcut !== "none") {
-                Plasmoid.globalShortcut = Plasmoid.configuration.configuredShortcut;
-            }
+            var shortcutState = ShortcutLogic.shortcutAfterGlobalChange(shortcut, Plasmoid.configuration.configuredShortcut);
+            Plasmoid.configuration.configuredShortcut = shortcutState.configuredShortcut;
+            if (String(Plasmoid.globalShortcut) !== shortcutState.globalShortcut)
+                Plasmoid.globalShortcut = shortcutState.globalShortcut;
         }
         function onActivated() {
             if (profileSelectorPopup.visible) {

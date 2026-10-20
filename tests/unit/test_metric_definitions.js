@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { loadQmlLibrary } from "../helpers.js";
+import { loadQmlLibrary, readProjectFile } from "../helpers.js";
 
 const MetricDefs = loadQmlLibrary("contents/ui/models/MetricDefinitions.js");
 
@@ -56,5 +56,14 @@ test("DEFINITIONS contains valid metric structures", () => {
         assert.ok(def.subKey, `subKey required for ${key}`);
         assert.ok(def.label, `Label required for ${key}`);
         assert.ok(validThresholdTypes.includes(def.thresholdType), `Invalid thresholdType for ${key}`);
+    }
+});
+
+test("every static MetricStore definition reference exists", () => {
+    const store = readProjectFile("contents/ui/models/MetricStore.qml");
+    const referenced = [...store.matchAll(/_createMetric\(["']([^"']+)["']/g)].map(match => match[1]);
+    assert.ok(referenced.length > 0);
+    for (const definitionId of referenced) {
+        assert.ok(MetricDefs.DEFINITIONS[definitionId], `MetricStore references undefined metric '${definitionId}'`);
     }
 });

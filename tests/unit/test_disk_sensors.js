@@ -1,98 +1,43 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { loadQmlLibrary } from "../helpers.js";
+import { SYSFS, TEMP_SENSORS } from "../fixtures.js";
 
-function parseSysfsOutput(rawOutput, availableSensors) {
-    if (!rawOutput) return {};
-    const map = {};
-    const lines = String(rawOutput).split("\n");
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        const parts = line.split(":");
-        if (parts.length < 3) continue;
-        const bname = parts[0].trim();
-        const hname = parts[1].trim();
-        const hdev = parts.slice(2).join(":").trim();
+const DiskSensorLogic = loadQmlLibrary("contents/ui/models/DiskSensorLogic.js");
 
-        let adapterPrefix = "";
-        if (hname === "nvme") {
-            const pciMatches = hdev.match(/[0-9a-fA-F]{4}:([0-9a-fA-F]{2}):([0-9a-fA-F]{2})\.([0-9a-fA-F])/g);
-            if (pciMatches && pciMatches.length > 0) {
-                const lastPci = pciMatches[pciMatches.length - 1];
-                const m = lastPci.match(/([0-9a-fA-F]{2}):([0-9a-fA-F]{2})\.([0-9a-fA-F])/);
-                if (m) {
-                    const pciAddr = m[1] + m[2];
-                    adapterPrefix = "lmsensors/nvme-pci-" + pciAddr.toLowerCase();
-                }
-            }
-        } else if (hname === "drivetemp") {
-            const scsiMatch = hdev.match(/host(\d+)\/target\d+:\d+:(\d+)\/(\d+):(\d+):(\d+):(\d+)/);
-            if (scsiMatch) {
-                adapterPrefix = "lmsensors/drivetemp-scsi-" + scsiMatch[1] + "-" + scsiMatch[2];
-            } else {
-                const scsiDevMatch = hdev.match(/(\d+):(\d+):(\d+):(\d+)$/);
-                if (scsiDevMatch) {
-                    adapterPrefix = "lmsensors/drivetemp-scsi-" + scsiDevMatch[1] + "-" + scsiDevMatch[3];
-                }
-            }
-        }
+test("maps NVMe and SATA devices to their real temperature sensors", () => {
+    const input = [SYSFS.nvme0, SYSFS.nvme2, SYSFS.sata0, SYSFS.sata2].join("\n");
+    const result = DiskSensorLogic.parseSysfsOutput(input, Object.values(TEMP_SENSORS));
 
-        if (adapterPrefix) {
-            const targetSensor = adapterPrefix + "/temp1";
-            if (availableSensors && availableSensors.length > 0) {
-                if (availableSensors.indexOf(targetSensor) !== -1) {
-                    map[bname] = targetSensor;
-                } else {
-                    for (let s = 0; s < availableSensors.length; s++) {
-                        if (availableSensors[s].indexOf(adapterPrefix) === 0) {
-                            map[bname] = availableSensors[s];
-                            break;
-                        }
-                    }
-                }
-            } else {
-                map[bname] = targetSensor;
-            }
-        }
-    }
-    return map;
-}
-
-function createDiskSensorResolver(sysfsOutput, tempSensorIds, directSensors = {}) {
-    const discovery = {
-        sensorExists: (id) => Boolean(directSensors[id])
-    };
-    const sysfsMap = parseSysfsOutput(sysfsOutput, tempSensorIds);
-
-    function _findTempSensorForDisk(diskId) {
-        if (!diskId) return "";
-        const directId = "disk/" + diskId + "/temperature";
-        if (discovery && discovery.sensorExists(directId)) return directId;
-        if (sysfsMap[diskId]) return sysfsMap[diskId];
-        return "";
-    }
-
-    return { _findTempSensorForDisk, sysfsMap };
-}
-
-test("Disk temperature resolves correctly across NVMe and SATA", () => {
-    const sysfs = `
-nvme0n1:nvme:/sys/devices/pci0000:00/0000:00:1d.0/0000:01:00.0/nvme/nvme0
-sda:drivetemp:/sys/devices/pci0000:00/0000:00:17.0/ata1/host0/target0:0:0/0:0:0:0
-`;
-    const sensors = ["lmsensors/nvme-pci-0100/temp1", "lmsensors/drivetemp-scsi-0-0/temp1"];
-    const { _findTempSensorForDisk } = createDiskSensorResolver(sysfs, sensors);
-
-    assert.equal(_findTempSensorForDisk("nvme0n1"), "lmsensors/nvme-pci-0100/temp1");
-    assert.equal(_findTempSensorForDisk("sda"), "lmsensors/drivetemp-scsi-0-0/temp1");
-    assert.equal(_findTempSensorForDisk("sdb"), "");
+    assert.deepEqual({ ...result }, {
+        nvme0n1: TEMP_SENSORS.nvme0,
+        nvme2n1: TEMP_SENSORS.nvme2,
+        sda: TEMP_SENSORS.sata0,
+        sdb: TEMP_SENSORS.sata2
+    });
 });
 
-test("Direct sensor takes priority over sysfs mapping", () => {
-    const sysfs = "sda:drivetemp:/sys/devices/pci0000:00/0000:00:17.0/ata1/host0/target0:0:0/0:0:0:0";
-    const sensors = ["lmsensors/drivetemp-scsi-0-0/temp1"];
-    const direct = { "disk/sda/temperature": true };
-    const { _findTempSensorForDisk } = createDiskSensorResolver(sysfs, sensors, direct);
+test("does not invent mappings for malformed, USB, or unavailable devices", () => {
+    const input = ["malformed", SYSFS.sata2, "sdc:usb:/sys/devices/usb1"].join("\n");
+    const result = DiskSensorLogic.parseSysfsOutput(input, [TEMP_SENSORS.sata2]);
 
-    assert.equal(_findTempSensorForDisk("sda"), "disk/sda/temperature");
+    assert.equal(result.sda, undefined);
+    assert.equal(result.sdc, undefined);
+    assert.equal(result.sdb, TEMP_SENSORS.sata2);
+    assert.deepEqual({ ...DiskSensorLogic.parseSysfsOutput("", []) }, {});
+});
+
+test("falls back to the first matching adapter sensor when temp1 is absent", () => {
+    const alternate = "lmsensors/nvme-pci-0100/temp2";
+    const result = DiskSensorLogic.parseSysfsOutput(SYSFS.nvme0, [alternate]);
+    assert.equal(result.nvme0n1, alternate);
+});
+
+test("direct KSystemStats temperature takes priority over sysfs", () => {
+    const map = { sda: TEMP_SENSORS.sata0 };
+    const direct = new Set(["disk/sda/temperature"]);
+
+    assert.equal(DiskSensorLogic.resolveTemperatureSensor("sda", map, id => direct.has(id)), "disk/sda/temperature");
+    assert.equal(DiskSensorLogic.resolveTemperatureSensor("sdb", map, () => false), "");
+    assert.equal(DiskSensorLogic.resolveTemperatureSensor("", map, () => true), "");
 });

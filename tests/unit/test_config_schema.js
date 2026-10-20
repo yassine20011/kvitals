@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -52,5 +52,34 @@ test("main.xml is well-formed KConfigXT schema with valid types and unique entri
 
     for (const key of requiredKeys) {
         assert.ok(names.has(key), `Required configuration key '${key}' missing from main.xml`);
+    }
+});
+
+test("every configuration property referenced by QML exists in main.xml", () => {
+    const projectRoot = resolve(__dirname, "../..");
+    const schema = readFileSync(resolve(projectRoot, "contents/config/main.xml"), "utf8");
+    const schemaNames = new Set([...schema.matchAll(/<entry\s+name="([^"]+)"/g)].map(match => match[1]));
+    const referencedNames = new Set();
+    const configurationApiMembers = new Set(["valueChanged"]);
+
+    const visit = directory => {
+        for (const entry of readdirSync(directory, { withFileTypes: true })) {
+            const path = resolve(directory, entry.name);
+            if (entry.isDirectory()) {
+                visit(path);
+                continue;
+            }
+            if (!entry.name.endsWith(".qml")) continue;
+            const source = readFileSync(path, "utf8");
+            for (const match of source.matchAll(/\bcfg_([A-Za-z][A-Za-z0-9_]*)\b/g)) referencedNames.add(match[1]);
+            for (const match of source.matchAll(/\bPlasmoid\.configuration\.([A-Za-z][A-Za-z0-9_]*)\b/g)) {
+                if (!configurationApiMembers.has(match[1])) referencedNames.add(match[1]);
+            }
+        }
+    };
+    visit(resolve(projectRoot, "contents"));
+
+    for (const name of referencedNames) {
+        assert.equal(schemaNames.has(name), true, `QML references configuration key '${name}' missing from main.xml`);
     }
 });

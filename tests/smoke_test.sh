@@ -19,6 +19,19 @@ cleanup() {
 }
 trap cleanup EXIT
 
+for required_command in plasmoidviewer timeout; do
+    if ! command -v "$required_command" >/dev/null 2>&1; then
+        echo "Error: required command '$required_command' is unavailable." >&2
+        exit 1
+    fi
+done
+
+PLASMA_VERSION="$(plasmoidviewer --version 2>&1 || true)"
+if ! echo "$PLASMA_VERSION" | grep -qE '(^|[[:space:]])6\.'; then
+    echo "Error: Plasma 6 plasmoidviewer is required; found: ${PLASMA_VERSION:-unknown}." >&2
+    exit 1
+fi
+
 # Headless display setup
 USE_XVFB_RUN=0
 if [ -z "${DISPLAY:-}" ]; then
@@ -48,37 +61,52 @@ if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
     fi
 fi
 
-echo "Running plasmoidviewer smoke test on $WIDGET_PATH (timeout: ${TIMEOUT}s)..."
-
-RUN_CMD=(plasmoidviewer -a "$WIDGET_PATH")
+RUN_PREFIX=(plasmoidviewer)
 if [ "$USE_XVFB_RUN" -eq 1 ]; then
-    RUN_CMD=(xvfb-run -a plasmoidviewer -a "$WIDGET_PATH")
+    RUN_PREFIX=(xvfb-run -a plasmoidviewer)
 fi
 
-set +e
-timeout "$TIMEOUT" "${RUN_CMD[@]}" >"$LOG" 2>&1
-EXIT_CODE=$?
-set -e
+CASES=(
+    "desktop|planar|floating|1"
+    "horizontal-panel|horizontal|topedge|1"
+    "vertical-panel|vertical|leftedge|1"
+    "hidpi-horizontal-panel|horizontal|topedge|2"
+)
 
-# Exit code 124 is expected from timeout command
-if [ "$EXIT_CODE" -ne 0 ] && [ "$EXIT_CODE" -ne 124 ]; then
-    echo "SMOKE TEST FAILED: plasmoidviewer exited with code $EXIT_CODE"
-    cat "$LOG"
-    exit 1
-fi
+echo "Running Plasma 6 smoke matrix on $WIDGET_PATH (${TIMEOUT}s per case)..."
 
-# Check for fatal applet loading errors
-if grep -qiE "error when loading applet|Error loading Applet|package .* does not exist|Could not find requested component|Segmentation fault|SIGSEGV|Aborted" "$LOG"; then
-    echo "SMOKE TEST FAILED: Fatal applet loading errors detected:"
-    cat "$LOG"
-    exit 1
-fi
+for test_case in "${CASES[@]}"; do
+    IFS='|' read -r name form_factor location scale_factor <<<"$test_case"
+    : >"$LOG"
+    echo "  - $name (form factor: $form_factor, location: $location, scale: $scale_factor)"
 
-# Check for widget-specific runtime exceptions
-if grep -E "${WIDGET_PATH}/.*(SyntaxError|TypeError|ReferenceError)" "$LOG"; then
-    echo "SMOKE TEST FAILED: QML runtime error in widget files detected:"
-    cat "$LOG"
-    exit 1
-fi
+    set +e
+    QT_SCALE_FACTOR="$scale_factor" \
+    QT_LOGGING_RULES="qml.debug=true" \
+        timeout "$TIMEOUT" "${RUN_PREFIX[@]}" \
+            -a "$WIDGET_PATH" -f "$form_factor" -l "$location" >"$LOG" 2>&1
+    EXIT_CODE=$?
+    set -e
 
-echo "Smoke test passed: widget loaded cleanly with plasmoidviewer."
+    # A healthy plasmoidviewer remains open until timeout. An early exit,
+    # including code 0, does not prove that the widget initialized.
+    if [ "$EXIT_CODE" -ne 124 ]; then
+        echo "SMOKE TEST FAILED [$name]: plasmoidviewer exited early with code $EXIT_CODE"
+        cat "$LOG"
+        exit 1
+    fi
+
+    if grep -qiE "error when loading applet|package .* does not exist|Could not find requested component|module .* is not installed|Type .* unavailable|QQml.*Error|Segmentation fault|SIGSEGV|Aborted" "$LOG"; then
+        echo "SMOKE TEST FAILED [$name]: fatal applet loading error detected"
+        cat "$LOG"
+        exit 1
+    fi
+
+    if grep -qiE "SyntaxError|TypeError|ReferenceError|Binding loop detected|Cannot assign|Unable to assign" "$LOG"; then
+        echo "SMOKE TEST FAILED [$name]: QML runtime error detected"
+        cat "$LOG"
+        exit 1
+    fi
+done
+
+echo "Smoke matrix passed on Plasma 6: desktop, horizontal, vertical, and HiDPI modes."

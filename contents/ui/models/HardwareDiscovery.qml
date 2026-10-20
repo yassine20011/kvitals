@@ -2,6 +2,7 @@ import QtQuick
 import org.kde.ksysguard.sensors as Sensors
 import org.kde.kitemmodels as KItemModels
 import "./MetricDefinitions.js" as MetricDefinitions
+import "./HardwareInventoryLogic.js" as HardwareInventoryLogic
 
 Item {
     id: root
@@ -114,83 +115,27 @@ Item {
 
     function _rebuildInventory() {
         var rowCount = flatSensors.rowCount();
-        var ids = [];
-        var sensors = [];
-        var set = {};
-
-        var gpuMap = {};
-        var diskMap = {};
-        var fanSet = {};
-        var coreMap = {};
-        var ifaceSet = {};
-        var batSet = {};
-        var diskTempSet = {};
-
-        var pGpu = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.GPU : /^gpu\/(gpu\d+)\/usage$/;
-        var pDisk = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_READ : /^disk\/(nvme\d+(?:c\d+)?n\d+|nvme\d+|sd[a-z]+|vd[a-z]+|xvd[a-z]+|mmcblk\d+)\/read$/;
-        var pFan = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.FAN : /^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i;
-        var pCore = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.CPU_CORE : /^cpu\/(cpu\d+)\/usage$/;
-        var pNet = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.NETWORK_IFACE : /^network\/([^/]+)\/download$/;
-        var pBat = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.BATTERY : /^power\/(.+)\/chargePercentage$/;
-        var pDiskTemp = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_TEMP : /^(?:disk\/(?:nvme\d+(?:c\d+)?n\d+|nvme\d+|sd[a-z]+|vd[a-z]+|xvd[a-z]+|mmcblk\d+)\/temperature|lmsensors\/(?:nvme-pci-[^/]+|drivetemp-scsi-[^/]+|scsi-[^/]+|drivetemp-[^/]+)\/temp\d+)$/;
+        var entries = [];
 
         for (var row = 0; row < rowCount; row++) {
             var idx = flatSensors.index(row, 0);
             var sid = flatSensors.data(idx, Sensors.SensorTreeModel.SensorId);
-            if (!sid || sid.length === 0) continue;
-            if (/[\(\)\*\?\+]/.test(sid)) continue;
-
             var name = flatSensors.data(idx, Qt.DisplayRole) || "";
-            ids.push(sid);
-            sensors.push({ id: sid, name: name });
-            set[sid] = true;
-
-            var m = null;
-            if ((m = sid.match(pGpu))) {
-                gpuMap[m[1]] = true;
-            } else if ((m = sid.match(pDisk))) {
-                diskMap[m[1]] = true;
-            } else if (pFan.test(sid)) {
-                fanSet[sid] = true;
-            } else if ((m = sid.match(pCore))) {
-                coreMap[m[1]] = true;
-            } else if ((m = sid.match(pNet))) {
-                if (m[1] !== "all" && m[1] !== "lo") ifaceSet[m[1]] = true;
-            } else if ((m = sid.match(pBat))) {
-                batSet[m[1]] = true;
-            } else if (pDiskTemp.test(sid)) {
-                diskTempSet[sid] = true;
-            }
+            entries.push({ id: sid, name: name });
         }
 
-        _allIds = ids;
-        _allSensors = sensors;
-        _idSet = set;
+        var inventory = HardwareInventoryLogic.buildInventory(entries, MetricDefinitions.PATTERNS);
+        _allIds = inventory.allIds;
+        _allSensors = inventory.allSensors;
+        _idSet = inventory.idSet;
         _patternCache = {};
-
-        var gList = Object.keys(gpuMap).sort();
-        _gpus = gList.map(function(id, i) { return { id: id, name: "GPU " + (i + 1) }; });
-
-        var dList = Object.keys(diskMap).sort();
-        _disks = dList.map(function(id, i) { return { id: id, name: "Disk " + (i + 1) }; });
-
-        var fList = Object.keys(fanSet).sort();
-        _fans = fList.map(function(id, i) { return { id: id, name: "Fan " + (i + 1) }; });
-
-        var cList = Object.keys(coreMap);
-        var cSorted = [];
-        for (var ci = 0; ci < cList.length; ci++) {
-            var num = parseInt(cList[ci].replace("cpu", ""), 10);
-            cSorted.push({ id: cList[ci], number: isNaN(num) ? ci : num });
-        }
-        cSorted.sort(function(a, b) { return a.number - b.number; });
-        _cpuCores = cSorted.map(function(c) { return { id: c.id, number: c.number, name: "Core " + (c.number + 1) }; });
-
-        var nList = Object.keys(ifaceSet).sort();
-        _netIfaces = ["auto"].concat(nList);
-
-        _batteries = Object.keys(batSet).sort();
-        _diskTemps = Object.keys(diskTempSet).sort();
+        _gpus = inventory.gpus;
+        _disks = inventory.disks;
+        _fans = inventory.fans;
+        _cpuCores = inventory.cpuCores;
+        _netIfaces = inventory.networkIfaces;
+        _batteries = inventory.batteries;
+        _diskTemps = inventory.diskTemps;
 
         _revision++;
     }

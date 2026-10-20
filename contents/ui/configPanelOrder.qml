@@ -6,6 +6,7 @@ import org.kde.kcmutils as KCM
 import org.kde.plasma.plasmoid
 import "./models"
 import "./models/MetricDefinitions.js" as MetricDefinitions
+import "./models/ConfigLogic.js" as ConfigLogic
 
 KCM.SimpleKCM {
     id: panelOrderPage
@@ -65,8 +66,7 @@ KCM.SimpleKCM {
 
     // Computed list of pinned items
     readonly property var currentList: {
-        if (!cfg_pinnedMetrics) return [];
-        return cfg_pinnedMetrics.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+        return ConfigLogic.parseCsv(cfg_pinnedMetrics);
     }
 
     function isPinned(id) {
@@ -75,30 +75,24 @@ KCM.SimpleKCM {
 
     function toggleItem(id) {
         if (!id) return;
-        var list = currentList.slice();
-        var idx = list.indexOf(id);
+        var wasPinned = isPinned(id);
         var oldX = stripList.contentX;
-        if (idx !== -1) {
-            list.splice(idx, 1);
-            cfg_pinnedMetrics = list.join(",");
+        cfg_pinnedMetrics = ConfigLogic.toggleCsvMembership(cfg_pinnedMetrics, id, "");
+        if (wasPinned) {
             Qt.callLater(function() {
                 stripList.contentX = Math.max(0, Math.min(oldX, stripList.contentWidth - stripList.width));
             });
         } else {
-            list.push(id);
-            cfg_pinnedMetrics = list.join(",");
             Qt.callLater(function() {
-                stripList.positionViewAtIndex(list.length - 1, ListView.Contain);
+                stripList.positionViewAtIndex(currentList.length - 1, ListView.Contain);
             });
         }
     }
 
     function removeItem(index) {
         if (index < 0 || index >= currentList.length) return;
-        var list = currentList.slice();
-        list.splice(index, 1);
         var oldX = stripList.contentX;
-        cfg_pinnedMetrics = list.join(",");
+        cfg_pinnedMetrics = ConfigLogic.setCsvMembership(cfg_pinnedMetrics, currentList[index], false, "");
         Qt.callLater(function() {
             stripList.contentX = Math.max(0, Math.min(oldX, stripList.contentWidth - stripList.width));
         });
@@ -106,11 +100,8 @@ KCM.SimpleKCM {
 
     function moveItem(fromIdx, toIdx) {
         if (fromIdx < 0 || fromIdx >= currentList.length || toIdx < 0 || toIdx >= currentList.length || fromIdx === toIdx) return;
-        var list = currentList.slice();
-        var item = list.splice(fromIdx, 1)[0];
-        list.splice(toIdx, 0, item);
         var oldX = stripList.contentX;
-        cfg_pinnedMetrics = list.join(",");
+        cfg_pinnedMetrics = ConfigLogic.moveCsvItem(cfg_pinnedMetrics, fromIdx, toIdx, "");
         Qt.callLater(function() {
             stripList.contentX = Math.max(0, Math.min(oldX, stripList.contentWidth - stripList.width));
             stripList.positionViewAtIndex(toIdx, ListView.Contain);
@@ -511,7 +502,7 @@ KCM.SimpleKCM {
                 text: i18n("Reset Default Order")
                 icon.name: "edit-undo"
                 onClicked: {
-                    cfg_pinnedMetrics = "cpu/usage,cpu/freq,cpu/temp,ram/percentage,temp/system,net/down,net/up";
+                    cfg_pinnedMetrics = ConfigLogic.DEFAULT_PINNED_METRICS;
                 }
             }
 

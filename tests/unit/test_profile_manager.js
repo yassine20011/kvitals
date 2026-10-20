@@ -1,83 +1,50 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { loadQmlLibrary } from "../helpers.js";
+import { profile } from "../fixtures.js";
 
-function validateProfiles(profiles) {
-    if (!Array.isArray(profiles) || profiles.length === 0) return false;
-    for (let i = 0; i < profiles.length; i++) {
-        const p = profiles[i];
-        if (!p || typeof p !== "object") return false;
-        if (typeof p.id !== "string" || p.id === "") return false;
-        if (typeof p.name !== "string" || p.name === "") return false;
-        if (!p.data || typeof p.data !== "object") return false;
-    }
-    return true;
-}
+const Profiles = loadQmlLibrary("contents/ui/models/ProfileLogic.js");
 
-function simulateLoadFromRaw(raw, activeId, config) {
-    let parsed = null;
-    let isCorrupted = false;
-    try {
-        parsed = JSON.parse(raw);
-        if (!parsed || typeof parsed !== "object" || !validateProfiles(parsed.profiles)) {
-            isCorrupted = true;
-        }
-    } catch {
-        isCorrupted = true;
-    }
-
-    if (isCorrupted) {
-        config.corruptedProfileListBackup = String(raw);
-        const defProfile = { id: "default-uuid", name: "Default", isDefault: true, data: { pinnedMetrics: "cpu/usage" } };
-        return {
-            recovered: true,
-            profiles: [defProfile],
-            activeProfileId: "default-uuid"
-        };
-    }
-
-    const profiles = parsed.profiles;
-    const hasIsDefault = profiles.some(p => Boolean(p.isDefault));
-    if (!hasIsDefault) {
-        const target = profiles.find(p => p.name === "Default") || profiles[0];
-        target.isDefault = true;
-    }
-
-    const found = profiles.some(p => p.id === activeId);
-    const targetId = found ? activeId : profiles[0].id;
-    return {
-        recovered: false,
-        profiles,
-        activeProfileId: targetId
-    };
-}
-
-test("ProfileManager recovers gracefully from corrupted JSON", () => {
-    const config = { corruptedProfileListBackup: "" };
-    const res = simulateLoadFromRaw("invalid{json", "some-id", config);
-
-    assert.equal(res.recovered, true);
-    assert.equal(res.profiles.length, 1);
-    assert.equal(res.profiles[0].isDefault, true);
-    assert.equal(config.corruptedProfileListBackup, "invalid{json");
+test("profile validation rejects malformed and ambiguous persisted state", () => {
+    assert.equal(Profiles.validateProfiles([profile()]), true);
+    assert.equal(Profiles.validateProfiles([]), false);
+    assert.equal(Profiles.validateProfiles([profile({ id: "" })]), false);
+    assert.equal(Profiles.validateProfiles([profile({ name: " " })]), false);
+    assert.equal(Profiles.validateProfiles([profile({ data: [] })]), false);
+    assert.equal(Profiles.validateProfiles([profile(), profile()]), false, "duplicate IDs are ambiguous");
 });
 
-test("Default profile cannot be deleted but duplicate-named custom profile can", () => {
-    const profiles = [
-        { id: "p1", name: "Default", isDefault: true, data: {} },
-        { id: "p2", name: "Default", isDefault: false, data: {} }
+test("default migration prefers the named Default then the oldest profile", () => {
+    const named = [
+        profile({ id: "newer", name: "Gaming", createdAt: 20, isDefault: false }),
+        profile({ id: "named", name: "Default", createdAt: 30, isDefault: false })
     ];
+    assert.equal(Profiles.defaultProfileIndex(named), 1);
 
-    function deleteProfile(id) {
-        if (profiles.length <= 1) return;
-        const idx = profiles.findIndex(p => p.id === id);
-        if (idx === -1 || profiles[idx].isDefault) return;
-        profiles.splice(idx, 1);
-    }
+    const oldest = [
+        profile({ id: "newer", name: "Gaming", createdAt: 20, isDefault: false }),
+        profile({ id: "oldest", name: "Work", createdAt: 10, isDefault: false })
+    ];
+    assert.equal(Profiles.defaultProfileIndex(oldest), 1);
+});
 
-    deleteProfile("p1");
-    assert.equal(profiles.length, 2);
+test("active profile selection falls back deterministically", () => {
+    const profiles = [profile(), profile({ id: "profile-2", name: "Gaming", isDefault: false })];
+    assert.equal(Profiles.activeProfileId(profiles, "profile-2"), "profile-2");
+    assert.equal(Profiles.activeProfileId(profiles, "missing"), "profile-1");
+    assert.equal(Profiles.activeProfileId([], "missing"), "");
+});
 
-    deleteProfile("p2");
-    assert.equal(profiles.length, 1);
-    assert.equal(profiles[0].id, "p1");
+test("only non-default profiles can be deleted when another profile remains", () => {
+    const profiles = [profile(), profile({ id: "profile-2", name: "Default", isDefault: false })];
+    assert.equal(Profiles.canDeleteProfile(profiles, "profile-1"), false);
+    assert.equal(Profiles.canDeleteProfile(profiles, "profile-2"), true);
+    assert.equal(Profiles.canDeleteProfile([profile()], "profile-1"), false);
+    assert.equal(Profiles.canDeleteProfile(profiles, "missing"), false);
+});
+
+test("profile serialization carries the central format version", () => {
+    const parsed = JSON.parse(Profiles.serializeProfiles([profile()]));
+    assert.equal(parsed.version, Profiles.PROFILE_FORMAT_VERSION);
+    assert.equal(parsed.profiles.length, 1);
 });

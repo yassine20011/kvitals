@@ -1,6 +1,7 @@
 import QtQuick
 import org.kde.plasma.plasmoid
 import "./MetricDefinitions.js" as Defs
+import "./ConfigLogic.js" as ConfigLogic
 
 QtObject {
     id: root
@@ -21,11 +22,10 @@ QtObject {
     // Pinned metrics on Plasma panel
     readonly property string pinnedMetrics: (target && target[propertyPrefix + "pinnedMetrics"] !== undefined)
         ? target[propertyPrefix + "pinnedMetrics"]
-        : "cpu/usage,ram/percentage,temp/system,bat/percentage,net/down,net/up"
+        : ConfigLogic.DEFAULT_PINNED_METRICS
 
     readonly property var pinnedList: {
-        if (!pinnedMetrics) return [];
-        return pinnedMetrics.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+        return ConfigLogic.parseCsv(pinnedMetrics);
     }
 
     readonly property var _pinnedSet: {
@@ -43,44 +43,24 @@ QtObject {
 
     function togglePin(instanceId) {
         if (!instanceId) return;
-        var list = pinnedList.slice();
-        var idx = list.indexOf(instanceId);
-        if (idx >= 0) {
-            list.splice(idx, 1);
-        } else {
-            list.push(instanceId);
-        }
         var prop = propertyPrefix + "pinnedMetrics";
         if (target && target[prop] !== undefined) {
-            target[prop] = list.join(",");
+            target[prop] = ConfigLogic.toggleCsvMembership(pinnedMetrics, instanceId, ConfigLogic.DEFAULT_PINNED_METRICS);
         }
     }
 
     function setPinned(instanceId, shouldPin) {
         if (!instanceId) return;
-        var list = pinnedList.slice();
-        var idx = list.indexOf(instanceId);
-        if (shouldPin && idx < 0) {
-            list.push(instanceId);
-        } else if (!shouldPin && idx >= 0) {
-            list.splice(idx, 1);
-        } else {
-            return;
-        }
         var prop = propertyPrefix + "pinnedMetrics";
         if (target && target[prop] !== undefined) {
-            target[prop] = list.join(",");
+            target[prop] = ConfigLogic.setCsvMembership(pinnedMetrics, instanceId, shouldPin, ConfigLogic.DEFAULT_PINNED_METRICS);
         }
     }
 
     function movePinnedMetric(fromIndex, toIndex) {
-        var list = pinnedList.slice();
-        if (fromIndex < 0 || fromIndex >= list.length || toIndex < 0 || toIndex >= list.length) return;
-        var item = list.splice(fromIndex, 1)[0];
-        list.splice(toIndex, 0, item);
         var prop = propertyPrefix + "pinnedMetrics";
         if (target && target[prop] !== undefined) {
-            target[prop] = list.join(",");
+            target[prop] = ConfigLogic.moveCsvItem(pinnedMetrics, fromIndex, toIndex, ConfigLogic.DEFAULT_PINNED_METRICS);
         }
     }
 
@@ -100,31 +80,14 @@ QtObject {
 
     function isGpuSelected(deviceId) {
         var raw = (target && target[propertyPrefix + "gpuSelection"]) || "";
-        if (raw === "none") return false;
-        if (!raw) return true; // all enabled by default
-        var list = raw.split(",").map(function(s){ return s.trim(); });
-        return list.indexOf(deviceId) !== -1;
+        return ConfigLogic.isSelectionEnabled(raw, deviceId);
     }
 
     function setGpuSelected(deviceId, enabled, allDiscoveredGpuIds) {
         var raw = (target && target[propertyPrefix + "gpuSelection"]) || "";
-        var current;
-        if (raw === "none") {
-            current = [];
-        } else if (!raw) {
-            current = allDiscoveredGpuIds ? allDiscoveredGpuIds.slice() : [];
-        } else {
-            current = raw.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
-        }
-        var idx = current.indexOf(deviceId);
-        if (enabled && idx === -1) {
-            current.push(deviceId);
-        } else if (!enabled && idx !== -1) {
-            current.splice(idx, 1);
-        }
         var prop = propertyPrefix + "gpuSelection";
         if (target && target[prop] !== undefined) {
-            target[prop] = current.length === 0 ? "none" : current.join(",");
+            target[prop] = ConfigLogic.updateSelection(raw, deviceId, enabled, allDiscoveredGpuIds);
         }
     }
 
@@ -155,20 +118,7 @@ QtObject {
     }
 
     function _parseJsonSafe(str) {
-        if (!str) return {};
-        if (typeof str === "object") return str;
-        var trimmed = String(str).trim();
-        if (trimmed.startsWith("{")) {
-            try {
-                return JSON.parse(trimmed);
-            } catch (e) {}
-        }
-        var res = {};
-        trimmed.split("|").forEach(function(pair) {
-            var sep = pair.indexOf(":");
-            if (sep > 0) res[pair.substring(0, sep).trim()] = pair.substring(sep + 1).trim();
-        });
-        return res;
+        return ConfigLogic.parseJsonMap(str);
     }
 
     // Static Group Labels
@@ -280,24 +230,15 @@ QtObject {
     readonly property string diskSubMetrics:      (target && target[propertyPrefix + "diskSubMetrics"])     || "read,write"
 
     // Group order in popup catalogue
-    readonly property string metricOrder: (target && target[propertyPrefix + "metricOrder"]) || "cpu,ram,temp,gpu,bat,net,disk,fan,uptime"
+    readonly property string metricOrder: (target && target[propertyPrefix + "metricOrder"]) || ConfigLogic.DEFAULT_METRIC_ORDER
     readonly property var orderedKeys: {
-        var all = Defs.ALL_GROUP_KEYS;
-        var keys = metricOrder.split(",").map(function(k){ return k.trim(); }).filter(function(k){ return k.length > 0 && all.indexOf(k) >= 0; });
-        for (var i = 0; i < all.length; i++) {
-            if (keys.indexOf(all[i]) === -1) keys.push(all[i]);
-        }
-        return keys;
+        return ConfigLogic.normalizeOrder(metricOrder, Defs.ALL_GROUP_KEYS, ConfigLogic.DEFAULT_METRIC_ORDER);
     }
 
     function moveMetric(fromIndex, toIndex) {
-        var keys = orderedKeys.slice();
-        if (fromIndex < 0 || fromIndex >= keys.length || toIndex < 0 || toIndex >= keys.length) return;
-        var item = keys.splice(fromIndex, 1)[0];
-        keys.splice(toIndex, 0, item);
         var prop = propertyPrefix + "metricOrder";
         if (target && target[prop] !== undefined) {
-            target[prop] = keys.join(",");
+            target[prop] = ConfigLogic.moveCsvItem(orderedKeys.join(","), fromIndex, toIndex, ConfigLogic.DEFAULT_METRIC_ORDER);
         }
     }
 }

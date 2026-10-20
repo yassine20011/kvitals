@@ -21,6 +21,35 @@ Thanks for your interest in contributing! Here's how to get started.
    ```
    Then restart the widget (remove & re-add to panel) or log out / log in.
 
+## Automated Tests
+
+The fast suite runs on Node.js 22 and exercises the same JavaScript logic imported by the QML runtime:
+
+```bash
+cd tests
+npm test
+```
+
+Additional checks:
+
+```bash
+npm run test:coverage  # source-level coverage report for production JS modules
+npm run test:lint-qml  # Qt 6 qmllint with the widget's import paths
+npm run test:qml       # Qt Quick Test component and interaction suite
+npm run test:smoke     # Plasma 6 desktop/panel/vertical/HiDPI launch matrix
+```
+
+The last three commands require Plasma 6, Qt 6 declarative development tools,
+Xvfb, and DBus. The smoke test rejects Plasma 5 explicitly. Before opening a
+pull request, also test the widget interactively on Plasma 6; headless tests do
+not replace checking real panel sizing, theme integration, and configuration
+behavior. CI runs the Node layer independently and runs the KDE-native layers
+in an Ubuntu 26.04 Plasma 6 container.
+
+The complete test architecture, current coverage, implemented checks, remaining
+automation, and manual release checklist are documented in
+[docs/testing.md](docs/testing.md).
+
 ## Project Structure
 
 ```
@@ -29,11 +58,18 @@ kvitals/
 ├── contents/
 │   ├── ui/
 │   │   ├── main.qml               # Main widget UI
+│   │   ├── models/                # Runtime models and shared testable logic
+│   │   ├── sensors/               # KSystemStats sensor adapters
 │   │   └── configGeneral.qml      # Settings page
 │   ├── config/
 │   │   └── config.qml             # Config entry point
 ├── install.sh                     # Local install script
 ├── install-remote.sh              # Remote install (curl/wget)
+├── tests/
+│   ├── qml/                       # Native Qt Quick component/interaction tests
+│   ├── unit/                      # Fast production-JS and contract tests
+│   ├── run_qml_tests.sh           # Qt 6 qmltestrunner entry point
+│   └── smoke_test.sh              # Plasma 6 form-factor smoke matrix
 └── package.sh                     # Build .plasmoid package
 ```
 

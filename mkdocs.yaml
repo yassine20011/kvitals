@@ -52,7 +52,9 @@ nav:
   - Architecture:
       - Overview: architecture.md
       - Temperature Detection: temp-sensor-logic.md
-  - Contributing: contributing.md
+  - Contributing:
+      - Contributor Guide: contributing.md
+      - Testing: testing.md
   - Troubleshooting: troubleshooting.md
   - Changelog: changelog.md
 
@@ -81,4 +83,5 @@ plugins:
           - troubleshooting.md: Common issues and solutions
         Community:
           - contributing.md: How to contribute to the project
+          - testing.md: Automated test architecture, commands, coverage, and remaining work
           - changelog.md: Version history and release notes

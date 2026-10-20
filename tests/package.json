@@ -1,3 +1,11 @@
 {
-  "type": "module"
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node runner.js",
+    "test:coverage": "node --test --experimental-test-coverage --test-coverage-include=../contents/ui/models/*.js --test-coverage-lines=90 --test-coverage-functions=95 --test-coverage-branches=70 all.test.js",
+    "test:qml": "bash run_qml_tests.sh",
+    "test:lint-qml": "bash lint_qml.sh",
+    "test:smoke": "bash smoke_test.sh"
+  }
 }

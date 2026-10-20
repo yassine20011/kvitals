@@ -51,11 +51,32 @@ To add an entirely new hardware category (such as NPU or Cooler), see the module
 2. Add the matching `cfg_<key>` property and UI control to the appropriate config tab (`configGeneral.qml`, `configPanelOrder.qml`, `configMetrics.qml`, `configIcons.qml`, `configColors.qml`, or `configProfiles.qml`) so the KCM can load and persist the value.
 3. Expose the value in `contents/ui/models/MetricConfig.qml` (for metric settings) or read it in `contents/ui/main.qml` (for general presentation settings).
 
+## Automated Tests
+
+Run the fast production-logic and contract suite after every change:
+
+```bash
+npm test --prefix tests
+npm run test:coverage --prefix tests
+```
+
+On a Plasma 6 development system, also run the native checks:
+
+```bash
+npm run test:lint-qml --prefix tests
+npm run test:qml --prefix tests
+npm run test:smoke --prefix tests
+```
+
+See [Testing](testing.md) for the test-layer design, current coverage, CI
+requirements, completed work, remaining automation, and the manual release
+checklist.
+
 ## Pull Requests
 
 1. Create a feature branch: `git checkout -b feat/my-feature`
 2. Make your changes and test locally
-3. Ensure ShellCheck passes
+3. Ensure ShellCheck and the automated test layers pass
 4. Push and open a PR against `master`
 
 !!! tip "Commit Messages"
