@@ -265,6 +265,7 @@ QtObject {
 
     // Units & hardware preferences
     readonly property int updateInterval:         (target && target[propertyPrefix + "updateInterval"])    || 2000
+    readonly property string ramUnit:             (target && target[propertyPrefix + "ramUnit"])           || "GiB"
     readonly property string tempUnit:            (target && target[propertyPrefix + "tempUnit"])          || "C"
     readonly property string networkUnit:         (target && target[propertyPrefix + "networkUnit"])       || "bytes"
     readonly property string fanUnit:             (target && target[propertyPrefix + "fanUnit"])           || "rpm"

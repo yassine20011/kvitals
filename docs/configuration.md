@@ -30,6 +30,7 @@ Right-click the widget, then select **Configure KVitals...** to open the setting
 
 | Preference | Options | Default |
 |---|---|---|
+| **RAM unit** | Gibibytes (GiB) or Gigabytes (GB) | GiB |
 | **Temperature unit** | Celsius (°C) or Fahrenheit (°F) | Celsius (°C) |
 | **Network/Disk I/O unit** | Bytes (KB/s, MB/s) or Bits (Kb/s, Mb/s) | Bytes |
 | **Fan Speed unit** | RPM or Percentage (%) | RPM |

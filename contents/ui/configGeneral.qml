@@ -17,6 +17,7 @@ KCM.SimpleKCM {
     property string cfg_fontFamily: "monospace"
     property string cfg_layoutType: "horizontal"
     property string cfg_backgroundType: "default"
+    property string cfg_ramUnit: "GiB"
     property string cfg_tempUnit: "C"
     property string cfg_networkUnit: "bytes"
     property string cfg_fanUnit: "rpm"
@@ -325,6 +326,14 @@ KCM.SimpleKCM {
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
             Kirigami.FormData.label: i18n("Unit Preferences")
+        }
+
+        ComboBox {
+            id: ramUnitCombo
+            Kirigami.FormData.label: i18n("RAM unit:")
+            model: ["GiB", "GB"]
+            currentIndex: cfg_ramUnit === "GB" ? 1 : 0
+            onActivated: cfg_ramUnit = (currentIndex === 1 ? "GB" : "GiB")
         }
 
         ComboBox {

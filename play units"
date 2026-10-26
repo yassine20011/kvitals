@@ -1,0 +1,148 @@
+[1mdiff --git a/contents/config/main.xml b/contents/config/main.xml[m
+[1mindex fca99c1..00c1035 100644[m
+[1m--- a/contents/config/main.xml[m
+[1m+++ b/contents/config/main.xml[m
+[36m@@ -304,6 +304,9 @@[m
+         </entry>[m
+ [m
+         <!-- Units -->[m
+[32m+[m[32m        <entry name="ramUnit" type="String">[m
+[32m+[m[32m            <default>GiB</default>[m
+[32m+[m[32m        </entry>[m
+         <entry name="tempUnit" type="String">[m
+             <default>C</default>[m
+         </entry>[m
+[1mdiff --git a/contents/ui/configGeneral.qml b/contents/ui/configGeneral.qml[m
+[1mindex 31790ab..7615de9 100644[m
+[1m--- a/contents/ui/configGeneral.qml[m
+[1m+++ b/contents/ui/configGeneral.qml[m
+[36m@@ -17,6 +17,7 @@[m [mKCM.SimpleKCM {[m
+     property string cfg_fontFamily: "monospace"[m
+     property string cfg_layoutType: "horizontal"[m
+     property string cfg_backgroundType: "default"[m
+[32m+[m[32m    property string cfg_ramUnit: "GiB"[m
+     property string cfg_tempUnit: "C"[m
+     property string cfg_networkUnit: "bytes"[m
+     property string cfg_fanUnit: "rpm"[m
+[36m@@ -327,6 +328,14 @@[m [mKCM.SimpleKCM {[m
+             Kirigami.FormData.label: i18n("Unit Preferences")[m
+         }[m
+ [m
+[32m+[m[32m        ComboBox {[m
+[32m+[m[32m            id: ramUnitCombo[m
+[32m+[m[32m            Kirigami.FormData.label: i18n("RAM unit:")[m
+[32m+[m[32m            model: ["GiB", "GB"][m
+[32m+[m[32m            currentIndex: cfg_ramUnit === "GB" ? 1 : 0[m
+[32m+[m[32m            onActivated: cfg_ramUnit = (currentIndex === 1 ? "GB" : "GiB")[m
+[32m+[m[32m        }[m
+[32m+[m
+         ComboBox {[m
+             id: tempUnitCombo[m
+             Kirigami.FormData.label: i18n("Temperature unit:")[m
+[1mdiff --git a/contents/ui/main.qml b/contents/ui/main.qml[m
+[1mindex 02dee71..dd66d51 100644[m
+[1m--- a/contents/ui/main.qml[m
+[1m+++ b/contents/ui/main.qml[m
+[36m@@ -134,6 +134,7 @@[m [mPlasmoidItem {[m
+             MemorySensors {[m
+                 id: _memory[m
+                 updateInterval: metricConfig.updateInterval[m
+[32m+[m[32m                ramUnit: metricConfig.ramUnit[m
+             }[m
+ [m
+             SwapSensors {[m
+[1mdiff --git a/contents/ui/models/MetricConfig.qml b/contents/ui/models/MetricConfig.qml[m
+[1mindex cb71f19..8059e33 100644[m
+[1m--- a/contents/ui/models/MetricConfig.qml[m
+[1m+++ b/contents/ui/models/MetricConfig.qml[m
+[36m@@ -265,6 +265,7 @@[m [mQtObject {[m
+ [m
+     // Units & hardware preferences[m
+     readonly property int updateInterval:         (target && target[propertyPrefix + "updateInterval"])    || 2000[m
+[32m+[m[32m    readonly property string ramUnit:             (target && target[propertyPrefix + "ramUnit"])           || "GiB"[m
+     readonly property string tempUnit:            (target && target[propertyPrefix + "tempUnit"])          || "C"[m
+     readonly property string networkUnit:         (target && target[propertyPrefix + "networkUnit"])       || "bytes"[m
+     readonly property string fanUnit:             (target && target[propertyPrefix + "fanUnit"])           || "rpm"[m
+[1mdiff --git a/contents/ui/models/ProfileManager.qml b/contents/ui/models/ProfileManager.qml[m
+[1mindex c5ad671..9b5412b 100644[m
+[1m--- a/contents/ui/models/ProfileManager.qml[m
+[1m+++ b/contents/ui/models/ProfileManager.qml[m
+[36m@@ -33,6 +33,7 @@[m [mQtObject {[m
+         ramSubMetrics:            "percentage",[m
+         ramWidgetShowBoth:        false,[m
+         ramVisibility:            "both",[m
+[32m+[m[32m        ramUnit:                  "GiB",[m
+         swapEnabled:              false,[m
+         swapSubMetrics:           "percent,used",[m
+         swapVisibility:           "both",[m
+[36m@@ -138,6 +139,7 @@[m [mQtObject {[m
+         property string ramSubMetrics:            "percentage"[m
+         property bool   ramWidgetShowBoth:        false[m
+         property string ramVisibility:            "both"[m
+[32m+[m[32m        property string ramUnit:                  "GiB"[m
+         property bool   swapEnabled:              false[m
+         property string swapSubMetrics:           "percent,used"[m
+         property string swapVisibility:           "both"[m
+[1mdiff --git a/contents/ui/sensors/MemorySensors.qml b/contents/ui/sensors/MemorySensors.qml[m
+[1mindex 3ad0fac..edc0a32 100644[m
+[1m--- a/contents/ui/sensors/MemorySensors.qml[m
+[1m+++ b/contents/ui/sensors/MemorySensors.qml[m
+[36m@@ -5,6 +5,7 @@[m [mItem {[m
+     id: root[m
+ [m
+     property int updateInterval: 2000[m
+[32m+[m[32m    property string ramUnit: "GiB"[m
+ [m
+     readonly property real ramPercentage: {[m
+         if (ramUsedSensor.status !== Sensors.Sensor.Ready || ramTotalSensor.status !== Sensors.Sensor.Ready)[m
+[36m@@ -14,9 +15,11 @@[m [mItem {[m
+     }[m
+ [m
+     readonly property string ramValue: {[m
+[31m-        if (isNaN(ramPercentage))[m
+[31m-            return "...";[m
+[31m-        return Utils.formatBytes(ramUsedSensor.value) + "/" + Utils.formatBytes(ramTotalSensor.value) + "G";[m
+[32m+[m[32m    if (isNaN(ramPercentage))[m
+[32m+[m[32m        return "...";[m
+[32m+[m[32m    return Utils.formatBytes(ramUsedSensor.value, root.ramUnit)[m
+[32m+[m[32m        + "/" + Utils.formatBytes(ramTotalSensor.value, root.ramUnit)[m
+[32m+[m[32m        + root.ramUnit;[m
+     }[m
+ [m
+     readonly property string ramPercentValue: isNaN(ramPercentage) ? "..." : Math.round(ramPercentage).toString().padStart(3) + "%"[m
+[1mdiff --git a/contents/ui/sensors/Utils.qml b/contents/ui/sensors/Utils.qml[m
+[1mindex 3e0e98c..0a9596b 100644[m
+[1m--- a/contents/ui/sensors/Utils.qml[m
+[1m+++ b/contents/ui/sensors/Utils.qml[m
+[36m@@ -3,11 +3,15 @@[m [mimport QtQuick[m
+ import org.kde.ksysguard.sensors as Sensors[m
+ [m
+ QtObject {[m
+[31m-    function formatBytes(bytes) {[m
+[32m+[m[32m    function formatBytes(bytes, unit) {[m
+         if (typeof bytes !== "number" || isNaN(bytes))[m
+[31m-            return "...";[m
+[31m-        var gb = bytes / (1024 * 1024 * 1024);[m
+[31m-        return gb.toFixed(1);[m
+[32m+[m[32m        return "...";[m
+[32m+[m
+[32m+[m[32m        var divisor = unit === "GB"[m
+[32m+[m[32m            ? 1000 * 1000 * 1000[m
+[32m+[m[32m            : 1024 * 1024 * 1024;[m
+[32m+[m
+[32m+[m[32m        return (bytes / divisor).toFixed(1);[m
+     }[m
+ [m
+     function formatData(bytes) {[m
+[1mdiff --git a/docs/configuration.md b/docs/configuration.md[m
+[1mindex 2b6ff71..20d207c 100644[m
+[1m--- a/docs/configuration.md[m
+[1m+++ b/docs/configuration.md[m
+[36m@@ -30,6 +30,7 @@[m [mRight-click the widget, then select **Configure KVitals...** to open the setting[m
+ [m
+ | Preference | Options | Default |[m
+ |---|---|---|[m
+[32m+[m[32m| **RAM unit** | Gibibytes (GiB) or Gigabytes (GB) | GiB |[m
+ | **Temperature unit** | Celsius (°C) or Fahrenheit (°F) | Celsius (°C) |[m
+ | **Network/Disk I/O unit** | Bytes (KB/s, MB/s) or Bits (Kb/s, Mb/s) | Bytes |[m
+ | **Fan Speed unit** | RPM or Percentage (%) | RPM |[m
