@@ -5,6 +5,7 @@ Item {
     id: root
 
     property int updateInterval: 2000
+    property string ramUnit: "GiB"
 
     readonly property real ramPercentage: {
         if (ramUsedSensor.status !== Sensors.Sensor.Ready || ramTotalSensor.status !== Sensors.Sensor.Ready)
@@ -14,9 +15,11 @@ Item {
     }
 
     readonly property string ramValue: {
-        if (isNaN(ramPercentage))
-            return "...";
-        return Utils.formatBytes(ramUsedSensor.value) + "/" + Utils.formatBytes(ramTotalSensor.value) + "G";
+    if (isNaN(ramPercentage))
+        return "...";
+    return Utils.formatBytes(ramUsedSensor.value, root.ramUnit)
+        + "/" + Utils.formatBytes(ramTotalSensor.value, root.ramUnit)
+        + root.ramUnit;
     }
 
     readonly property string ramPercentValue: isNaN(ramPercentage) ? "..." : Math.round(ramPercentage).toString().padStart(3) + "%"

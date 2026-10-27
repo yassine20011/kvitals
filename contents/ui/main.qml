@@ -134,6 +134,7 @@ PlasmoidItem {
             MemorySensors {
                 id: _memory
                 updateInterval: metricConfig.updateInterval
+                ramUnit: metricConfig.ramUnit
             }
 
             SwapSensors {

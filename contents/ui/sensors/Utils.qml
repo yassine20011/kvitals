@@ -3,11 +3,15 @@ import QtQuick
 import org.kde.ksysguard.sensors as Sensors
 
 QtObject {
-    function formatBytes(bytes) {
+    function formatBytes(bytes, unit) {
         if (typeof bytes !== "number" || isNaN(bytes))
-            return "...";
-        var gb = bytes / (1024 * 1024 * 1024);
-        return gb.toFixed(1);
+        return "...";
+
+        var divisor = unit === "GB"
+            ? 1000 * 1000 * 1000
+            : 1024 * 1024 * 1024;
+
+        return (bytes / divisor).toFixed(1);
     }
 
     function formatData(bytes) {

@@ -304,6 +304,9 @@
         </entry>
 
         <!-- Units -->
+        <entry name="ramUnit" type="String">
+            <default>GiB</default>
+        </entry>
         <entry name="tempUnit" type="String">
             <default>C</default>
         </entry>

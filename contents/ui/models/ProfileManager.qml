@@ -33,6 +33,7 @@ QtObject {
         ramSubMetrics:            "percentage",
         ramWidgetShowBoth:        false,
         ramVisibility:            "both",
+        ramUnit:                  "GiB",
         swapEnabled:              false,
         swapSubMetrics:           "percent,used",
         swapVisibility:           "both",
@@ -138,6 +139,7 @@ QtObject {
         property string ramSubMetrics:            "percentage"
         property bool   ramWidgetShowBoth:        false
         property string ramVisibility:            "both"
+        property string ramUnit:                  "GiB"
         property bool   swapEnabled:              false
         property string swapSubMetrics:           "percent,used"
         property string swapVisibility:           "both"
