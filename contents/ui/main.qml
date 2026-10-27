@@ -22,6 +22,7 @@ PlasmoidItem {
     }
 
     readonly property bool isPlanar: Plasmoid.formFactor === PlasmaCore.Types.Planar
+    readonly property bool isVerticalPanel: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     Layout.preferredWidth: compactRepresentationItem ? compactRepresentationItem.implicitWidth : -1
     Layout.preferredHeight: compactRepresentationItem ? compactRepresentationItem.implicitHeight : -1
 
@@ -29,6 +30,7 @@ PlasmoidItem {
     property string displayMode:      profileManager.activeConfig.displayMode
     property string layoutType:       profileManager.activeConfig.layoutType
     property string backgroundType:   profileManager.activeConfig.backgroundType || "default"
+    property int panelPadding:        profileManager.activeConfig.panelPadding !== undefined ? profileManager.activeConfig.panelPadding : 0
     property int iconSize:            profileManager.activeConfig.iconSize
     property string fontFamily:       profileManager.activeConfig.fontFamily
     property int fontSize:            profileManager.activeConfig.fontSize
@@ -457,7 +459,9 @@ PlasmoidItem {
         metricsModel: root._compactItems
         layoutType: root.layoutType
         backgroundType: root.backgroundType
+        panelPadding: root.panelPadding
         isPlanar: root.isPlanar
+        isVerticalPanel: root.isVerticalPanel
         useIcons: root.useIcons
         useText: root.useText
         effectiveFontSize: root.effectiveFontSize
