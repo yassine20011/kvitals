@@ -302,6 +302,12 @@
         <entry name="diskTempCriticalThreshold" type="Int">
             <default>60</default>
         </entry>
+        <entry name="coolantTempWarningThreshold" type="Int">
+            <default>40</default>
+        </entry>
+        <entry name="coolantTempCriticalThreshold" type="Int">
+            <default>50</default>
+        </entry>
 
         <!-- Units -->
         <entry name="ramUnit" type="String">
@@ -317,6 +323,9 @@
             <default>FAN</default>
         </entry>
         <entry name="fanLabels" type="String">
+            <default></default>
+        </entry>
+        <entry name="coolantLabels" type="String">
             <default></default>
         </entry>
         <entry name="fanUnit" type="String">

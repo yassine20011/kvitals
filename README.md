@@ -34,6 +34,7 @@ Here is what you can track and customize:
 - **System temperature**: Auto-detects the chipset/motherboard sensor from lmsensors. Falls back to CPU average if no ISA-bus sensor is found.
 - **GPU**: Usage, VRAM, temperature, core frequency, and power draw. Supports multiple GPUs independently with custom labels (iGPU, dGPU, etc.).
 - **Fan speed**: Per-fan RPM and percentage with stable numbering.
+- **AIO coolant temperature**: Liquid temperature from AIO coolers and pumps whose kernel driver labels the sensor as coolant, with custom labels.
 - **Battery and power**: Automatically detects battery interfaces, charge percentage, health, and power draw in watts.
 - **Network**: Download and upload speeds, session data totals (download/upload), Wi-Fi signal strength, local IP address display, and interface auto-detection.
 - **Disk I/O, space, and temperature**: Per-drive read/write rates, overall used space, and per-disk temperature monitoring (displayed when the corresponding sensor is available through KSystemStats) with hotplug detection.

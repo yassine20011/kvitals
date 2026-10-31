@@ -111,6 +111,7 @@ PlasmoidItem {
             property alias network:   _network
             property alias disk:      _disk
             property alias fans:      _fans
+            property alias coolant:   _coolant
             property alias uptime:    _uptime
 
             HardwareDiscovery {
@@ -191,6 +192,14 @@ PlasmoidItem {
                 fanUnit: metricConfig.fanUnit
                 fanLabels: metricConfig.fanLabels
                 fanMaxRpm: metricConfig.fanMaxRpm
+            }
+
+            CoolantSensors {
+                id: _coolant
+                discovery: _discovery
+                updateInterval: metricConfig.updateInterval
+                tempUnit: metricConfig.tempUnit
+                coolantLabels: metricConfig.coolantLabels
             }
 
             UptimeSensors {

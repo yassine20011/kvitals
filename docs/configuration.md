@@ -87,6 +87,7 @@ Below the pinned list, an **Available Metrics** palette organizes all discoverab
 - **CPU**: Usage, Frequency, Load Averages (1m, 5m, 15m), and per-core usage.
 - **Memory**: RAM Used/Total, RAM Percentage, and Swap metrics.
 - **System**: Overall Temperature and System Uptime.
+- **Temperature**: System temperature plus one item per detected AIO coolant sensor (`Coolant`, or `Coolant 1`, `Coolant 2` when several are present). Custom coolant labels are respected.
 - **GPU**: Core Usage, VRAM, Temperature, Frequency, and Power across discovered GPUs.
 - **Storage**: Read rates, write rates, total usage percentage, free/used space, and drive temperatures. Multiple NVMe drives are automatically distinguished (e.g. `NVMe 1`, `NVMe 2`), and custom disk labels are respected.
 - **Fans**: Individual fan RPM and percentage items.
@@ -117,6 +118,7 @@ Each metric features a four-way visibility selector:
 | **RAM & Swap** | `RAM:` / `SWAP:` | Used/total memory, swap percentages, and DDR5 temps |
 | **CPU Temperature** | `CPU:` | Dedicated CPU temperature reading |
 | **System Temperature** | `System:` | Motherboard/chipset temperature |
+| **Coolant Temperature** | `Coolant:` / `<label>:` | AIO/pump liquid temperature per detected cooler, with per-sensor labels |
 | **GPU Metrics** | `GPU:` / `<name>:` | Usage %, VRAM, temperature, core frequency, and power draw |
 | **Fan Speed** | `FAN:` / `Fan N:` | Fan RPM, percentage, and per-fan labels |
 | **Battery Status** | `BAT:` | Battery level %, health %, and power draw (watts) |
@@ -204,7 +206,7 @@ Click **Reset to defaults** to restore the default icon assignments. If an icon 
 | **Warning color** | Color when a warning threshold is met | `#e5a50a` |
 | **Critical color** | Color when a critical threshold is met | `#da4453` |
 
-Threshold sliders are available for CPU usage, CPU temperature, System temperature, RAM usage, RAM temperature, GPU usage, GPU temperature, and battery level.
+Threshold sliders are available for CPU usage, CPU temperature, System temperature, Coolant temperature, RAM usage, RAM temperature, GPU usage, GPU temperature, and battery level.
 
 ## Profiles Tab
 

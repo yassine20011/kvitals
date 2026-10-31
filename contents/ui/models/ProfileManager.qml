@@ -70,6 +70,7 @@ QtObject {
         gpuLabels:                "",
         fanLabel:                 "FAN",
         fanLabels:                "",
+        coolantLabels:            "",
         displayMode:              "icons",
         layoutType:               "horizontal",
         iconSize:                 12,
@@ -121,6 +122,8 @@ QtObject {
         diskCriticalThreshold:    90,
         diskTempWarningThreshold: 45,
         diskTempCriticalThreshold: 60,
+        coolantTempWarningThreshold: 40,
+        coolantTempCriticalThreshold: 50,
         tempUnit:                 "C",
         networkUnit:              "bytes",
         fanUnit:                  "rpm",
@@ -176,6 +179,7 @@ QtObject {
         property string gpuLabels:                ""
         property string fanLabel:                 "FAN"
         property string fanLabels:                ""
+        property string coolantLabels:            ""
         property string displayMode:              "icons"
         property string layoutType:               "horizontal"
         property int    iconSize:                 12
@@ -227,6 +231,8 @@ QtObject {
         property int    diskCriticalThreshold:    90
         property int    diskTempWarningThreshold: 45
         property int    diskTempCriticalThreshold: 60
+        property int    coolantTempWarningThreshold: 40
+        property int    coolantTempCriticalThreshold: 50
         property string tempUnit:                 "C"
         property string networkUnit:              "bytes"
         property string fanUnit:                  "rpm"
@@ -239,6 +245,7 @@ QtObject {
         onGpuSelectionChanged:  root._saveActiveConfigKey("gpuSelection", gpuSelection)
         onDiskLabelsChanged:    root._saveActiveConfigKey("diskLabels", diskLabels)
         onFanLabelsChanged:     root._saveActiveConfigKey("fanLabels", fanLabels)
+        onCoolantLabelsChanged: root._saveActiveConfigKey("coolantLabels", coolantLabels)
     }
 
     function _saveActiveConfigKey(key, value) {
