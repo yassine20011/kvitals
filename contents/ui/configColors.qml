@@ -38,6 +38,8 @@ KCM.SimpleKCM {
     property alias cfg_diskCriticalThreshold: diskCritSlider.value
     property alias cfg_diskTempWarningThreshold: diskTempWarnSlider.value
     property alias cfg_diskTempCriticalThreshold: diskTempCritSlider.value
+    property alias cfg_coolantTempWarningThreshold: coolantTempWarnSlider.value
+    property alias cfg_coolantTempCriticalThreshold: coolantTempCritSlider.value
 
     readonly property string defaultWarningColor: "#e5a50a"
     readonly property string defaultCriticalColor: "#da4453"
@@ -470,6 +472,20 @@ KCM.SimpleKCM {
             }
             Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: systemWarnSlider.value >= systemCritSlider.value ? cfg_criticalColor : "transparent" }
 
+            // --- Coolant Temperature ---
+            Label { text: i18n("Coolant Temp") }
+            RowLayout {
+                Layout.fillWidth: true
+                Slider { id: coolantTempWarnSlider; from: 20; to: 70; stepSize: 5; value: 40; Layout.fillWidth: true }
+                Label { text: Utils.formatTemp(coolantTempWarnSlider.value, cfg_tempUnit); Layout.preferredWidth: 40 }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Slider { id: coolantTempCritSlider; from: 20; to: 70; stepSize: 5; value: 50; Layout.fillWidth: true }
+                Label { text: Utils.formatTemp(coolantTempCritSlider.value, cfg_tempUnit); Layout.preferredWidth: 40 }
+            }
+            Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: coolantTempWarnSlider.value >= coolantTempCritSlider.value ? cfg_criticalColor : "transparent" }
+
             // --- RAM Usage ---
             Label { text: i18n("RAM Usage") }
             RowLayout {
@@ -617,6 +633,7 @@ KCM.SimpleKCM {
                 cpuWarnSlider.value = 70;  cpuCritSlider.value = 90
                 tempWarnSlider.value = 60; tempCritSlider.value = 85
                 systemWarnSlider.value = 60; systemCritSlider.value = 85
+                coolantTempWarnSlider.value = 40; coolantTempCritSlider.value = 50
                 ramWarnSlider.value = 70;  ramCritSlider.value = 90
                 swapWarnSlider.value = 70; swapCritSlider.value = 90
                 ramTempWarnSlider.value = 60; ramTempCritSlider.value = 85

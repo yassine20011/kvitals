@@ -18,6 +18,7 @@ KCM.SimpleKCM {
     property string cfg_netLabel: "NET"
     property string cfg_diskLabel: "DSK"
     property string cfg_diskLabels: "{}"
+    property string cfg_coolantLabels: "{}"
     property string cfg_fanLabel: "FAN"
     property string cfg_batLabel: "BAT"
 
@@ -61,6 +62,18 @@ KCM.SimpleKCM {
             return "NVMe";
         }
         return did;
+    }
+
+    function getCoolantDisplayName(cid) {
+        if (!cid) return "";
+        var custom = metricConfig.parseCoolantLabels();
+        if (custom && custom[cid]) return custom[cid];
+
+        var coolants = discovery.discoveredCoolants || [];
+        for (var i = 0; i < coolants.length; i++) {
+            if (coolants[i].id === cid) return coolants[i].name;
+        }
+        return cid;
     }
 
     // Computed list of pinned items
@@ -164,7 +177,12 @@ KCM.SimpleKCM {
         } else if (group === "swap") {
             previewVal = subKey === "percent" ? "0%" : "0 MB";
         } else if (group === "temp") {
-            previewVal = "62°C";
+            if (subKey === "coolant") {
+                displayName = panelOrderPage.getCoolantDisplayName(devId);
+                previewVal = "32°C";
+            } else {
+                previewVal = "62°C";
+            }
         } else if (group === "bat") {
             previewVal = subKey === "percentage" ? "85%" : (subKey === "power" ? "14.2W" : (subKey === "health" ? "98%" : "85%"));
         } else if (group === "net") {
@@ -242,12 +260,21 @@ KCM.SimpleKCM {
         });
 
         // 3. Temperature
+        var tempItems = [
+            { id: "temp/system", label: i18n("System Temperature"), icon: "temperature-symbolic" }
+        ];
+        var coolants = discovery.discoveredCoolants || [];
+        for (var coi = 0; coi < coolants.length; coi++) {
+            tempItems.push({
+                id: "temp:" + coolants[coi].id + "/coolant",
+                label: i18n("%1 Temperature", panelOrderPage.getCoolantDisplayName(coolants[coi].id)),
+                icon: "temperature-symbolic"
+            });
+        }
         cats.push({
             title: i18n("Temperature"),
             icon: "temperature-symbolic",
-            items: [
-                { id: "temp/system", label: i18n("System Temperature"), icon: "temperature-symbolic" }
-            ]
+            items: tempItems
         });
 
         // 4. Battery & Power

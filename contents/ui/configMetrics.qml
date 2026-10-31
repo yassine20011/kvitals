@@ -27,6 +27,7 @@ KCM.SimpleKCM {
     property string cfg_diskLabels: ""
     property string cfg_fanLabel: "FAN"
     property string cfg_fanLabels: ""
+    property string cfg_coolantLabels: ""
     property int cfg_fanMaxRpm: 2000
     property string cfg_metricOrder: "cpu,ram,swap,temp,gpu,bat,net,disk,fan,uptime"
     property string cfg_batteryDevice: "auto"
@@ -62,6 +63,7 @@ KCM.SimpleKCM {
     readonly property var discoveredGpus: discovery.discoveredGpus
     readonly property var discoveredDisks: discovery.discoveredDisks
     readonly property var discoveredFans: discovery.discoveredFans
+    readonly property var discoveredCoolants: discovery.discoveredCoolants
     readonly property var ifaceList: discovery.discoveredNetworkIfaces
     readonly property var batteryList: {
         var list = ["auto"].concat(discovery.discoveredBatteries || []);
@@ -167,6 +169,19 @@ KCM.SimpleKCM {
                 placeholderText: "System"
                 implicitWidth: Kirigami.Units.gridUnit * 14
                 onTextEdited: cfg_tempLabel = text.trim() || "System"
+            }
+
+            Repeater {
+                model: metricsPage.discoveredCoolants
+
+                delegate: TextField {
+                    required property var modelData
+                    Kirigami.FormData.label: modelData.name + ":"
+                    implicitWidth: Kirigami.Units.gridUnit * 14
+                    text: metricConfig.parseCoolantLabels()[modelData.id] || ""
+                    placeholderText: modelData.name
+                    onTextEdited: metricConfig.saveCoolantLabel(modelData.id, text)
+                }
             }
         }
 

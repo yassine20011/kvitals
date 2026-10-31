@@ -51,7 +51,9 @@ var GROUPS = {
         defaultLabel: "System",
         defaultIcon: "temperature-symbolic",
         defaultSubMetrics: "system",
-        subs: []
+        subs: [
+            { key: "coolant", label: "Coolant" }
+        ]
     },
     gpu: {
         id: "gpu",
@@ -158,6 +160,7 @@ var PATTERNS = {
     DISK_READ: /^disk\/(nvme\d+(?:c\d+)?n\d+|nvme\d+|sd[a-z]+|vd[a-z]+|xvd[a-z]+|mmcblk\d+)\/read$/,
     DISK_TEMP: /^(?:disk\/(?:nvme\d+(?:c\d+)?n\d+|nvme\d+|sd[a-z]+|vd[a-z]+|xvd[a-z]+|mmcblk\d+)\/temperature|lmsensors\/(?:nvme-pci-[^/]+|drivetemp-scsi-[^/]+|scsi-[^/]+|drivetemp-[^/]+)\/temp\d+)$/,
     FAN: /^(lmsensors|cpu|gpu)\/.*\/fan\d+$/i,
+    COOLANT: /^lmsensors\/([^/]+)\/temp\d+$/,
     NETWORK_IFACE: /^network\/([^/]+)\/download$/,
     TEMP_LMSENSORS: /^lmsensors\/(.+)\/temp\d+$/,
     BATTERY: /^power\/(.+)\/chargePercentage$/
@@ -310,6 +313,16 @@ var DEFINITIONS = {
         label: "System",
         thresholdType: "normal",
         thresholdKey: "system"
+    },
+    "temp.coolant": {
+        id: "temp.coolant",
+        group: "temp",
+        subKey: "coolant",
+        sensorPattern: "lmsensors/{adapter}/temp{n}",
+        label: "Coolant",
+        thresholdType: "normal",
+        thresholdKey: "coolantTemp",
+        secondaryIcon: "temperature-normal"
     },
     "gpu.usage": {
         id: "gpu.usage",

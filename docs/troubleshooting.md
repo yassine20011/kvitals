@@ -75,6 +75,26 @@ KVitals DSK 2 temperature
 !!! note
     KVitals does not load kernel modules itself; it visualizes sensors provided by KSystemStats. Per-disk temperatures are displayed when the corresponding sensor is available through KSystemStats.
 
+## Coolant Temperature Missing (AIO Coolers)
+
+**Cause:** KVitals only shows coolant temperatures that KSystemStats exposes as `lmsensors/<chip>/tempN` sensors labelled "Coolant" by their kernel driver (`asus_rog_ryujin`, `nzxt-kraken2`, `nzxt-kraken3`, `gigabyte_waterforce`, `aquacomputer_d5next`). Coolers without an in-kernel hwmon driver (for example many Corsair iCUE AIOs, which are only supported by liquidctl or OpenRGB) are invisible to KSystemStats, and therefore to KVitals.
+
+**Troubleshooting:**
+
+1. Check that KSystemStats sees a coolant sensor:
+   ```bash
+   kstatsviewer --list | grep -i coolant
+   ```
+
+2. If nothing is listed, check whether the kernel driver is loaded:
+   ```bash
+   sensors | grep -i -B3 coolant
+   lsmod | grep -i -E 'ryujin|kraken|waterforce|d5next'
+   ```
+
+!!! note
+    Custom-loop temperature probes that the driver does not label as coolant (for example Aquacomputer Octo/Quadro "Sensor 1–4") are not detected as coolant.
+
 ## RAM Shows Empty (versions ≤ 1.4.0)
 
 **Cause:** On versions before 1.4.1, RAM was read by parsing the `free` command, which translates its output headers (e.g. `Mem:`) based on your system locale. Non-English locales caused the parser to match nothing.

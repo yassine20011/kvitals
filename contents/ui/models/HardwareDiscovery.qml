@@ -18,6 +18,7 @@ Item {
     readonly property var discoveredNetworkIfaces: _netIfaces
     readonly property var discoveredBatteries: _batteries
     readonly property var discoveredDiskTemps: _diskTemps
+    readonly property var discoveredCoolants: _coolants
 
     // Query cache for O(1) repeated pattern queries
     property var _patternCache: ({})
@@ -77,6 +78,7 @@ Item {
     property var _netIfaces: ["auto"]
     property var _batteries: []
     property var _diskTemps: []
+    property var _coolants: []
 
     Sensors.SensorTreeModel {
         id: sensorTree
@@ -125,6 +127,7 @@ Item {
         var ifaceSet = {};
         var batSet = {};
         var diskTempSet = {};
+        var coolantList = [];
 
         var pGpu = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.GPU : /^gpu\/(gpu\d+)\/usage$/;
         var pDisk = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_READ : /^disk\/(nvme\d+(?:c\d+)?n\d+|nvme\d+|sd[a-z]+|vd[a-z]+|xvd[a-z]+|mmcblk\d+)\/read$/;
@@ -133,6 +136,7 @@ Item {
         var pNet = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.NETWORK_IFACE : /^network\/([^/]+)\/download$/;
         var pBat = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.BATTERY : /^power\/(.+)\/chargePercentage$/;
         var pDiskTemp = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_TEMP : /^(?:disk\/(?:nvme\d+(?:c\d+)?n\d+|nvme\d+|sd[a-z]+|vd[a-z]+|xvd[a-z]+|mmcblk\d+)\/temperature|lmsensors\/(?:nvme-pci-[^/]+|drivetemp-scsi-[^/]+|scsi-[^/]+|drivetemp-[^/]+)\/temp\d+)$/;
+        var pCoolant = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.COOLANT : /^lmsensors\/([^/]+)\/temp\d+$/;
 
         for (var row = 0; row < rowCount; row++) {
             var idx = flatSensors.index(row, 0);
@@ -160,6 +164,8 @@ Item {
                 batSet[m[1]] = true;
             } else if (pDiskTemp.test(sid)) {
                 diskTempSet[sid] = true;
+            } else if ((m = sid.match(pCoolant)) && /coolant/i.test(name)) {
+                coolantList.push({ sensorId: sid, adapter: m[1] });
             }
         }
 
@@ -191,6 +197,17 @@ Item {
 
         _batteries = Object.keys(batSet).sort();
         _diskTemps = Object.keys(diskTempSet).sort();
+
+        coolantList.sort(function(a, b) { return a.sensorId.localeCompare(b.sensorId); });
+        var coolantBaseCount = {};
+        coolantList.forEach(function(c) {
+            c.base = c.adapter.replace(/-(isa|pci|i2c|spi|hid|usb|acpi|virtual|mdio|scsi)-.*$/, "");
+            coolantBaseCount[c.base] = (coolantBaseCount[c.base] || 0) + 1;
+        });
+        _coolants = coolantList.map(function(c, i) {
+            var id = coolantBaseCount[c.base] > 1 ? c.adapter : c.base;
+            return { id: id, sensorId: c.sensorId, name: coolantList.length > 1 ? "Coolant " + (i + 1) : "Coolant" };
+        });
 
         _revision++;
     }
