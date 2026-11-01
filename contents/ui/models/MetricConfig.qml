@@ -167,6 +167,46 @@ QtObject {
         }
     }
 
+    function isTempSensorSelected(sensorId) {
+        var raw = (target && target[propertyPrefix + "tempSelection"]) || "";
+        if (raw === "none" || !raw) return false;
+        var list = raw.split(",").map(function(s){ return s.trim(); });
+        return list.indexOf(sensorId) !== -1;
+    }
+
+    function setTempSensorSelected(sensorId, enabled) {
+        var raw = (target && target[propertyPrefix + "tempSelection"]) || "";
+        var current;
+        if (raw === "none" || !raw) {
+            current = [];
+        } else {
+            current = raw.split(",").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+        }
+        var idx = current.indexOf(sensorId);
+        if (enabled && idx === -1) {
+            current.push(sensorId);
+        } else if (!enabled && idx !== -1) {
+            current.splice(idx, 1);
+        }
+        var prop = propertyPrefix + "tempSelection";
+        if (target && target[prop] !== undefined) {
+            target[prop] = current.length === 0 ? "none" : current.join(",");
+        }
+    }
+
+    function parseTempLabels() {
+        return _parseJsonSafe((target && target[propertyPrefix + "tempLabels"]) || "{}");
+    }
+
+    function saveTempLabel(sensorId, label) {
+        var map = parseTempLabels();
+        map[sensorId] = label;
+        var prop = propertyPrefix + "tempLabels";
+        if (target && target[prop] !== undefined) {
+            target[prop] = JSON.stringify(map);
+        }
+    }
+
     function _parseJsonSafe(str) {
         if (!str) return {};
         if (typeof str === "object") return str;
@@ -282,6 +322,7 @@ QtObject {
     readonly property int updateInterval:         (target && target[propertyPrefix + "updateInterval"])    || 2000
     readonly property string ramUnit:             (target && target[propertyPrefix + "ramUnit"])           || "GiB"
     readonly property string tempUnit:            (target && target[propertyPrefix + "tempUnit"])          || "C"
+    readonly property string tempSensor:          (target && target[propertyPrefix + "tempSensor"])        || "auto"
     readonly property string networkUnit:         (target && target[propertyPrefix + "networkUnit"])       || "bytes"
     readonly property string fanUnit:             (target && target[propertyPrefix + "fanUnit"])           || "rpm"
     readonly property int fanMaxRpm:              (target && target[propertyPrefix + "fanMaxRpm"])         || 2000
@@ -293,6 +334,8 @@ QtObject {
     readonly property string diskLabels:          (target && target[propertyPrefix + "diskLabels"])         || ""
     readonly property string fanLabels:           (target && target[propertyPrefix + "fanLabels"])          || ""
     readonly property string coolantLabels:       (target && target[propertyPrefix + "coolantLabels"])      || ""
+    readonly property string tempSelection:       (target && target[propertyPrefix + "tempSelection"])      || ""
+    readonly property string tempLabels:          (target && target[propertyPrefix + "tempLabels"])         || ""
     readonly property string gpuSubMetrics:       (target && target[propertyPrefix + "gpuSubMetrics"])      || "usage,vram,temp"
     readonly property string diskSubMetrics:      (target && target[propertyPrefix + "diskSubMetrics"])     || "read,write"
 

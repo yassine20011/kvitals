@@ -18,6 +18,9 @@ KCM.SimpleKCM {
     property string cfg_ramLabel: "RAM"
     property string cfg_swapLabel: "SWAP"
     property string cfg_tempLabel: "System"
+    property string cfg_tempSensor: "auto"
+    property string cfg_tempSelection: ""
+    property string cfg_tempLabels: ""
     property string cfg_gpuSelection: ""
     property string cfg_gpuLabels: ""
     property string cfg_netLabel: "NET"
@@ -64,11 +67,37 @@ KCM.SimpleKCM {
     readonly property var discoveredDisks: discovery.discoveredDisks
     readonly property var discoveredFans: discovery.discoveredFans
     readonly property var discoveredCoolants: discovery.discoveredCoolants
+    readonly property var discoveredTempSensors: discovery.discoveredTempSensors || []
     readonly property var ifaceList: discovery.discoveredNetworkIfaces
     readonly property var batteryList: {
         var list = ["auto"].concat(discovery.discoveredBatteries || []);
         if (cfg_batteryDevice && list.indexOf(cfg_batteryDevice) === -1) {
             list.push(cfg_batteryDevice);
+        }
+        return list;
+    }
+    readonly property var tempSensorList: {
+        var list = [{ id: "auto", name: i18n("Automatic") }];
+        var discovered = discovery.discoveredTempSensors || [];
+        var foundConfigured = (cfg_tempSensor === "auto");
+        var matchedId = "";
+        for (var i = 0; i < discovered.length; i++) {
+            list.push(discovered[i]);
+            if (discovered[i].id === cfg_tempSensor) {
+                foundConfigured = true;
+            } else if (!foundConfigured && cfg_tempSensor) {
+                if (discovered[i].adapter === cfg_tempSensor ||
+                    discovered[i].id === "lmsensors/" + cfg_tempSensor) {
+                    matchedId = discovered[i].id;
+                }
+            }
+        }
+        if (!foundConfigured && matchedId) {
+            foundConfigured = true;
+            cfg_tempSensor = matchedId;
+        }
+        if (!foundConfigured && cfg_tempSensor && cfg_tempSensor.length > 0) {
+            list.push({ id: cfg_tempSensor, name: cfg_tempSensor });
         }
         return list;
     }
@@ -171,6 +200,61 @@ KCM.SimpleKCM {
                 onTextEdited: cfg_tempLabel = text.trim() || "System"
             }
 
+            RowLayout {
+                Kirigami.FormData.label: i18n("Sensor:")
+                spacing: Kirigami.Units.smallSpacing
+
+                ComboBox {
+                    id: tempSensorCombo
+                    textRole: "name"
+                    valueRole: "id"
+                    model: metricsPage.tempSensorList
+                    currentIndex: {
+                        for (var i = 0; i < metricsPage.tempSensorList.length; i++) {
+                            if (metricsPage.tempSensorList[i].id === cfg_tempSensor) {
+                                return i;
+                            }
+                        }
+                        return 0;
+                    }
+                    onActivated: (index) => cfg_tempSensor = metricsPage.tempSensorList[index].id
+                    implicitWidth: Kirigami.Units.gridUnit * 14
+                }
+
+                Kirigami.ContextualHelpButton {
+                    toolTipText: i18n("Select 'Automatic' for auto-detection (PCH, Super I/O, ACPI), or select a specific sensor.")
+                }
+            }
+
+            Repeater {
+                id: tempSelectorRepeater
+                model: metricsPage.discoveredTempSensors
+
+                delegate: RowLayout {
+                    id: tempDelegate
+                    required property var modelData
+                    Kirigami.FormData.label: tempDelegate.modelData.name + ":"
+                    spacing: Kirigami.Units.smallSpacing
+
+                    property bool _sensorEnabled: metricConfig.isTempSensorSelected(tempDelegate.modelData.id)
+
+                    CheckBox {
+                        text: i18n("Enabled")
+                        checked: tempDelegate._sensorEnabled
+                        onToggled: {
+                            metricConfig.setTempSensorSelected(tempDelegate.modelData.id, checked);
+                        }
+                    }
+
+                    TextField {
+                        implicitWidth: Kirigami.Units.gridUnit * 12
+                        text: metricConfig.parseTempLabels()[tempDelegate.modelData.id] || ""
+                        placeholderText: tempDelegate.modelData.name
+                        onTextEdited: metricConfig.saveTempLabel(tempDelegate.modelData.id, text)
+                    }
+                }
+            }
+
             Repeater {
                 model: metricsPage.discoveredCoolants
 
@@ -269,7 +353,7 @@ KCM.SimpleKCM {
                         var idx = metricsPage.batteryList.indexOf(cfg_batteryDevice);
                         return idx >= 0 ? idx : 0;
                     }
-                    onActivated: cfg_batteryDevice = metricsPage.batteryList[currentIndex]
+                    onActivated: (index) => cfg_batteryDevice = metricsPage.batteryList[index]
                     implicitWidth: Kirigami.Units.gridUnit * 14
                 }
 
@@ -298,7 +382,7 @@ KCM.SimpleKCM {
                     var idx = metricsPage.ifaceList.indexOf(cfg_networkInterface);
                     return idx >= 0 ? idx : 0;
                 }
-                onActivated: cfg_networkInterface = metricsPage.ifaceList[currentIndex]
+                onActivated: (index) => cfg_networkInterface = metricsPage.ifaceList[index]
                 implicitWidth: Kirigami.Units.gridUnit * 14
             }
 

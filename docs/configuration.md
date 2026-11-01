@@ -127,6 +127,21 @@ Each metric features a four-way visibility selector:
 | **Disk I/O & Space** | `DSK:` (customizable) | Per-drive read/write speeds, overall used space, and drive temperatures |
 | **System Uptime** | `UPTIME:` | System uptime |
 
+### Temperature Sensors
+
+The **Temperature** section provides two ways to configure temperature monitoring:
+
+1. **Primary Sensor Selection**:
+   The **Sensor** dropdown controls which sensor provides the primary `System` temperature reading:
+   - **Automatic (`auto`)**: Automatically selects the best available sensor using a priority hierarchy: Intel PCH > Motherboard Super I/O > ACPI thermal zones > CPU average fallback.
+   - **Specific Sensor**: Binds directly to a selected sensor (e.g. `lmsensors/acpitz-acpi-0/temp1`, `lmsensors/pch_cannonlake-virtual-0/temp1`).
+
+2. **Discovered Temperature Sensors (Multi-Sensor Monitoring)**:
+   All discovered motherboard, chipset, and ACPI sensors are listed with independent controls:
+   - **Enabled**: Toggle monitoring for any specific sensor.
+   - **Custom Label**: Customize the display name (e.g. `ACPI`, `PCH`, `VRM`).
+   - Enabled sensors appear in the popup under the **Temperature** section and can be positioned individually in **Panel Items**.
+
 ### Network Interface
 
 When set to `auto`, the widget aggregates traffic across all active network connections using KDE's `network/all` sensor while detecting the active Wi-Fi interface for signal strength. This handles VPN routing and switching networks automatically.

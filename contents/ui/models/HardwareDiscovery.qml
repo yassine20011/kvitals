@@ -19,6 +19,7 @@ Item {
     readonly property var discoveredBatteries: _batteries
     readonly property var discoveredDiskTemps: _diskTemps
     readonly property var discoveredCoolants: _coolants
+    readonly property var discoveredTempSensors: _tempSensors
 
     // Query cache for O(1) repeated pattern queries
     property var _patternCache: ({})
@@ -79,6 +80,7 @@ Item {
     property var _batteries: []
     property var _diskTemps: []
     property var _coolants: []
+    property var _tempSensors: []
 
     Sensors.SensorTreeModel {
         id: sensorTree
@@ -128,6 +130,7 @@ Item {
         var batSet = {};
         var diskTempSet = {};
         var coolantList = [];
+        var tempCandidates = [];
 
         var pGpu = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.GPU : /^gpu\/(gpu\d+)\/usage$/;
         var pDisk = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_READ : /^disk\/(nvme\d+(?:c\d+)?n\d+|nvme\d+|sd[a-z]+|vd[a-z]+|xvd[a-z]+|mmcblk\d+)\/read$/;
@@ -137,6 +140,7 @@ Item {
         var pBat = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.BATTERY : /^power\/(.+)\/chargePercentage$/;
         var pDiskTemp = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.DISK_TEMP : /^(?:disk\/(?:nvme\d+(?:c\d+)?n\d+|nvme\d+|sd[a-z]+|vd[a-z]+|xvd[a-z]+|mmcblk\d+)\/temperature|lmsensors\/(?:nvme-pci-[^/]+|drivetemp-scsi-[^/]+|scsi-[^/]+|drivetemp-[^/]+)\/temp\d+)$/;
         var pCoolant = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.COOLANT : /^lmsensors\/([^/]+)\/temp\d+$/;
+        var pTemp = MetricDefinitions.PATTERNS ? MetricDefinitions.PATTERNS.TEMP_LMSENSORS : /^lmsensors\/(.+)\/temp\d+$/;
 
         for (var row = 0; row < rowCount; row++) {
             var idx = flatSensors.index(row, 0);
@@ -166,6 +170,22 @@ Item {
                 diskTempSet[sid] = true;
             } else if ((m = sid.match(pCoolant)) && /coolant/i.test(name)) {
                 coolantList.push({ sensorId: sid, adapter: m[1] });
+            }
+
+            if ((m = sid.match(pTemp))) {
+                var adapter = m[1];
+                if (!/^(cpu|gpu)\//.test(sid) &&
+                    !/^(spd5118|jc42|dimm_temp|dimm-temp)/i.test(adapter) &&
+                    !/^(nvme|drivetemp|scsi)/i.test(adapter)) {
+                    var isPch = /^pch_/i.test(adapter);
+                    var isIsaSuperIo = /-isa-/.test(adapter) && !/^coretemp/i.test(adapter) && !/^asus-isa/i.test(adapter);
+                    var isAcpi = /-acpi-/i.test(adapter);
+                    if (isPch || isIsaSuperIo || isAcpi) {
+                        if (!/^(cputin|auxtin|peci|smbusmaster)/i.test(name)) {
+                            tempCandidates.push({ id: sid, adapter: adapter, label: name, isPch: isPch, isIsa: isIsaSuperIo, isAcpi: isAcpi });
+                        }
+                    }
+                }
             }
         }
 
@@ -197,7 +217,6 @@ Item {
 
         _batteries = Object.keys(batSet).sort();
         _diskTemps = Object.keys(diskTempSet).sort();
-
         coolantList.sort(function(a, b) { return a.sensorId.localeCompare(b.sensorId); });
         var coolantBaseCount = {};
         coolantList.forEach(function(c) {
@@ -207,6 +226,25 @@ Item {
         _coolants = coolantList.map(function(c, i) {
             var id = coolantBaseCount[c.base] > 1 ? c.adapter : c.base;
             return { id: id, sensorId: c.sensorId, name: coolantList.length > 1 ? "Coolant " + (i + 1) : "Coolant" };
+        });
+
+        tempCandidates.sort(function(a, b) {
+            var pa = a.isPch ? 1 : (a.isIsa ? 2 : 3);
+            var pb = b.isPch ? 1 : (b.isIsa ? 2 : 3);
+            if (pa !== pb) return pa - pb;
+            return a.id.localeCompare(b.id);
+        });
+
+        _tempSensors = tempCandidates.map(function(c) {
+            var labelText = (c.label && c.label.length > 0 && c.label !== c.id) ? c.label : "";
+            var channel = c.id.split("/").pop();
+            var desc = labelText ? (c.adapter + " (" + labelText + ")") : (c.adapter + " (" + channel + ")");
+            return {
+                id: c.id,
+                name: desc,
+                adapter: c.adapter,
+                label: c.label
+            };
         });
 
         _revision++;

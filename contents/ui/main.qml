@@ -150,6 +150,10 @@ PlasmoidItem {
                 discovery: _discovery
                 updateInterval: metricConfig.updateInterval
                 tempUnit: metricConfig.tempUnit
+                tempSensor: metricConfig.tempSensor
+                tempSelection: metricConfig.tempSelection
+                tempLabels: metricConfig.tempLabels
+                pinnedMetrics: metricConfig.pinnedMetrics
             }
 
             GpuSensors {

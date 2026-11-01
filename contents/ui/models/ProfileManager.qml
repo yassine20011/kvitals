@@ -40,6 +40,9 @@ QtObject {
         tempEnabled:              true,
         tempLabel:                "System",
         tempVisibility:           "both",
+        tempSensor:               "auto",
+        tempSelection:            "",
+        tempLabels:               "",
         gpuEnabled:               true,
         gpuSubMetrics:            "usage,vram,temp",
         gpuVisibility:            "both",
@@ -236,6 +239,9 @@ QtObject {
         property int    coolantTempWarningThreshold: 40
         property int    coolantTempCriticalThreshold: 50
         property string tempUnit:                 "C"
+        property string tempSensor:               "auto"
+        property string tempSelection:            ""
+        property string tempLabels:               ""
         property string networkUnit:              "bytes"
         property string fanUnit:                  "rpm"
         property int    fanMaxRpm:                2000
@@ -248,6 +254,8 @@ QtObject {
         onDiskLabelsChanged:    root._saveActiveConfigKey("diskLabels", diskLabels)
         onFanLabelsChanged:     root._saveActiveConfigKey("fanLabels", fanLabels)
         onCoolantLabelsChanged: root._saveActiveConfigKey("coolantLabels", coolantLabels)
+        onTempSelectionChanged: root._saveActiveConfigKey("tempSelection", tempSelection)
+        onTempLabelsChanged:    root._saveActiveConfigKey("tempLabels", tempLabels)
     }
 
     function _saveActiveConfigKey(key, value) {

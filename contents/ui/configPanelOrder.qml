@@ -18,6 +18,7 @@ KCM.SimpleKCM {
     property string cfg_netLabel: "NET"
     property string cfg_diskLabel: "DSK"
     property string cfg_diskLabels: "{}"
+    property string cfg_tempLabels: "{}"
     property string cfg_coolantLabels: "{}"
     property string cfg_fanLabel: "FAN"
     property string cfg_batLabel: "BAT"
@@ -74,6 +75,19 @@ KCM.SimpleKCM {
             if (coolants[i].id === cid) return coolants[i].name;
         }
         return cid;
+    }
+
+    function getTempDisplayName(devId) {
+        if (!devId) return "";
+        var custom = metricConfig.parseTempLabels();
+        if (custom && custom[devId]) return custom[devId];
+        var discovered = discovery.discoveredTempSensors || [];
+        for (var i = 0; i < discovered.length; i++) {
+            if (discovered[i].id === devId || discovered[i].adapter === devId) {
+                return discovered[i].name || devId;
+            }
+        }
+        return devId;
     }
 
     // Computed list of pinned items
@@ -133,7 +147,7 @@ KCM.SimpleKCM {
     function describeMetric(instanceId) {
         if (!instanceId) return { id: "", label: "", icon: "configure", preview: "" };
         var colonIdx = instanceId.indexOf(":");
-        var slashIdx = instanceId.indexOf("/");
+        var slashIdx = instanceId.lastIndexOf("/");
         var group = "";
         var devId = "";
         var subKey = "";
@@ -180,6 +194,9 @@ KCM.SimpleKCM {
             if (subKey === "coolant") {
                 displayName = panelOrderPage.getCoolantDisplayName(devId);
                 previewVal = "32°C";
+            } else if (devId) {
+                displayName = panelOrderPage.getTempDisplayName(devId);
+                previewVal = "45°C";
             } else {
                 previewVal = "62°C";
             }
@@ -263,6 +280,12 @@ KCM.SimpleKCM {
         var tempItems = [
             { id: "temp/system", label: i18n("System Temperature"), icon: "temperature-symbolic" }
         ];
+        var discoveredTemps = discovery.discoveredTempSensors || [];
+        for (var ti = 0; ti < discoveredTemps.length; ti++) {
+            var ts = discoveredTemps[ti];
+            var tsName = panelOrderPage.getTempDisplayName(ts.id);
+            tempItems.push({ id: "temp:" + ts.id + "/temp", label: tsName, icon: "temperature-symbolic" });
+        }
         var coolants = discovery.discoveredCoolants || [];
         for (var coi = 0; coi < coolants.length; coi++) {
             tempItems.push({
