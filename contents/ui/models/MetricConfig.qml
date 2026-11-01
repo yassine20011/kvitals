@@ -154,6 +154,19 @@ QtObject {
         }
     }
 
+    function parseCoolantLabels() {
+        return _parseJsonSafe((target && target[propertyPrefix + "coolantLabels"]) || "{}");
+    }
+
+    function saveCoolantLabel(deviceId, label) {
+        var map = parseCoolantLabels();
+        map[deviceId] = label;
+        var prop = propertyPrefix + "coolantLabels";
+        if (target && target[prop] !== undefined) {
+            target[prop] = JSON.stringify(map);
+        }
+    }
+
     function _parseJsonSafe(str) {
         if (!str) return {};
         if (typeof str === "object") return str;
@@ -246,6 +259,8 @@ QtObject {
     readonly property int diskCriticalThreshold:    (target && target[propertyPrefix + "diskCriticalThreshold"])    || 90
     readonly property int diskTempWarningThreshold: (target && target[propertyPrefix + "diskTempWarningThreshold"]) || 45
     readonly property int diskTempCriticalThreshold: (target && target[propertyPrefix + "diskTempCriticalThreshold"]) || 60
+    readonly property int coolantTempWarningThreshold:  (target && target[propertyPrefix + "coolantTempWarningThreshold"])  || 40
+    readonly property int coolantTempCriticalThreshold: (target && target[propertyPrefix + "coolantTempCriticalThreshold"]) || 50
 
     function getWarningThreshold(key) {
         var prop = propertyPrefix + key + "WarningThreshold";
@@ -277,6 +292,7 @@ QtObject {
     readonly property string gpuLabels:           (target && target[propertyPrefix + "gpuLabels"])          || ""
     readonly property string diskLabels:          (target && target[propertyPrefix + "diskLabels"])         || ""
     readonly property string fanLabels:           (target && target[propertyPrefix + "fanLabels"])          || ""
+    readonly property string coolantLabels:       (target && target[propertyPrefix + "coolantLabels"])      || ""
     readonly property string gpuSubMetrics:       (target && target[propertyPrefix + "gpuSubMetrics"])      || "usage,vram,temp"
     readonly property string diskSubMetrics:      (target && target[propertyPrefix + "diskSubMetrics"])     || "read,write"
 

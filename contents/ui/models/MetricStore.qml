@@ -72,6 +72,7 @@ Item {
         function onGpuLabelsChanged() { root._rebuildMetrics(); }
         function onDiskLabelsChanged() { root._rebuildMetrics(); }
         function onFanLabelsChanged() { root._rebuildMetrics(); }
+        function onCoolantLabelsChanged() { root._rebuildMetrics(); }
         function onGpuSelectionChanged() { root._rebuildMetrics(); }
         function onNetworkInterfaceChanged() { root._rebuildMetrics(); }
         function onBatteryDeviceChanged() { root._rebuildMetrics(); }
@@ -307,6 +308,22 @@ Item {
                 subLabel: "System",
                 status: !isNaN(s.temp.tempNumericValue) ? "ready" : "unavailable"
             }));
+        }
+
+        // Coolant instances (AIO / pump liquid temperature)
+        if (s.coolant && s.coolant.hasCoolantData && (neededGroups === null || neededGroups["temp"])) {
+            var clList = s.coolant.coolantDataList;
+            for (var cli = 0; cli < clList.length; cli++) {
+                var cl = clList[cli];
+                list.push(_createMetric("temp.coolant", {
+                    deviceId: cl.id, deviceName: cl.name,
+                    label: cl.name, groupLabel: cl.name,
+                    subLabel: cl.name,
+                    value: cl.valueNumber,
+                    displayValue: cl.value,
+                    status: !isNaN(cl.valueNumber) ? "ready" : "loading"
+                }));
+            }
         }
 
         // GPU instances

@@ -95,6 +95,7 @@ switches to a chipset sensor.
 | CPU Temperature      | `temp.cpuTempValue` | `cpu/all/averageTemperature`                        | `cpuTempSensor`        |
 | DDR5 RAM Temperature | `temp.ramTempValue` | `lmsensors/spd5118-*/temp1`, `jc42`                  | `ramSensor`            |
 | Disk Temperatures    | `disk.temp`         | `disk/<deviceId>/temperature` or `lmsensors/*`      | `DiskSensors.qml`      |
+| Coolant Temperatures | `temp.coolant`      | `lmsensors/<chip>/tempN` labelled "Coolant…"        | `CoolantSensors.qml`   |
 
 - `sysIsFallback = true` when System Temperature falls back to CPU
 - The "No chipset temp sensor detected" label in settings is controlled by
@@ -108,3 +109,32 @@ KVitals binds disk temperatures on a per-device basis:
 1. **Direct Path (Preferred)**: `disk/<deviceId>/temperature` exposed natively by KSystemStats.
 2. **NVMe Controller Fallback**: `lmsensors/nvme-pci-*/temp1` mapped deterministically to physical NVMe controllers. Namespaces (e.g. `nvme0n1`, `nvme0n2`) share the physical controller's sensor.
 3. **SATA/SCSI Fallback**: `lmsensors/drivetemp-scsi-*/temp1` provided by the Linux `drivetemp` kernel driver. SCSI host/target topology maps to drive letters (`sda`, `sdb`). Unknown or unmatched drives return no temperature without cross-assignment.
+
+## Coolant Temperature Discovery (`HardwareDiscovery.qml` → `CoolantSensors.qml`)
+
+AIO coolers and pumps expose their liquid temperature through HID hwmon drivers,
+which KSystemStats publishes under the `lmsensors` category:
+
+| Kernel driver          | Example sensor ID                      | Label          |
+| ---------------------- | -------------------------------------- | -------------- |
+| `asus_rog_ryujin`      | `lmsensors/rog_ryujin-hid-3-d/temp1`   | `Coolant temp` |
+| `nzxt-kraken3`         | `lmsensors/x53-hid-3-9/temp1`          | `Coolant temp` |
+| `nzxt-kraken2`         | `lmsensors/kraken2-hid-3-7/temp1`      | `Coolant`      |
+| `gigabyte_waterforce`  | `lmsensors/waterforce-hid-3-5/temp1`   | `Coolant temp` |
+| `aquacomputer_d5next`  | `lmsensors/d5next-hid-3-8/temp1`       | `Coolant temp` |
+
+1. **Match**: sensor ID matches `PATTERNS.COOLANT` (`lmsensors/<chip>/tempN`) **and**
+   its `Qt::DisplayRole` label matches `/coolant/i`. The adapter name alone is not
+   used, so any driver that labels its sensor as coolant is supported.
+2. **Stable device ID**: the lm-sensors bus suffix is stripped from the chip name
+   (`rog_ryujin-hid-3-d` → `rog_ryujin`). The HID suffix depends on device
+   enumeration order and can change across reboots or replugs, which would otherwise
+   orphan pinned metrics (`temp:rog_ryujin/coolant`) and custom labels. When several
+   identical coolers are present, each keeps its full chip name
+   (`rog_ryujin-hid-3-d`, `rog_ryujin-hid-3-e`), so an ID is never handed over to
+   another cooler when one is removed. Identical units cannot be told apart more
+   stably than that through KSystemStats.
+3. **Naming**: `Coolant` for a single sensor, `Coolant 1`, `Coolant 2`, … for several;
+   overridden by `coolantLabels` (Settings → Sensors & Hardware → Temperature).
+4. **Thresholds**: `coolantTempWarningThreshold` / `coolantTempCriticalThreshold`
+   (defaults 40 °C / 50 °C).

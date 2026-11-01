@@ -8,7 +8,7 @@ CPU: 26%  |  RAM: 8.8/39.0G  |  TEMP: 58°C  |  🔋BAT: 78%  |  PWR: +20W  |  N
 
 ## Features
 
-- **Live Monitoring**: CPU, RAM, CPU/motherboard temperatures, GPU, fans, battery, network speeds, and disk I/O.
+- **Live Monitoring**: CPU, RAM, CPU/motherboard temperatures, AIO coolant temperature, GPU, fans, battery, network speeds, and disk I/O.
 - **Interactive Popup**: Categorized accordion popup with real-time vitals and click-to-pin controls.
 - **Display Modes**: Text, Icons, or Icons + Text, with horizontal or vertical layouts.
 - **Visibility Controls**: Set each metric to show in panel and popup, panel only, popup only, or disabled.

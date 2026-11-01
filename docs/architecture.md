@@ -19,7 +19,7 @@ KVitals separates hardware discovery from sensor interpretation:
 - `count`: Total number of registered sensors.
 - `revision`: Reactive counter incremented when hardware topology changes.
 - `allSensorIds`: Array of all discovered sensor ID strings.
-- `discoveredGpus`, `discoveredDisks`, `discoveredFans`, `discoveredCores`, `discoveredNetworkIfaces`: Pre-indexed typed device arrays populated in a single pass.
+- `discoveredGpus`, `discoveredDisks`, `discoveredFans`, `discoveredCores`, `discoveredNetworkIfaces`, `discoveredCoolants`: Pre-indexed typed device arrays populated in a single pass.
 - `query(pattern)`: Returns array of matching `{ id, name }` objects (memoized in $O(1)$).
 - `queryIds(pattern)`: Returns array of matching sensor ID strings (memoized in $O(1)$).
 - `sensorExists(id)`: Fast $O(1)$ hash map check.
@@ -40,6 +40,7 @@ Each metric category has its own QML component. Components receive the shared `H
 | `NetworkSensors.qml` | `discovery.discoveredNetworkIfaces` + Wi-Fi signal detection | `netDownValue`, `netUpValue`, `netTotalDownValue`, `netTotalUpValue`, `netSignalValue`, `netIpValue` |
 | `DiskSensors.qml` | `discovery.discoveredDisks` + Solid hotplug filter | `diskReadValue`, `diskWriteValue`, `diskDataList` |
 | `FanSensors.qml` | `discovery.discoveredFans` | `fanDataList`, `hasFanData` |
+| `CoolantSensors.qml` | `discovery.discoveredCoolants` (`PATTERNS.COOLANT` + "coolant" label) | `coolantDataList`, `hasCoolantData` |
 | `UptimeSensors.qml` | Static (`os/system/uptime`) | `uptimeValue` |
 
 `Utils.qml` is a singleton providing formatting helpers (`formatBytes`, `formatData`, `formatRate`, `resolveColor`) used by sensor components.
@@ -60,7 +61,7 @@ This layer sits between sensors and views and is where metric aggregation lives.
 A `.pragma library` file (shared singleton) holding:
 
 - `GROUPS`: Metadata per category (id, default label, icon, default sub-metrics).
-- `PATTERNS`: Canonical discovery regex patterns (`GPU`, `DISK_READ`, `DISK_TEMP`, `FAN`, `NETWORK_IFACE`, `TEMP_LMSENSORS`, `BATTERY`).
+- `PATTERNS`: Canonical discovery regex patterns (`GPU`, `DISK_READ`, `DISK_TEMP`, `FAN`, `COOLANT`, `NETWORK_IFACE`, `TEMP_LMSENSORS`, `BATTERY`).
 - `DEFINITIONS`: One entry per metric keyed by `"group.subKey"`. Each entry declares the sensor path, threshold type/key, and direction prefix. `MetricStore._createMetric` merges these definitions with runtime overrides from the sensor layer.
 
 ### `MetricConfig.qml`
