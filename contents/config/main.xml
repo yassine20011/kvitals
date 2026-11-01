@@ -157,6 +157,9 @@
         <entry name="backgroundType" type="String">
             <default>default</default>
         </entry>
+        <entry name="panelPadding" type="Int">
+            <default>0</default>
+        </entry>
 
         <!-- Icons -->
         <entry name="cpuIcon" type="String">

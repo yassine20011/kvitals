@@ -16,6 +16,7 @@ Right-click the widget, then select **Configure KVitals...** to open the setting
 | **Display mode** | Controls how metrics appear in the panel (Text, Icons, Icons + Text, or None) | Text |
 | **Layout** | Direction of compact panel items (Horizontal or Vertical) | Horizontal |
 | **Background** | Appearance of widget background when placed on desktop (Default, Translucent, Shadow Only, Fully Transparent) | Default |
+| **Panel padding** | Spacing around widget in pixels when placed in a panel | 0 px |
 | **Icon size** | Icon dimensions in pixels (visible when icons are enabled) | 12 px |
 | **Font** | Searchable text input with popup list of installed system fonts | monospace |
 | **Font size** | Text size in pixels. Setting `0` uses the system default | 0 |

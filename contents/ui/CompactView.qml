@@ -23,12 +23,18 @@ Item {
     required property bool showSeparators
     required property string backgroundType
     required property bool isPlanar
+    property bool isVerticalPanel: false
+    property int panelPadding: 0
 
     readonly property bool isVertical: layoutType === "vertical"
     readonly property bool customFont: effectiveFontSize > 0
 
-    readonly property int hPadding: (isPlanar && backgroundType !== "transparent" && backgroundType !== "shadow") ? Math.round(Kirigami.Units.gridUnit * 0.75) : 0
-    readonly property int vPadding: (isPlanar && backgroundType !== "transparent" && backgroundType !== "shadow") ? Math.round(Kirigami.Units.smallSpacing * 0.75) : 0
+    readonly property int hPadding: isPlanar
+        ? ((backgroundType !== "transparent" && backgroundType !== "shadow") ? Math.round(Kirigami.Units.gridUnit * 0.75) : 0)
+        : (isVerticalPanel ? 0 : panelPadding)
+    readonly property int vPadding: isPlanar
+        ? ((backgroundType !== "transparent" && backgroundType !== "shadow") ? Math.round(Kirigami.Units.smallSpacing * 0.75) : 0)
+        : (isVerticalPanel ? panelPadding : 0)
 
     implicitWidth: compactRow.implicitWidth + (hPadding * 2)
     implicitHeight: compactRow.implicitHeight + (vPadding * 2)
