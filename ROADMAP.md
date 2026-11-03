@@ -9,9 +9,10 @@ Have a suggestion? Open an issue or start a discussion on GitHub.
 ## Currently supported metrics
 
 - CPU: overall usage, frequency, average temperature, load averages (1m, 5m, 15m), and per-core usage
-- RAM: usage (percentage and used/total), RAM temperature (DDR5 via spd5118 driver)
+- RAM: usage (percentage and used/total), configurable units (GiB or GB), RAM temperature (DDR5 via spd5118 driver)
 - Swap: usage percentage, used, free, and total swap
-- System/chipset temperature: auto-detected from lmsensors ISA bus
+- System and ACPI temperature: auto-detected chipset, motherboard, and ACPI thermal zones with primary sensor selection and multi-sensor monitoring
+- AIO coolant temperature: liquid temperature from supported AIO cooler drivers with custom sensor labels
 - GPU: usage, VRAM, temperature, core frequency, power draw (multi-GPU supported)
 - Battery: charge percentage, power draw (watts), and health across standard and serial-numbered devices
 - Network: download/upload rates, cumulative data volume (total down/up), Wi-Fi signal strength, local IP address
@@ -26,13 +27,16 @@ Have a suggestion? Open an issue or start a discussion on GitHub.
 - Visual Panel Items builder with live preview bar and categorized click-to-pin metric palette
 - Custom metric order (drag to reorder or arrow keys)
 - Per-metric visibility: panel only, popup only, both, or disabled
+- Configuration profiles: named profiles with independent layouts, metrics, colors, and thresholds
+- Profile quick switcher: global keyboard shortcut (Meta+Shift+V) and floating switcher dialog
+- Configurable panel padding for horizontal and vertical panels
 - Multi-NVMe automatic differentiation and per-drive custom label overrides
 - Metric grouping (merge CPU + temperature, battery + power, split GPU)
 - Threshold-based coloring (warning/critical, per metric)
 - Custom font and label colors
 - Display modes: text, icons, icons + text, none
 - Horizontal and vertical layout with optional dividers
-- Unit preferences (°C/°F, bytes/bits, RPM/%)
+- Unit preferences (RAM GiB/GB, °C/°F, bytes/bits, RPM/%)
 - Interactive accordion popup with category summaries and click-to-pin toggles
 - Popup pin mode
 - Per-metric custom label (CPU, RAM, NET, DSK, FAN, TEMP)

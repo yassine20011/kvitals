@@ -19,7 +19,7 @@ KVitals separates hardware discovery from sensor interpretation:
 - `count`: Total number of registered sensors.
 - `revision`: Reactive counter incremented when hardware topology changes.
 - `allSensorIds`: Array of all discovered sensor ID strings.
-- `discoveredGpus`, `discoveredDisks`, `discoveredFans`, `discoveredCores`, `discoveredNetworkIfaces`, `discoveredCoolants`: Pre-indexed typed device arrays populated in a single pass.
+- `discoveredGpus`, `discoveredDisks`, `discoveredFans`, `discoveredCores`, `discoveredNetworkIfaces`, `discoveredBatteries`, `discoveredDiskTemps`, `discoveredCoolants`, `discoveredTempSensors`: Pre-indexed typed device arrays populated in a single pass.
 - `query(pattern)`: Returns array of matching `{ id, name }` objects (memoized in $O(1)$).
 - `queryIds(pattern)`: Returns array of matching sensor ID strings (memoized in $O(1)$).
 - `sensorExists(id)`: Fast $O(1)$ hash map check.
@@ -34,7 +34,7 @@ Each metric category has its own QML component. Components receive the shared `H
 | `CpuSensors.qml` | Static + `PATTERNS.CPU_CORE` (`discovery.discoveredCores`) | `cpuValue`, `cpuNumericValue`, `cpuFreqValue`, `cpuLoad1Value`, `coreDataList` |
 | `MemorySensors.qml` | Static (`memory/physical/used`, `total`) | `ramValue`, `ramPercentValue`, `ramPercentage` |
 | `SwapSensors.qml` | Static (`memory/swap/used`, `total`) | `swapPercentValue`, `swapUsedValue`, `swapFreeValue` |
-| `TempSensors.qml` | `PATTERNS.TEMP_LMSENSORS` + ISA Super I/O / SPD5118 filtering | `tempValue`, `cpuTempValue`, `ramTempValue`, `ramTempExists` |
+| `TempSensors.qml` | `PATTERNS.TEMP_LMSENSORS` + ISA Super I/O, ACPI, and SPD5118 filtering | `tempValue`, `cpuTempValue`, `ramTempValue`, `ramTempExists`, `tempDataList` |
 | `GpuSensors.qml` | `discovery.discoveredGpus` | `gpuDataList`, `discoveredGpus` |
 | `BatterySensors.qml` | `PATTERNS.BATTERY` + probe/qdbus fallback | `batValue`, `batNumericValue`, `powerValue`, `batHealthValue` |
 | `NetworkSensors.qml` | `discovery.discoveredNetworkIfaces` + Wi-Fi signal detection | `netDownValue`, `netUpValue`, `netTotalDownValue`, `netTotalUpValue`, `netSignalValue`, `netIpValue` |

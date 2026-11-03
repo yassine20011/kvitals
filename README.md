@@ -30,8 +30,8 @@ CPU: 26% · 3.2GHz  |  RAM: 8.8/39.0G  |  TEMP: 58°C  |  🔋BAT: 78% · 20W  |
 Here is what you can track and customize:
 
 - **CPU**: Usage percentage, frequency, temperature, load averages (1m/5m/15m), and per-core CPU usage.
-- **RAM & Swap**: Used/total memory and swap (percentage and absolute), with optional DDR5 temperature via the `spd5118` driver.
-- **System temperature**: Auto-detects the chipset/motherboard sensor from lmsensors. Falls back to CPU average if no ISA-bus sensor is found.
+- **RAM & Swap**: Used/total memory and swap (percentage and absolute), configurable units (GiB or GB), with optional DDR5 temperature via the `spd5118` driver.
+- **System & ACPI temperature**: Auto-detects chipset/motherboard and ACPI thermal zone sensors from lmsensors, with primary sensor selection, custom labels, and multi-sensor panel pinning. Falls back to CPU average if no motherboard sensor is found.
 - **GPU**: Usage, VRAM, temperature, core frequency, and power draw. Supports multiple GPUs independently with custom labels (iGPU, dGPU, etc.).
 - **Fan speed**: Per-fan RPM and percentage with stable numbering.
 - **AIO coolant temperature**: Liquid temperature from AIO coolers and pumps whose kernel driver labels the sensor as coolant, with custom labels.
@@ -40,9 +40,9 @@ Here is what you can track and customize:
 - **Disk I/O, space, and temperature**: Per-drive read/write rates, overall used space, and per-disk temperature monitoring (displayed when the corresponding sensor is available through KSystemStats) with hotplug detection.
 - **System uptime**: Live uptime pulled from `os/system/uptime`.
 - **Interactive popup**: Categorized accordion view with live metric readings, click-to-pin toggles, and system shortcuts.
-- **Visibility controls**: Choose where each metric appears — panel and popup, panel only, popup only, or disabled entirely.
+- **Visibility controls**: Choose where each metric appears (panel and popup, panel only, popup only, or disabled entirely).
 - **Popup pin mode**: Keep the expanded popup open while working in other windows.
-- **Display modes**: Text, icons, or icons and text, in horizontal or vertical panel layouts, with customizable desktop background styles (default, translucent, shadow, or fully transparent).
+- **Display modes & spacing**: Text, icons, or icons and text, in horizontal or vertical panel layouts, with configurable panel padding and customizable desktop background styles (default, translucent, shadow, or fully transparent).
 - **Color customization**: Font, label, and icon colors with per-metric threshold sliders for warning and critical states.
 - **Custom ordering**: Drag and drop metrics to rearrange them.
 - **Appearance**: Search system fonts and pick icons from your installed theme or bundled fallback icons.
@@ -106,7 +106,7 @@ Right-click the widget and select **Configure KVitals...** to open the settings 
 
 | Tab | Available settings |
 | :-- | :----------------- |
-| **General** | Display modes (Text, Icons, Icons + Text), layouts (Horizontal or Vertical), icon dimensions, custom font selection, refresh intervals, and unit settings (°C/°F, bytes/bits). |
+| **General** | Display modes (Text, Icons, Icons + Text), layouts (Horizontal or Vertical), panel padding, icon dimensions, custom font selection, refresh intervals, and unit preferences (RAM GiB/GB, °C/°F, bytes/bits, RPM/%). |
 | **Panel Items** | Live interactive panel preview, drag-and-drop metric chip reordering, and categorized click-to-pin metric palette. |
 | **Sensors & Hardware** | Custom device labels, per-GPU selection and discrete GPU power suspension, per-fan max RPM fallback, and network interface selection. |
 | **Icons** | Custom symbolic icon selectors mapped to your active system icon theme with bundled SVG fallback support. |
