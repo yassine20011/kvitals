@@ -256,6 +256,7 @@ QtObject {
         onCoolantLabelsChanged: root._saveActiveConfigKey("coolantLabels", coolantLabels)
         onTempSelectionChanged: root._saveActiveConfigKey("tempSelection", tempSelection)
         onTempLabelsChanged:    root._saveActiveConfigKey("tempLabels", tempLabels)
+        onTempSensorChanged:    root._saveActiveConfigKey("tempSensor", tempSensor)
     }
 
     function _saveActiveConfigKey(key, value) {

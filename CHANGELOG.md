@@ -2,6 +2,26 @@
 
 All notable changes to KVitals will be documented in this file.
 
+## [3.4.0] - 2026-11-03
+
+### Added
+
+- **ACPI Discovery & Multi-Sensor Temperature Monitoring**:
+  - **ACPI Thermal Zones**: Automatic discovery and telemetry support for ACPI thermal sensors (`lmsensors/*acpi*/temp*`).
+  - **Primary Temperature Selector**: Dedicated dropdown in Settings → Sensors & Hardware allowing users to choose `auto` or bind directly to a specific detected sensor (ACPI, Super I/O, or PCH) (Issue #127, PR #132).
+  - **Multi-Sensor Tracking & Pinning**: Toggle and configure individual discovered motherboard and ACPI sensors, with custom labels and per-sensor panel pinning.
+- **AIO Coolant Liquid Temperature Monitoring**:
+  - **AIO Driver Discovery**: Automatic detection of liquid coolant temperatures exposed via kernel hwmon drivers (such as `asus_rog_ryujin`, `nzxt-kraken`, `gigabyte_waterforce`, and `aquacomputer_d5next`) (PR #130).
+  - **Coolant Controls**: Configurable custom labels, warning and critical thresholds (default 40 °C / 50 °C), and individual panel pinning.
+- **Configurable Panel Padding**: Added a slider in Settings → General to set widget padding (0–30 px) for horizontal and vertical panel layouts (Fixes #120, PR #123).
+- **Configurable RAM Display Units**: Added a unit selector in Settings → General allowing users to choose between binary Gibibytes (`GiB`) and decimal Gigabytes (`GB`) for memory display (PR #128).
+
+### Fixed
+
+- **Shortcut Picker Isolation**: Isolated the `kquickcontrols` KeySequenceItem into an auxiliary component to prevent settings page crashes on systems without `qml6-module-org-kde-kquickcontrols` (Issue #119).
+- **Manual Shortcut Fallback**: Added a manual text field and clear button with package installation guidance when `kquickcontrols` is not installed.
+- **Modern QML Imports**: Dropped obsolete versioned QML imports across configuration views to match KDE Plasma 6 guidelines.
+
 ## [3.3.0] - 2026-09-30
 
 ### Added
