@@ -52,6 +52,8 @@ var GROUPS = {
         defaultIcon: "temperature-symbolic",
         defaultSubMetrics: "system",
         subs: [
+            { key: "system",  label: "System Temperature" },
+            { key: "temp",    label: "Temperature" },
             { key: "coolant", label: "Coolant" }
         ]
     },
@@ -313,6 +315,16 @@ var DEFINITIONS = {
         label: "System",
         thresholdType: "normal",
         thresholdKey: "system"
+    },
+    "temp.temp": {
+        id: "temp.temp",
+        group: "temp",
+        subKey: "temp",
+        sensorPattern: "lmsensors/{id}/temp1",
+        label: "Temperature",
+        thresholdType: "normal",
+        thresholdKey: "system",
+        icon: "temperature-symbolic"
     },
     "temp.coolant": {
         id: "temp.coolant",

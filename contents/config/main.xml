@@ -51,6 +51,15 @@
         <entry name="tempVisibility" type="String">
             <default>both</default>
         </entry>
+        <entry name="tempSensor" type="String">
+            <default>auto</default>
+        </entry>
+        <entry name="tempSelection" type="String">
+            <default></default>
+        </entry>
+        <entry name="tempLabels" type="String">
+            <default></default>
+        </entry>
         <entry name="gpuEnabled" type="Bool">
             <default>true</default>
         </entry>

@@ -37,12 +37,14 @@ then iterates rows, reading `SensorId` via
    - `spd5118` / `jc42` → DDR5/DDR4 RAM (separate sensor)
    - `pch_*` → Intel Platform Controller Hub thermal driver (Priority 1)
    - `-isa-` in adapter name AND not `coretemp` → Super I/O chipset candidate (Priority 2)
+   - `-acpi-` in adapter name → ACPI thermal zones (Priority 3)
    - Everything else (PCI bus: k10temp, amdgpu, nvme, etc.) → deliberately ignored
 5. Read `Qt::DisplayRole` (lm-sensors label, e.g. `SYSTIN`, `CPUTIN`, `AUXTIN0`)
-6. When multiple ISA channels exist, exclude candidates whose label matches
-   `/^(cputin|auxtin|peci|smbusmaster)/i` — these are CPU-adjacent or auxiliary
-   sensors, not chipset board temperature
-7. Prioritize Intel PCH over ISA Super I/O, picking the highest-priority candidate as `_systemSensorId`
+6. When multiple channels exist, exclude candidates whose label matches
+   `/^(cputin|auxtin|peci|smbusmaster)/i` (CPU-adjacent or auxiliary sensors)
+7. In auto mode, prioritize Intel PCH > Super I/O ISA > ACPI, picking the highest-priority candidate as `_systemSensorId`
+8. When `tempSensor` is configured manually, bind directly to the specified sensor ID
+9. For multi-sensor configurations, poll all enabled sensors in `tempSelection` (or pinned to panel) via `Sensors.SensorDataModel`
 
 #### Why ISA bus and PCH?
 
