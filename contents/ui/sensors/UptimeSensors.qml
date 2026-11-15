@@ -5,6 +5,7 @@ Item {
     id: root
 
     property int updateInterval: 2000
+    readonly property int sensorRateLimit: Math.max(250, updateInterval - 150)
 
     readonly property string uptimeValue: {
         if (uptimeSensor.status !== Sensors.Sensor.Ready) return "...";
@@ -27,6 +28,6 @@ Item {
     Sensors.Sensor {
         id: uptimeSensor
         sensorId: "os/system/uptime"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 }

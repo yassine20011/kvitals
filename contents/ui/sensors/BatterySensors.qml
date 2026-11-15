@@ -7,6 +7,7 @@ Item {
 
     property var discovery: null
     property int updateInterval: 2000
+    readonly property int sensorRateLimit: Math.max(250, updateInterval - 150)
     property string batteryDevice: "auto"
 
     property string discoveredBatId: ""
@@ -87,18 +88,18 @@ Item {
     Sensors.Sensor {
         id: batChargeSensor
         sensorId: root.batChargeSensorId
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     Sensors.Sensor {
         id: batRateSensor
         sensorId: root.batRateSensorId
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     Sensors.Sensor {
         id: batHealthSensor
         sensorId: root.batHealthSensorId
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 }

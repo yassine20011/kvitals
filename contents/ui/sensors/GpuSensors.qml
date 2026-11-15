@@ -7,6 +7,7 @@ Item {
 
     property var discovery: null
     property int updateInterval: 2000
+    readonly property int sensorRateLimit: Math.max(250, updateInterval - 150)
 
     // Comma-separated selected GPU IDs e.g. "gpu0,gpu1". Empty = all discovered.
     property string gpuSelection: ""
@@ -154,7 +155,7 @@ Item {
     Sensors.SensorDataModel {
         id: gpuData
         sensors: root._activeSensorIds
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
         enabled: root._activeSensorIds.length > 0
 
         onDataChanged: root.aggregate()

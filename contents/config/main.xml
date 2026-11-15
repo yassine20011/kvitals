@@ -223,6 +223,8 @@
 
         <!-- Timing -->
         <entry name="updateInterval" type="Int">
+            <min>500</min>
+            <max>10000</max>
             <default>2000</default>
         </entry>
 

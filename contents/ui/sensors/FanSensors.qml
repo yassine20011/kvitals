@@ -7,6 +7,7 @@ Item {
 
     property var discovery: null
     property int updateInterval: 2000
+    readonly property int sensorRateLimit: Math.max(250, updateInterval - 150)
     property string fanUnit: "rpm" // "rpm" or "percent"
     property string fanLabels: ""
     property int fanMaxRpm: 2000
@@ -57,7 +58,7 @@ Item {
     Sensors.SensorDataModel {
         id: fanData
         sensors: root._activeSensorIds
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
         enabled: root._activeSensorIds.length > 0
 
         onDataChanged: root.aggregate()

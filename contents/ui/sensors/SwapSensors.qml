@@ -5,6 +5,7 @@ Item {
     id: root
 
     property int updateInterval: 2000
+    readonly property int sensorRateLimit: Math.max(250, updateInterval - 150)
 
     readonly property bool swapAvailable: {
         return swapTotalSensor.status === Sensors.Sensor.Ready && swapTotalSensor.value > 0;
@@ -28,18 +29,18 @@ Item {
     Sensors.Sensor {
         id: swapUsedSensor
         sensorId: "memory/swap/used"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     Sensors.Sensor {
         id: swapFreeSensor
         sensorId: "memory/swap/free"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     Sensors.Sensor {
         id: swapTotalSensor
         sensorId: "memory/swap/total"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 }

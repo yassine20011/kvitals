@@ -7,6 +7,7 @@ Item {
 
     property var discovery: null
     property int updateInterval: 2000
+    readonly property int sensorRateLimit: Math.max(250, updateInterval - 150)
     property string networkInterface: "auto"
     property string networkUnit: "bytes"
 
@@ -76,7 +77,7 @@ Item {
         sensors: (root._bootReady && (root.networkInterface === "auto" || root.networkInterface === ""))
                  ? root._ipSensorIds
                  : []
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
         enabled: sensors.length > 0
 
         onDataChanged: root._resolveActiveIface()
@@ -133,13 +134,13 @@ Item {
     Sensors.Sensor {
         id: netDownSensor
         sensorId: "network/" + root.netIfacePath + "/download"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     Sensors.Sensor {
         id: netUpSensor
         sensorId: "network/" + root.netIfacePath + "/upload"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     // Cumulative totals sensors
@@ -152,13 +153,13 @@ Item {
     Sensors.Sensor {
         id: netTotalDownSensor
         sensorId: "network/" + root.netIfacePath + "/totalDownload"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     Sensors.Sensor {
         id: netTotalUpSensor
         sensorId: "network/" + root.netIfacePath + "/totalUpload"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     // IP address sensor
@@ -177,7 +178,7 @@ Item {
         sensorId: root.netIpIfacePath !== ""
                   ? "network/" + root.netIpIfacePath + "/ipv4withPrefixLength"
                   : ""
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     // Wi-Fi interface resolution
@@ -211,7 +212,7 @@ Item {
     Sensors.Sensor {
         id: netSignalSensor
         sensorId: root.netSignalSensorId
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
         enabled: root.netSignalSensorId !== ""
     }
 }

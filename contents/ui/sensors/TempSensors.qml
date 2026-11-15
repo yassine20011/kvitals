@@ -7,6 +7,7 @@ Item {
 
     property var discovery: null
     property int updateInterval: 2000
+    readonly property int sensorRateLimit: Math.max(250, updateInterval - 150)
     property string tempUnit: "C"
     property string tempSensor: "auto"
     property string tempSelection: ""
@@ -51,13 +52,13 @@ Item {
     Sensors.Sensor {
         id: cpuTempSensor
         sensorId: "cpu/all/averageTemperature"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     Sensors.Sensor {
         id: sysSensor
         sensorId: root._systemSensorId || "cpu/all/averageTemperature"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     // DDR5 RAM temperature via SPD5118 (discovered from sensor tree)
@@ -81,7 +82,7 @@ Item {
     Sensors.Sensor {
         id: ramSensor
         sensorId: root._ramSensorId || ""
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
         enabled: root.ramTempExists
     }
 
@@ -210,7 +211,7 @@ Item {
     Sensors.SensorDataModel {
         id: multiTempData
         sensors: root._activeSensorIds
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
         enabled: root._activeSensorIds.length > 0
 
         onDataChanged: root.aggregateMultiTemps()
