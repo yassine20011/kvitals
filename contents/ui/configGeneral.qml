@@ -327,7 +327,7 @@ KCM.SimpleKCM {
         Slider {
             id: intervalSlider
             Kirigami.FormData.label: i18n("Update interval:")
-            from: 1000
+            from: 500
             to: 10000
             stepSize: 500
             value: 2000

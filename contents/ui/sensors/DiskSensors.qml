@@ -8,6 +8,7 @@
 
         property var discovery: null
         property int updateInterval: 2000
+        readonly property int sensorRateLimit: Math.max(250, updateInterval - 150)
         property bool enabled: true
         property string tempUnit: "C"
         property string networkUnit: "bytes"
@@ -61,35 +62,35 @@
         Sensors.Sensor {
             id: diskReadSensor
             sensorId: "disk/all/read"
-            updateRateLimit: root.updateInterval
+            updateRateLimit: root.sensorRateLimit
             enabled: root.enabled
         }
 
         Sensors.Sensor {
             id: diskWriteSensor
             sensorId: "disk/all/write"
-            updateRateLimit: root.updateInterval
+            updateRateLimit: root.sensorRateLimit
             enabled: root.enabled
         }
 
         Sensors.Sensor {
             id: diskUsedPercentSensor
             sensorId: "disk/all/usedPercent"
-            updateRateLimit: root.updateInterval
+            updateRateLimit: root.sensorRateLimit
             enabled: root.enabled
         }
 
         Sensors.Sensor {
             id: diskUsedSensor
             sensorId: "disk/all/used"
-            updateRateLimit: root.updateInterval
+            updateRateLimit: root.sensorRateLimit
             enabled: root.enabled
         }
 
         Sensors.Sensor {
             id: diskTotalSensor
             sensorId: "disk/all/total"
-            updateRateLimit: root.updateInterval
+            updateRateLimit: root.sensorRateLimit
             enabled: root.enabled
         }
 
@@ -140,7 +141,7 @@
             // Defer DBus subscriptions by keeping sensors empty until boot guards pass,
             // avoiding KSysGuard C++ bugs where setting enabled=false on boot freezes the model
             sensors: root._bootReady ? root._activeSensorIds : []
-            updateRateLimit: root.updateInterval
+            updateRateLimit: root.sensorRateLimit
             enabled: sensors.length > 0
             onDataChanged: root.aggregatePerDisk()
             onReadyChanged: { if (ready) root.aggregatePerDisk(); }
@@ -379,7 +380,7 @@
         Sensors.SensorDataModel {
             id: tempData
             sensors: root._bootReady ? root._tempSensorIds : []
-            updateRateLimit: root.updateInterval
+            updateRateLimit: root.sensorRateLimit
             enabled: sensors.length > 0
             onDataChanged: root.aggregatePerDisk()
             onReadyChanged: { if (ready) root.aggregatePerDisk(); }

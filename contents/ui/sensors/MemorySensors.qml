@@ -5,6 +5,7 @@ Item {
     id: root
 
     property int updateInterval: 2000
+    readonly property int sensorRateLimit: Math.max(250, updateInterval - 150)
     property string ramUnit: "GiB"
 
     readonly property real ramPercentage: {
@@ -27,12 +28,12 @@ Item {
     Sensors.Sensor {
         id: ramUsedSensor
         sensorId: "memory/physical/used"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     Sensors.Sensor {
         id: ramTotalSensor
         sensorId: "memory/physical/total"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 }

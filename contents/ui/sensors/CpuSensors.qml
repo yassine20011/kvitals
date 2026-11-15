@@ -7,6 +7,7 @@ Item {
 
     property var discovery: null
     property int updateInterval: 2000
+    readonly property int sensorRateLimit: Math.max(250, updateInterval - 150)
     property bool popupExpanded: false
     property bool hasPinnedCores: false
 
@@ -43,31 +44,31 @@ Item {
     Sensors.Sensor {
         id: cpuSensor
         sensorId: "cpu/all/usage"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     Sensors.Sensor {
         id: freqSensor
         sensorId: "cpu/all/averageFrequency"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     Sensors.Sensor {
         id: load1Sensor
         sensorId: "cpu/loadaverages/loadaverage1"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     Sensors.Sensor {
         id: load5Sensor
         sensorId: "cpu/loadaverages/loadaverage5"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     Sensors.Sensor {
         id: load15Sensor
         sensorId: "cpu/loadaverages/loadaverage15"
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
     }
 
     // CPU core discovery
@@ -105,7 +106,7 @@ Item {
     Sensors.SensorDataModel {
         id: coreData
         sensors: root._activeSensorIds
-        updateRateLimit: root.updateInterval
+        updateRateLimit: root.sensorRateLimit
         enabled: (root.popupExpanded || root.hasPinnedCores) && root._activeSensorIds.length > 0
         onDataChanged: root.aggregateCores()
         onReadyChanged: { if (ready) root.aggregateCores(); }
