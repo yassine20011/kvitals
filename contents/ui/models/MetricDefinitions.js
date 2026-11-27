@@ -1,120 +1,123 @@
 .pragma library
 
+// Mark static display strings for gettext; translate in the consuming QML context.
+function I18N_NOOP(message) { return message; }
+
 // GROUPS describes each metric category: its default label, icon, and which
 // sub-metrics are active by default. MetricConfig reads defaultSubMetrics as
 // a fallback when the user hasn't saved a custom selection yet.
 var GROUPS = {
     cpu: {
         id: "cpu",
-        name: "CPU",
+        name: I18N_NOOP("CPU"),
         defaultLabel: "CPU",
         defaultIcon: "cpu-symbolic",
         defaultSubMetrics: "usage,freq,temp",
         subs: [
-            { key: "usage",  label: "Usage" },
-            { key: "freq",   label: "Frequency" },
-            { key: "temp",   label: "Temperature" },
-            { key: "load1",  label: "Load (1m)" },
-            { key: "load5",  label: "Load (5m)" },
-            { key: "load15", label: "Load (15m)" },
-            { key: "core",   label: "Cores" }
+            { key: "usage",  label: I18N_NOOP("Usage") },
+            { key: "freq",   label: I18N_NOOP("Frequency") },
+            { key: "temp",   label: I18N_NOOP("Temperature") },
+            { key: "load1",  label: I18N_NOOP("Load (1m)") },
+            { key: "load5",  label: I18N_NOOP("Load (5m)") },
+            { key: "load15", label: I18N_NOOP("Load (15m)") },
+            { key: "core",   label: I18N_NOOP("Cores") }
         ]
     },
     ram: {
         id: "ram",
-        name: "RAM",
+        name: I18N_NOOP("RAM"),
         defaultLabel: "RAM",
         defaultIcon: "memory-symbolic",
         defaultSubMetrics: "percentage",
         subs: [
-            { key: "percentage", label: "Percentage" },
-            { key: "used",       label: "Used / Total" },
-            { key: "temp",       label: "Temperature (DDR5)" }
+            { key: "percentage", label: I18N_NOOP("Percentage") },
+            { key: "used",       label: I18N_NOOP("Used / Total") },
+            { key: "temp",       label: I18N_NOOP("Temperature (DDR5)") }
         ]
     },
     swap: {
         id: "swap",
-        name: "Swap",
+        name: I18N_NOOP("Swap"),
         defaultLabel: "SWAP",
         defaultIcon: "memory-symbolic",
         defaultSubMetrics: "percent,used",
         subs: [
-            { key: "percent", label: "Usage (%)" },
-            { key: "used",    label: "Used" },
-            { key: "free",    label: "Free" },
-            { key: "total",   label: "Total" }
+            { key: "percent", label: I18N_NOOP("Usage (%)") },
+            { key: "used",    label: I18N_NOOP("Used") },
+            { key: "free",    label: I18N_NOOP("Free") },
+            { key: "total",   label: I18N_NOOP("Total") }
         ]
     },
     temp: {
         id: "temp",
-        name: "Temperature",
+        name: I18N_NOOP("Temperature"),
         defaultLabel: "System",
         defaultIcon: "temperature-symbolic",
         defaultSubMetrics: "system",
         subs: [
-            { key: "system",  label: "System Temperature" },
-            { key: "temp",    label: "Temperature" },
-            { key: "coolant", label: "Coolant" }
+            { key: "system",  label: I18N_NOOP("System Temperature") },
+            { key: "temp",    label: I18N_NOOP("Temperature") },
+            { key: "coolant", label: I18N_NOOP("Coolant") }
         ]
     },
     gpu: {
         id: "gpu",
-        name: "GPU",
+        name: I18N_NOOP("GPU"),
         defaultLabel: "GPU",
         defaultIcon: "gpu-symbolic",
         defaultSubMetrics: "usage,vram,temp",
         subs: [
-            { key: "usage", label: "Usage" },
-            { key: "vram",  label: "VRAM" },
-            { key: "temp",  label: "Temperature" },
-            { key: "freq",  label: "Frequency" },
-            { key: "power", label: "Power" }
+            { key: "usage", label: I18N_NOOP("Usage") },
+            { key: "vram",  label: I18N_NOOP("VRAM") },
+            { key: "temp",  label: I18N_NOOP("Temperature") },
+            { key: "freq",  label: I18N_NOOP("Frequency") },
+            { key: "power", label: I18N_NOOP("Power") }
         ]
     },
     bat: {
         id: "bat",
-        name: "Battery",
+        name: I18N_NOOP("Battery"),
         defaultLabel: "BAT",
         defaultIcon: "battery-symbolic",
         defaultSubMetrics: "percentage,power",
         subs: [
-            { key: "percentage", label: "Percentage" },
-            { key: "power",      label: "Power consumption" },
-            { key: "health",     label: "Health" }
+            { key: "percentage", label: I18N_NOOP("Percentage") },
+            { key: "power",      label: I18N_NOOP("Power consumption") },
+            { key: "health",     label: I18N_NOOP("Health") }
         ]
     },
     net: {
         id: "net",
-        name: "Network",
+        name: I18N_NOOP("Network"),
         defaultLabel: "NET",
         defaultIcon: "network-symbolic",
         defaultSubMetrics: "down,up",
         subs: [
-            { key: "down",      label: "Download" },
-            { key: "up",        label: "Upload" },
-            { key: "totalDown", label: "Total Downloaded" },
-            { key: "totalUp",   label: "Total Uploaded" },
-            { key: "signal",    label: "Wi-Fi Signal" },
-            { key: "ip",        label: "IP address" }
+            { key: "down",      label: I18N_NOOP("Download") },
+            { key: "up",        label: I18N_NOOP("Upload") },
+            { key: "totalDown", label: I18N_NOOP("Total Downloaded") },
+            { key: "totalUp",   label: I18N_NOOP("Total Uploaded") },
+            { key: "signal",    label: I18N_NOOP("Wi-Fi Signal") },
+            { key: "ip",        label: I18N_NOOP("IP address") }
         ]
     },
     disk: {
         id: "disk",
-        name: "Disk",
+        name: I18N_NOOP("Disk"),
         defaultLabel: "DSK",
         defaultIcon: "storage-symbolic",
         defaultSubMetrics: "read,write",
         subs: [
-            { key: "read",  label: "Read" },
-            { key: "write", label: "Write" },
-            { key: "usage", label: "Usage (%)" },
-            { key: "space", label: "Space (Used/Total)" },
-            { key: "temp",  label: "Temperature" }
+            { key: "read",  label: I18N_NOOP("Read") },
+            { key: "write", label: I18N_NOOP("Write") },
+            { key: "usage", label: I18N_NOOP("Usage (%)") },
+            { key: "space", label: I18N_NOOP("Space (Used/Total)") },
+            { key: "temp",  label: I18N_NOOP("Temperature") }
         ]
     },
     fan: {
         id: "fan",
-        name: "Fan",
+        name: I18N_NOOP("Fan"),
         defaultLabel: "FAN",
         defaultIcon: "fan-symbolic",
         defaultSubMetrics: "speed",
@@ -122,12 +125,12 @@ var GROUPS = {
     },
     uptime: {
         id: "uptime",
-        name: "Uptime",
+        name: I18N_NOOP("Uptime"),
         defaultLabel: "UPTIME",
         defaultIcon: "system-symbolic",
         defaultSubMetrics: "uptime",
         subs: [
-            { key: "uptime", label: "Uptime" }
+            { key: "uptime", label: I18N_NOOP("Uptime") }
         ]
     }
 };
@@ -192,7 +195,7 @@ var DEFINITIONS = {
         group: "cpu",
         subKey: "usage",
         sensorId: "cpu/all/usage",
-        label: "Usage",
+        label: I18N_NOOP("Usage"),
         thresholdType: "normal",
         thresholdKey: "cpu"
     },
@@ -201,7 +204,7 @@ var DEFINITIONS = {
         group: "cpu",
         subKey: "freq",
         sensorId: "cpu/all/averageFrequency",
-        label: "Frequency",
+        label: I18N_NOOP("Frequency"),
         thresholdType: "none"
     },
     "cpu.temp": {
@@ -209,7 +212,7 @@ var DEFINITIONS = {
         group: "cpu",
         subKey: "temp",
         sensorId: "cpu/all/averageTemperature",
-        label: "Temperature",
+        label: I18N_NOOP("Temperature"),
         thresholdType: "normal",
         thresholdKey: "temp",
         secondaryIcon: "temperature-normal"
@@ -219,7 +222,7 @@ var DEFINITIONS = {
         group: "cpu",
         subKey: "load1",
         sensorId: "cpu/loadaverages/loadaverage1",
-        label: "Load (1m)",
+        label: I18N_NOOP("Load (1m)"),
         thresholdType: "none"
     },
     "cpu.load5": {
@@ -227,7 +230,7 @@ var DEFINITIONS = {
         group: "cpu",
         subKey: "load5",
         sensorId: "cpu/loadaverages/loadaverage5",
-        label: "Load (5m)",
+        label: I18N_NOOP("Load (5m)"),
         thresholdType: "none"
     },
     "cpu.load15": {
@@ -235,7 +238,7 @@ var DEFINITIONS = {
         group: "cpu",
         subKey: "load15",
         sensorId: "cpu/loadaverages/loadaverage15",
-        label: "Load (15m)",
+        label: I18N_NOOP("Load (15m)"),
         thresholdType: "none"
     },
     "cpu.core": {
@@ -243,7 +246,7 @@ var DEFINITIONS = {
         group: "cpu",
         subKey: "core",
         sensorPattern: "cpu/{id}/usage",
-        label: "Core Usage",
+        label: I18N_NOOP("Core Usage"),
         thresholdType: "normal",
         thresholdKey: "cpu"
     },
@@ -252,7 +255,7 @@ var DEFINITIONS = {
         group: "ram",
         subKey: "percentage",
         sensorId: "memory/physical/used",
-        label: "Percentage",
+        label: I18N_NOOP("Percentage"),
         thresholdType: "normal",
         thresholdKey: "ram"
     },
@@ -261,7 +264,7 @@ var DEFINITIONS = {
         group: "ram",
         subKey: "used",
         sensorId: "memory/physical/used",
-        label: "Used / Total",
+        label: I18N_NOOP("Used / Total"),
         thresholdType: "none"
     },
     "ram.temp": {
@@ -269,7 +272,7 @@ var DEFINITIONS = {
         group: "ram",
         subKey: "temp",
         sensorId: "lmsensors/spd5118",
-        label: "Temperature",
+        label: I18N_NOOP("Temperature"),
         thresholdType: "normal",
         thresholdKey: "ramTemp",
         secondaryIcon: "temperature-normal"
@@ -279,7 +282,7 @@ var DEFINITIONS = {
         group: "swap",
         subKey: "percent",
         sensorId: "memory/swap/usedPercent",
-        label: "Usage (%)",
+        label: I18N_NOOP("Usage (%)"),
         thresholdType: "normal",
         thresholdKey: "swap"
     },
@@ -288,7 +291,7 @@ var DEFINITIONS = {
         group: "swap",
         subKey: "used",
         sensorId: "memory/swap/used",
-        label: "Used",
+        label: I18N_NOOP("Used"),
         thresholdType: "none"
     },
     "swap.free": {
@@ -296,7 +299,7 @@ var DEFINITIONS = {
         group: "swap",
         subKey: "free",
         sensorId: "memory/swap/free",
-        label: "Free",
+        label: I18N_NOOP("Free"),
         thresholdType: "none"
     },
     "swap.total": {
@@ -304,7 +307,7 @@ var DEFINITIONS = {
         group: "swap",
         subKey: "total",
         sensorId: "memory/swap/total",
-        label: "Total",
+        label: I18N_NOOP("Total"),
         thresholdType: "none"
     },
     "temp.system": {
@@ -312,7 +315,7 @@ var DEFINITIONS = {
         group: "temp",
         subKey: "system",
         sensorId: "cpu/all/averageTemperature",
-        label: "System",
+        label: I18N_NOOP("System"),
         thresholdType: "normal",
         thresholdKey: "system"
     },
@@ -321,7 +324,7 @@ var DEFINITIONS = {
         group: "temp",
         subKey: "temp",
         sensorPattern: "lmsensors/{id}/temp1",
-        label: "Temperature",
+        label: I18N_NOOP("Temperature"),
         thresholdType: "normal",
         thresholdKey: "system",
         icon: "temperature-symbolic"
@@ -331,7 +334,7 @@ var DEFINITIONS = {
         group: "temp",
         subKey: "coolant",
         sensorPattern: "lmsensors/{adapter}/temp{n}",
-        label: "Coolant",
+        label: I18N_NOOP("Coolant"),
         thresholdType: "normal",
         thresholdKey: "coolantTemp",
         secondaryIcon: "temperature-normal"
@@ -341,7 +344,7 @@ var DEFINITIONS = {
         group: "gpu",
         subKey: "usage",
         sensorPattern: "gpu/{id}/usage",
-        label: "Usage",
+        label: I18N_NOOP("Usage"),
         thresholdType: "normal",
         thresholdKey: "gpu"
     },
@@ -350,7 +353,7 @@ var DEFINITIONS = {
         group: "gpu",
         subKey: "vram",
         sensorPattern: "gpu/{id}/usedVram",
-        label: "VRAM",
+        label: I18N_NOOP("VRAM"),
         thresholdType: "none"
     },
     "gpu.temp": {
@@ -358,7 +361,7 @@ var DEFINITIONS = {
         group: "gpu",
         subKey: "temp",
         sensorPattern: "gpu/{id}/temperature",
-        label: "Temperature",
+        label: I18N_NOOP("Temperature"),
         thresholdType: "normal",
         thresholdKey: "gpuTemp",
         secondaryIcon: "temperature-normal"
@@ -368,7 +371,7 @@ var DEFINITIONS = {
         group: "gpu",
         subKey: "freq",
         sensorPattern: "gpu/{id}/coreFrequency",
-        label: "Frequency",
+        label: I18N_NOOP("Frequency"),
         thresholdType: "none"
     },
     "gpu.power": {
@@ -376,7 +379,7 @@ var DEFINITIONS = {
         group: "gpu",
         subKey: "power",
         sensorPattern: "gpu/{id}/power",
-        label: "Power",
+        label: I18N_NOOP("Power"),
         thresholdType: "none"
     },
     "bat.percentage": {
@@ -384,7 +387,7 @@ var DEFINITIONS = {
         group: "bat",
         subKey: "percentage",
         sensorPattern: "power/{id}/chargePercentage",
-        label: "Percentage",
+        label: I18N_NOOP("Percentage"),
         thresholdType: "inverted",
         thresholdKey: "battery"
     },
@@ -393,7 +396,7 @@ var DEFINITIONS = {
         group: "bat",
         subKey: "power",
         sensorPattern: "power/{id}/chargeRate",
-        label: "Power",
+        label: I18N_NOOP("Power"),
         thresholdType: "none",
         iconOverrideKey: "powerIcon"
     },
@@ -402,7 +405,7 @@ var DEFINITIONS = {
         group: "bat",
         subKey: "health",
         sensorPattern: "power/{id}/health",
-        label: "Health",
+        label: I18N_NOOP("Health"),
         thresholdType: "inverted",
         thresholdKey: "battery"
     },
@@ -411,7 +414,7 @@ var DEFINITIONS = {
         group: "net",
         subKey: "down",
         sensorPattern: "network/{id}/download",
-        label: "Download",
+        label: I18N_NOOP("Download"),
         icon: "network-download-symbolic",
         thresholdType: "none"
     },
@@ -420,7 +423,7 @@ var DEFINITIONS = {
         group: "net",
         subKey: "up",
         sensorPattern: "network/{id}/upload",
-        label: "Upload",
+        label: I18N_NOOP("Upload"),
         icon: "network-upload-symbolic",
         thresholdType: "none"
     },
@@ -429,7 +432,7 @@ var DEFINITIONS = {
         group: "net",
         subKey: "ip",
         sensorPattern: "network/{id}/ipv4withPrefixLength",
-        label: "Local IP",
+        label: I18N_NOOP("Local IP"),
         icon: "network-symbolic",
         thresholdType: "none"
     },
@@ -438,7 +441,7 @@ var DEFINITIONS = {
         group: "net",
         subKey: "signal",
         sensorPattern: "network/{id}/signal",
-        label: "Wi-Fi Signal",
+        label: I18N_NOOP("Wi-Fi Signal"),
         icon: "network-wireless-symbolic",
         thresholdType: "inverted",
         thresholdKey: "battery"
@@ -448,7 +451,7 @@ var DEFINITIONS = {
         group: "net",
         subKey: "totalDown",
         sensorPattern: "network/{id}/totalDownload",
-        label: "Total Downloaded",
+        label: I18N_NOOP("Total Downloaded"),
         icon: "network-download-symbolic",
         thresholdType: "none"
     },
@@ -457,7 +460,7 @@ var DEFINITIONS = {
         group: "net",
         subKey: "totalUp",
         sensorPattern: "network/{id}/totalUpload",
-        label: "Total Uploaded",
+        label: I18N_NOOP("Total Uploaded"),
         icon: "network-upload-symbolic",
         thresholdType: "none"
     },
@@ -466,7 +469,7 @@ var DEFINITIONS = {
         group: "disk",
         subKey: "read",
         sensorPattern: "disk/{id}/read",
-        label: "Read",
+        label: I18N_NOOP("Read"),
         icon: "network-download-symbolic",
         thresholdType: "none"
     },
@@ -475,7 +478,7 @@ var DEFINITIONS = {
         group: "disk",
         subKey: "write",
         sensorPattern: "disk/{id}/write",
-        label: "Write",
+        label: I18N_NOOP("Write"),
         icon: "network-upload-symbolic",
         thresholdType: "none"
     },
@@ -484,7 +487,7 @@ var DEFINITIONS = {
         group: "disk",
         subKey: "usage",
         sensorId: "disk/all/usedPercent",
-        label: "Usage",
+        label: I18N_NOOP("Usage"),
         thresholdType: "normal",
         thresholdKey: "disk"
     },
@@ -493,7 +496,7 @@ var DEFINITIONS = {
         group: "disk",
         subKey: "space",
         sensorId: "disk/all/used",
-        label: "Space",
+        label: I18N_NOOP("Space"),
         thresholdType: "none"
     },
     "disk.temp": {
@@ -501,7 +504,7 @@ var DEFINITIONS = {
         group: "disk",
         subKey: "temp",
         sensorPattern: "disk/{id}/temperature",
-        label: "Temperature",
+        label: I18N_NOOP("Temperature"),
         thresholdType: "normal",
         thresholdKey: "diskTemp",
         secondaryIcon: "temperature-normal"
@@ -511,7 +514,7 @@ var DEFINITIONS = {
         group: "fan",
         subKey: "speed",
         sensorPattern: "{adapter}/{id}/fan1",
-        label: "Fan Speed",
+        label: I18N_NOOP("Fan Speed"),
         thresholdType: "none"
     },
     "uptime.uptime": {
@@ -519,7 +522,7 @@ var DEFINITIONS = {
         group: "uptime",
         subKey: "uptime",
         sensorId: "os/system/uptime",
-        label: "Uptime",
+        label: I18N_NOOP("Uptime"),
         thresholdType: "none"
     }
 };

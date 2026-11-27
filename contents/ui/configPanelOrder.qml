@@ -168,8 +168,8 @@ KCM.SimpleKCM {
         var grp = MetricDefinitions.GROUPS[group] || {};
 
         var icon = (subKey === "temp" || group === "temp") ? "temperature-symbolic" : (grp.defaultIcon || "configure");
-        var groupTitle = grp.name || group.toUpperCase();
-        var subLabel = def.label || subKey;
+        var groupTitle = grp.name ? i18n(grp.name) : group.toUpperCase();
+        var subLabel = def.label ? i18n(def.label) : subKey;
         var displayName = (devId ? devId + " " : "") + subLabel;
 
         // Mockup preview values
@@ -177,7 +177,7 @@ KCM.SimpleKCM {
         if (group === "cpu") {
             if (subKey === "core") {
                 var cNum = parseInt(devId.replace("cpu", ""), 10);
-                displayName = "Core " + (!isNaN(cNum) ? (cNum + 1) : devId);
+                displayName = i18n("Core %1", !isNaN(cNum) ? (cNum + 1) : devId);
                 previewVal = "28%";
             } else {
                 previewVal = subKey === "usage" ? "22%" : (subKey === "freq" ? "3.6 GHz" : (subKey === "temp" ? "62°C" : (subKey === "load1" ? "1.20" : (subKey === "load5" ? "1.05" : (subKey === "load15" ? "0.95" : "22%")))));
@@ -336,11 +336,11 @@ KCM.SimpleKCM {
             for (var gi = 0; gi < gpus.length; gi++) {
                 var gid = gpus[gi].id;
                 var gName = gpus[gi].name;
-                gpuItems.push({ id: "gpu:" + gid + "/usage", label: gName + " Usage", icon: "gpu-symbolic" });
-                gpuItems.push({ id: "gpu:" + gid + "/vram", label: gName + " VRAM", icon: "gpu-symbolic" });
-                gpuItems.push({ id: "gpu:" + gid + "/temp", label: gName + " Temp", icon: "temperature-symbolic" });
-                gpuItems.push({ id: "gpu:" + gid + "/freq", label: gName + " Frequency", icon: "gpu-symbolic" });
-                gpuItems.push({ id: "gpu:" + gid + "/power", label: gName + " Power", icon: "voltage-symbolic" });
+                gpuItems.push({ id: "gpu:" + gid + "/usage", label: i18n("%1 Usage", gName), icon: "gpu-symbolic" });
+                gpuItems.push({ id: "gpu:" + gid + "/vram", label: i18n("%1 VRAM", gName), icon: "gpu-symbolic" });
+                gpuItems.push({ id: "gpu:" + gid + "/temp", label: i18n("%1 Temp", gName), icon: "temperature-symbolic" });
+                gpuItems.push({ id: "gpu:" + gid + "/freq", label: i18n("%1 Frequency", gName), icon: "gpu-symbolic" });
+                gpuItems.push({ id: "gpu:" + gid + "/power", label: i18n("%1 Power", gName), icon: "voltage-symbolic" });
             }
             cats.push({
                 title: i18n("Graphics (GPU)"),
@@ -358,9 +358,9 @@ KCM.SimpleKCM {
         for (var di = 0; di < disks.length; di++) {
             var did = disks[di].id;
             var dName = panelOrderPage.getDiskDisplayName(did);
-            diskItems.push({ id: "disk:" + did + "/read", label: dName + " Read", icon: "network-download-symbolic" });
-            diskItems.push({ id: "disk:" + did + "/write", label: dName + " Write", icon: "network-upload-symbolic" });
-            diskItems.push({ id: "disk:" + did + "/temp", label: dName + " Temp", icon: "temperature-symbolic" });
+            diskItems.push({ id: "disk:" + did + "/read", label: i18n("%1 Read", dName), icon: "network-download-symbolic" });
+            diskItems.push({ id: "disk:" + did + "/write", label: i18n("%1 Write", dName), icon: "network-upload-symbolic" });
+            diskItems.push({ id: "disk:" + did + "/temp", label: i18n("%1 Temp", dName), icon: "temperature-symbolic" });
         }
         if (diskItems.length > 0) {
             cats.push({

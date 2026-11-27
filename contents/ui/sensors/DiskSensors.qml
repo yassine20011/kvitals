@@ -103,7 +103,7 @@
             for (var i = 0; i < disks.length; i++) {
                 var did = disks[i].id;
                 if (_unplugged[did]) continue;
-                found.push({ id: did, name: "DSK " + (found.length + 1) });
+                found.push({ id: did, name: i18n("DSK %1", found.length + 1) });
             }
             if (JSON.stringify(found) !== JSON.stringify(_discovered)) {
                 _discovered = found;
