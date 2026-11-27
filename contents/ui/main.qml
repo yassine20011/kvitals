@@ -408,7 +408,9 @@ PlasmoidItem {
         if (!root.expanded) {
             return;
         }
-        var rawGroups = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys);
+        var rawGroups = ViewHelpers.buildPopupGroups(metricStore.metrics, metricConfig.orderedKeys, function(message, arg) {
+            return arg === undefined ? i18n(message) : i18n(message, arg);
+        });
         if (ViewHelpers.syncPopupGroups(root._popupGroups, rawGroups)) {
             return;
         }

@@ -2,7 +2,7 @@
 
 // buildPopupGroups groups catalogue metrics into standard GNOME Vitals categories:
 // Temperature, Fan, Memory, Processor, System, Network, Storage, GPU.
-function buildPopupGroups(metricsList, orderedKeys) {
+function buildPopupGroups(metricsList, orderedKeys, i18n) {
     if (!metricsList || metricsList.length === 0) return [];
     var available = metricsList.filter(function(m) {
         return m.status !== "unavailable";
@@ -27,7 +27,7 @@ function buildPopupGroups(metricsList, orderedKeys) {
         var tempAgg = map["temp/system"] || map["cpu/temp"] || tempMetrics[0];
         categories.push({
             key: "temperature",
-            groupLabel: "Temperature",
+            groupLabel: i18n("Temperature"),
             icon: "temperature-symbolic",
             aggregateValue: tempAgg ? tempAgg.displayValue : "",
             aggregateColor: tempAgg ? tempAgg.color : "",
@@ -45,7 +45,7 @@ function buildPopupGroups(metricsList, orderedKeys) {
     if (fanMetrics.length > 0) {
         categories.push({
             key: "fan",
-            groupLabel: "Fan",
+            groupLabel: i18n("Fan"),
             icon: fanMetrics[0].icon || "fan-symbolic",
             aggregateValue: fanMetrics[0].displayValue,
             aggregateColor: fanMetrics[0].color,
@@ -65,15 +65,15 @@ function buildPopupGroups(metricsList, orderedKeys) {
         var ramPct = map["ram/percentage"];
         var memSections = [];
         if (ramMetrics.length > 0 && swapMetrics.length > 0) {
-            memSections.push({ sectionLabel: "RAM", metrics: ramMetrics });
-            memSections.push({ sectionLabel: "Swap", metrics: swapMetrics });
+            memSections.push({ sectionLabel: i18n("RAM"), metrics: ramMetrics });
+            memSections.push({ sectionLabel: i18n("Swap"), metrics: swapMetrics });
         } else {
             memSections.push({ sectionLabel: "", metrics: ramMetrics.concat(swapMetrics) });
         }
 
         categories.push({
             key: "memory",
-            groupLabel: "Memory",
+            groupLabel: i18n("Memory"),
             icon: "memory-symbolic",
             aggregateValue: ramPct ? ramPct.displayValue : (ramMetrics[0] ? ramMetrics[0].displayValue : ""),
             aggregateColor: ramPct ? ramPct.color : (ramMetrics[0] ? ramMetrics[0].color : ""),
@@ -91,14 +91,14 @@ function buildPopupGroups(metricsList, orderedKeys) {
         var cpuSections = [];
         if (coreMetrics.length > 0 && nonCoreMetrics.length > 0) {
             cpuSections.push({ sectionLabel: "", metrics: nonCoreMetrics });
-            cpuSections.push({ sectionLabel: "Cores", metrics: coreMetrics });
+            cpuSections.push({ sectionLabel: i18n("Cores"), metrics: coreMetrics });
         } else {
             cpuSections.push({ sectionLabel: "", metrics: cpuMetrics });
         }
 
         categories.push({
             key: "processor",
-            groupLabel: "Processor",
+            groupLabel: i18n("Processor"),
             icon: "cpu-symbolic",
             aggregateValue: cpuUsage ? cpuUsage.displayValue : "",
             aggregateColor: cpuUsage ? cpuUsage.color : "",
@@ -112,7 +112,7 @@ function buildPopupGroups(metricsList, orderedKeys) {
         var batPct = map["bat/percentage"] || batMetrics[0];
         categories.push({
             key: "battery",
-            groupLabel: "Battery",
+            groupLabel: i18n("Battery"),
             icon: "battery-symbolic",
             aggregateValue: batPct ? batPct.displayValue : "",
             aggregateColor: batPct ? batPct.color : "",
@@ -131,7 +131,7 @@ function buildPopupGroups(metricsList, orderedKeys) {
         var uptimeMetric = map["uptime/uptime"] || sysMetrics[0];
         categories.push({
             key: "system",
-            groupLabel: "System",
+            groupLabel: i18n("System"),
             icon: "system-symbolic",
             aggregateValue: uptimeMetric ? uptimeMetric.displayValue : "",
             aggregateColor: uptimeMetric ? uptimeMetric.color : "",
@@ -150,7 +150,7 @@ function buildPopupGroups(metricsList, orderedKeys) {
         var netDown = map["net/down"] || netMetrics[0];
         categories.push({
             key: "network",
-            groupLabel: "Network",
+            groupLabel: i18n("Network"),
             icon: "network-symbolic",
             aggregateValue: netDown ? netDown.displayValue : "",
             aggregateColor: netDown ? netDown.color : "",
@@ -177,14 +177,14 @@ function buildPopupGroups(metricsList, orderedKeys) {
             var globalDiskItems = diskMetrics.filter(function(m) { return !m.deviceId; });
             if (globalDiskItems.length > 0) {
                 diskSections.push({
-                    sectionLabel: "Overall",
+                    sectionLabel: i18n("Overall"),
                     metrics: globalDiskItems
                 });
             }
             for (var dIdx = 0; dIdx < diskDeviceIds.length; dIdx++) {
                 var dId = diskDeviceIds[dIdx];
                 var dItems = diskMetrics.filter(function(m) { return m.deviceId === dId; });
-                var dLabel = dItems[0].deviceName || dItems[0].groupLabel || ("Disk " + (dIdx + 1));
+                var dLabel = dItems[0].deviceName || dItems[0].groupLabel || i18n("Disk %1", dIdx + 1);
                 diskSections.push({
                     sectionLabel: dLabel,
                     metrics: dItems
@@ -200,7 +200,7 @@ function buildPopupGroups(metricsList, orderedKeys) {
         var diskAgg = map["disk/usage"] || diskMetrics[0];
         categories.push({
             key: "storage",
-            groupLabel: "Storage",
+            groupLabel: i18n("Storage"),
             icon: "storage-symbolic",
             aggregateValue: diskAgg ? diskAgg.displayValue : "",
             aggregateColor: diskAgg ? diskAgg.color : "",
@@ -222,7 +222,7 @@ function buildPopupGroups(metricsList, orderedKeys) {
             for (var gIdx = 0; gIdx < gpuDeviceIds.length; gIdx++) {
                 var gId = gpuDeviceIds[gIdx];
                 var gItems = gpuMetrics.filter(function(m) { return m.deviceId === gId; });
-                var gLabel = gItems[0].deviceName || gItems[0].groupLabel || ("GPU " + (gIdx + 1));
+                var gLabel = gItems[0].deviceName || gItems[0].groupLabel || i18n("GPU %1", gIdx + 1);
                 gpuSections.push({
                     sectionLabel: gLabel,
                     metrics: gItems
@@ -238,7 +238,7 @@ function buildPopupGroups(metricsList, orderedKeys) {
         var gpuUsage = gpuMetrics.filter(function(m){ return m.subKey === "usage"; })[0] || gpuMetrics[0];
         categories.push({
             key: "gpu",
-            groupLabel: "GPU",
+            groupLabel: i18n("GPU"),
             icon: "gpu-symbolic",
             aggregateValue: gpuUsage ? gpuUsage.displayValue : "",
             aggregateColor: gpuUsage ? gpuUsage.color : "",

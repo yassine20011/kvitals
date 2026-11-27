@@ -195,13 +195,13 @@ Item {
         _patternCache = {};
 
         var gList = Object.keys(gpuMap).sort();
-        _gpus = gList.map(function(id, i) { return { id: id, name: "GPU " + (i + 1) }; });
+        _gpus = gList.map(function(id, i) { return { id: id, name: i18n("GPU %1", i + 1) }; });
 
         var dList = Object.keys(diskMap).sort();
-        _disks = dList.map(function(id, i) { return { id: id, name: "Disk " + (i + 1) }; });
+        _disks = dList.map(function(id, i) { return { id: id, name: i18n("Disk %1", i + 1) }; });
 
         var fList = Object.keys(fanSet).sort();
-        _fans = fList.map(function(id, i) { return { id: id, name: "Fan " + (i + 1) }; });
+        _fans = fList.map(function(id, i) { return { id: id, name: i18n("Fan %1", i + 1) }; });
 
         var cList = Object.keys(coreMap);
         var cSorted = [];
@@ -210,7 +210,7 @@ Item {
             cSorted.push({ id: cList[ci], number: isNaN(num) ? ci : num });
         }
         cSorted.sort(function(a, b) { return a.number - b.number; });
-        _cpuCores = cSorted.map(function(c) { return { id: c.id, number: c.number, name: "Core " + (c.number + 1) }; });
+        _cpuCores = cSorted.map(function(c) { return { id: c.id, number: c.number, name: i18n("Core %1", c.number + 1) }; });
 
         var nList = Object.keys(ifaceSet).sort();
         _netIfaces = ["auto"].concat(nList);
@@ -225,7 +225,7 @@ Item {
         });
         _coolants = coolantList.map(function(c, i) {
             var id = coolantBaseCount[c.base] > 1 ? c.adapter : c.base;
-            return { id: id, sensorId: c.sensorId, name: coolantList.length > 1 ? "Coolant " + (i + 1) : "Coolant" };
+            return { id: id, sensorId: c.sensorId, name: coolantList.length > 1 ? i18n("Coolant %1", i + 1) : i18n("Coolant") };
         });
 
         tempCandidates.sort(function(a, b) {

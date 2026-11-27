@@ -19,9 +19,9 @@ Item {
         var m = Math.floor((seconds % 3600) / 60);
         
         var parts = [];
-        if (d > 0) parts.push(d + "d");
-        if (h > 0 || d > 0) parts.push(h + "h");
-        parts.push(m + "m");
+        if (d > 0) parts.push(i18n("%1d", d));
+        if (h > 0 || d > 0) parts.push(i18n("%1h", h));
+        parts.push(i18n("%1m", m));
         return parts.join(" ");
     }
 

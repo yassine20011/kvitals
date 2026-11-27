@@ -122,9 +122,9 @@ Item {
             subKey: subKey,
             deviceId: devId,
             deviceName: devName,
-            label: _normalizeString(overrides.label, (cfg ? cfg.getGroupLabel(group) : (def.label || group.toUpperCase()))),
-            groupLabel: _normalizeString(overrides.groupLabel, cfg ? cfg.getGroupLabel(group) : (def.label || group.toUpperCase())),
-            subLabel: _normalizeString(overrides.subLabel !== undefined ? overrides.subLabel : (def.label || ""), ""),
+            label: _normalizeString(overrides.label, (cfg ? cfg.getGroupLabel(group) : (def.label ? i18n(def.label) : group.toUpperCase()))),
+            groupLabel: _normalizeString(overrides.groupLabel, cfg ? cfg.getGroupLabel(group) : (def.label ? i18n(def.label) : group.toUpperCase())),
+            subLabel: _normalizeString(overrides.subLabel !== undefined ? overrides.subLabel : (def.label ? i18n(def.label) : ""), ""),
             prefix: _normalizeString(overrides.prefix !== undefined ? overrides.prefix : (def.prefix || ""), ""),
             groupIcon: overrides.groupIcon || (cfg ? cfg.getGroupIcon(group) : ""),
             icon: overrides.icon || defIcon,
@@ -171,7 +171,7 @@ Item {
                 value: s.cpu.cpuNumericValue,
                 displayValue: s.cpu.cpuValue,
                 label: cfg.cpuLabel,
-                subLabel: "Usage",
+                subLabel: i18n("Usage"),
                 status: !isNaN(s.cpu.cpuNumericValue) ? "ready" : "loading"
             }));
 
@@ -179,7 +179,7 @@ Item {
                 list.push(_createMetric("cpu.freq", {
                     displayValue: s.cpu.cpuFreqValue,
                     label: cfg.cpuLabel,
-                    subLabel: "Frequency",
+                    subLabel: i18n("Frequency"),
                     status: s.cpu.cpuFreqValue !== "..." ? "ready" : "loading"
                 }));
             }
@@ -212,8 +212,8 @@ Item {
                 list.push(_createMetric("cpu.temp", {
                     value: s.temp.cpuTempNumericValue,
                     displayValue: s.temp.cpuTempValue,
-                    label: "CPU",
-                    subLabel: "CPU",
+                    label: i18n("CPU"),
+                    subLabel: i18n("CPU"),
                     status: !isNaN(s.temp.cpuTempNumericValue) ? "ready" : "unavailable"
                 }));
             }
@@ -242,14 +242,14 @@ Item {
                 value: s.memory.ramPercentage,
                 displayValue: s.memory.ramPercentValue,
                 label: cfg.ramLabel,
-                subLabel: "Percentage",
+                subLabel: i18n("Percentage"),
                 status: !isNaN(s.memory.ramPercentage) ? "ready" : "loading"
             }));
 
             list.push(_createMetric("ram.used", {
                 displayValue: s.memory.ramValue,
                 label: cfg.ramLabel,
-                subLabel: "Used / Total",
+                subLabel: i18n("Used / Total"),
                 status: s.memory.ramValue !== "..." ? "ready" : "loading"
             }));
 
@@ -259,8 +259,8 @@ Item {
                 list.push(_createMetric("ram.temp", {
                     value: rNum,
                     displayValue: (rDisp && rDisp !== "--") ? rDisp : "...",
-                    label: "RAM",
-                    subLabel: "RAM",
+                    label: i18n("RAM"),
+                    subLabel: i18n("RAM"),
                     status: !isNaN(rNum) ? "ready" : "loading"
                 }));
             }
@@ -272,7 +272,7 @@ Item {
                 value: s.swap.swapPercentage,
                 displayValue: s.swap.swapPercentValue,
                 label: cfg.swapLabel,
-                subLabel: "Usage (%)",
+                subLabel: i18n("Usage (%)"),
                 status: !isNaN(s.swap.swapPercentage) ? "ready" : "loading"
             }));
 
@@ -280,7 +280,7 @@ Item {
                 value: s.swap.swapUsedRaw,
                 displayValue: s.swap.swapUsedValue,
                 label: cfg.swapLabel,
-                subLabel: "Used",
+                subLabel: i18n("Used"),
                 status: !isNaN(s.swap.swapUsedRaw) ? "ready" : "loading"
             }));
 
@@ -288,7 +288,7 @@ Item {
                 value: s.swap.swapFreeRaw,
                 displayValue: s.swap.swapFreeValue,
                 label: cfg.swapLabel,
-                subLabel: "Free",
+                subLabel: i18n("Free"),
                 status: !isNaN(s.swap.swapFreeRaw) ? "ready" : "loading"
             }));
 
@@ -296,7 +296,7 @@ Item {
                 value: s.swap.swapTotalRaw,
                 displayValue: s.swap.swapTotalValue,
                 label: cfg.swapLabel,
-                subLabel: "Total",
+                subLabel: i18n("Total"),
                 status: !isNaN(s.swap.swapTotalRaw) ? "ready" : "loading"
             }));
         }
@@ -307,7 +307,7 @@ Item {
                 value: s.temp.tempNumericValue,
                 displayValue: s.temp.tempValue,
                 label: cfg.tempLabel,
-                subLabel: "System",
+                subLabel: i18n("System"),
                 status: !isNaN(s.temp.tempNumericValue) ? "ready" : "unavailable"
             }));
         }
@@ -352,13 +352,13 @@ Item {
             if (gList && gList.length > 0) {
                 for (var gi = 0; gi < gList.length; gi++) {
                     var gd = gList[gi];
-                    var gpuName = gd.name || ("GPU " + (gi + 1));
+                    var gpuName = gd.name || i18n("GPU %1", gi + 1);
 
                     if (gd.usage) {
                         list.push(_createMetric("gpu.usage", {
                             deviceId: gd.id, deviceName: gpuName,
                             label: gpuName, groupLabel: gpuName,
-                            subLabel: "Usage",
+                            subLabel: i18n("Usage"),
                             value: gd.usageNumber, displayValue: gd.usage,
                             status: !isNaN(gd.usageNumber) ? "ready" : "loading"
                         }));
@@ -367,7 +367,7 @@ Item {
                         list.push(_createMetric("gpu.vram", {
                             deviceId: gd.id, deviceName: gpuName,
                             label: gpuName, groupLabel: gpuName,
-                            subLabel: "VRAM",
+                            subLabel: i18n("VRAM"),
                             displayValue: gd.vram,
                             status: "ready"
                         }));
@@ -384,8 +384,8 @@ Item {
                     if (gd.freq) {
                         list.push(_createMetric("gpu.freq", {
                             deviceId: gd.id, deviceName: gpuName,
-                            label: gpuName + " Frequency", groupLabel: gpuName,
-                            subLabel: "Frequency",
+                            label: i18n("%1 Frequency", gpuName), groupLabel: gpuName,
+                            subLabel: i18n("Frequency"),
                             value: gd.freqNumber, displayValue: gd.freq,
                             status: !isNaN(gd.freqNumber) ? "ready" : "loading"
                         }));
@@ -393,8 +393,8 @@ Item {
                     if (gd.power) {
                         list.push(_createMetric("gpu.power", {
                             deviceId: gd.id, deviceName: gpuName,
-                            label: gpuName + " Power", groupLabel: gpuName,
-                            subLabel: "Power",
+                            label: i18n("%1 Power", gpuName), groupLabel: gpuName,
+                            subLabel: i18n("Power"),
                             value: gd.powerNumber, displayValue: gd.power,
                             status: !isNaN(gd.powerNumber) ? "ready" : "loading"
                         }));
@@ -409,14 +409,14 @@ Item {
                 value: s.battery.batNumericValue,
                 displayValue: s.battery.batValue || "...",
                 label: cfg.batLabel || "BAT",
-                subLabel: "Percentage",
+                subLabel: i18n("Percentage"),
                 status: !isNaN(s.battery.batNumericValue) ? "ready" : "loading"
             }));
             if (s.battery.powerValue) {
                 list.push(_createMetric("bat.power", {
                     displayValue: s.battery.powerValue,
                     label: cfg.batLabel || "BAT",
-                    subLabel: "Power",
+                    subLabel: i18n("Power"),
                     status: "ready"
                 }));
             }
@@ -424,8 +424,8 @@ Item {
                 list.push(_createMetric("bat.health", {
                     value: s.battery.batHealthNumericValue,
                     displayValue: s.battery.batHealthValue,
-                    label: (cfg.batLabel || "BAT") + " Health",
-                    subLabel: "Health",
+                    label: i18n("%1 Health", cfg.batLabel || "BAT"),
+                    subLabel: i18n("Health"),
                     status: !isNaN(s.battery.batHealthNumericValue) ? "ready" : "loading"
                 }));
             }
@@ -437,7 +437,7 @@ Item {
                 value: s.network.netDownRaw,
                 displayValue: s.network.netDownValue,
                 label: cfg.netLabel,
-                subLabel: "Download",
+                subLabel: i18n("Download"),
                 icon: cfg.resolveIcon("network-download-symbolic"),
                 status: !isNaN(s.network.netDownRaw) ? "ready" : "loading"
             }));
@@ -445,7 +445,7 @@ Item {
                 value: s.network.netUpRaw,
                 displayValue: s.network.netUpValue,
                 label: cfg.netLabel,
-                subLabel: "Upload",
+                subLabel: i18n("Upload"),
                 icon: cfg.resolveIcon("network-upload-symbolic"),
                 status: !isNaN(s.network.netUpRaw) ? "ready" : "loading"
             }));
@@ -453,8 +453,8 @@ Item {
                 list.push(_createMetric("net.totalDown", {
                     value: s.network.netTotalDownRaw,
                     displayValue: s.network.netTotalDownValue,
-                    label: cfg.netLabel + " Total ↓",
-                    subLabel: "Total Downloaded",
+                    label: i18n("%1 Total ↓", cfg.netLabel),
+                    subLabel: i18n("Total Downloaded"),
                     icon: cfg.resolveIcon("network-download-symbolic"),
                     status: "ready"
                 }));
@@ -463,8 +463,8 @@ Item {
                 list.push(_createMetric("net.totalUp", {
                     value: s.network.netTotalUpRaw,
                     displayValue: s.network.netTotalUpValue,
-                    label: cfg.netLabel + " Total ↑",
-                    subLabel: "Total Uploaded",
+                    label: i18n("%1 Total ↑", cfg.netLabel),
+                    subLabel: i18n("Total Uploaded"),
                     icon: cfg.resolveIcon("network-upload-symbolic"),
                     status: "ready"
                 }));
@@ -473,8 +473,8 @@ Item {
                 list.push(_createMetric("net.signal", {
                     value: s.network.netSignalRaw,
                     displayValue: s.network.netSignalValue,
-                    label: cfg.netLabel + " Signal",
-                    subLabel: "Wi-Fi Signal",
+                    label: i18n("%1 Signal", cfg.netLabel),
+                    subLabel: i18n("Wi-Fi Signal"),
                     icon: cfg.resolveIcon("network-wireless-symbolic"),
                     status: "ready"
                 }));
@@ -483,7 +483,7 @@ Item {
                 list.push(_createMetric("net.ip", {
                     displayValue: s.network.netIpValue,
                     label: cfg.netLabel,
-                    subLabel: "IP address",
+                    subLabel: i18n("IP address"),
                     icon: cfg.resolveIcon("network-symbolic"),
                     status: "ready"
                 }));
@@ -500,7 +500,7 @@ Item {
                     list.push(_createMetric("disk.read", {
                         deviceId: dd.id, deviceName: dName,
                         label: dName, groupLabel: dName,
-                        subLabel: "Read",
+                        subLabel: i18n("Read"),
                         icon: cfg.resolveIcon("network-download-symbolic"),
                         displayValue: dd.read,
                         status: "ready"
@@ -508,7 +508,7 @@ Item {
                     list.push(_createMetric("disk.write", {
                         deviceId: dd.id, deviceName: dName,
                         label: dName, groupLabel: dName,
-                        subLabel: "Write",
+                        subLabel: i18n("Write"),
                         icon: cfg.resolveIcon("network-upload-symbolic"),
                         displayValue: dd.write,
                         status: "ready"
@@ -530,7 +530,7 @@ Item {
                 list.push(_createMetric("disk.usage", {
                     value: s.disk.diskUsedPercentRaw,
                     displayValue: s.disk.diskUsedPercentValue,
-                    label: cfg.diskLabel + " Usage",
+                    label: i18n("%1 Usage", cfg.diskLabel),
                     status: !isNaN(s.disk.diskUsedPercentRaw) ? "ready" : "loading"
                 }));
             }
@@ -539,7 +539,7 @@ Item {
                 list.push(_createMetric("disk.space", {
                     value: s.disk.diskUsedRaw,
                     displayValue: s.disk.diskSpaceValue,
-                    label: cfg.diskLabel + " Space",
+                    label: i18n("%1 Space", cfg.diskLabel),
                     status: !isNaN(s.disk.diskUsedRaw) ? "ready" : "loading"
                 }));
             }
@@ -550,7 +550,7 @@ Item {
             var fList = s.fans.fanDataList;
             for (var fi = 0; fi < fList.length; fi++) {
                 var fd = fList[fi];
-                var fName = fd.name || ("Fan " + fd.number);
+                var fName = fd.name || i18n("Fan %1", fd.number);
                 list.push(_createMetric("fan.speed", {
                     deviceId: fd.id, deviceName: fName,
                     label: fName,
@@ -567,9 +567,9 @@ Item {
         // Uptime
         if (s.uptime && s.uptime.uptimeValue && (neededGroups === null || neededGroups["uptime"])) {
             list.push(_createMetric("uptime.uptime", {
-                label: "Uptime",
-                groupLabel: "Uptime",
-                subLabel: "Uptime",
+                label: i18n("Uptime"),
+                groupLabel: i18n("Uptime"),
+                subLabel: i18n("Uptime"),
                 displayValue: s.uptime.uptimeValue,
                 status: "ready"
             }));

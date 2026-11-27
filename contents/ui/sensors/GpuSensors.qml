@@ -198,7 +198,7 @@ Item {
             var showP = m.indexOf("power") >= 0;
 
             // Resolve display name: custom label > default name > fallback
-            var hwName = "GPU " + (i + 1);
+            var hwName = i18n("GPU %1", i + 1);
             for (var j = 0; j < _discovered.length; j++) {
                 if (_discovered[j].id === g) { hwName = _discovered[j].name; break; }
             }
