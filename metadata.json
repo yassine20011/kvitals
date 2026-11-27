@@ -3,6 +3,7 @@
     "Id": "org.kde.plasma.kvitals",
     "Name": "KVitals",
     "Description": "Live system vitals in the panel: CPU, RAM, Temp, GPU, Battery, Network, Disk, Fan",
+    "Description[pl]": "Monitorowanie zasobów systemu w panelu: CPU, RAM, temperatury, GPU, bateria, sieć, dyski i wentylatory",
     "Icon": "utilities-system-monitor",
     "Category": "System Information",
     "Authors": [
